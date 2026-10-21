@@ -17,7 +17,9 @@ export type Chapter = {
     | "Sparkles"
     | "Bot"
     | "MonitorSmartphone"
-    | "Library";
+    | "Library"
+    | "BookMarked"
+    | "Calculator";
 };
 
 export const chapters: Chapter[] = [
@@ -118,5 +120,19 @@ export const chapters: Chapter[] = [
     title: "ספריית תבניות מוכנות",
     summary: "סוכנים, פקודות ו-Skills מהקהילה: מה כל אחד עושה, פקודת התקנה, בקשה מוכנה ודוגמה לתוצאה.",
     icon: "Library",
+  },
+  {
+    number: 15,
+    slug: "15-glossary",
+    title: "מילון מושגים ודף עזר",
+    summary: "כל המושגים והפקודות מהקורס במקום אחד, עם חיפוש וסינון לפי נושא.",
+    icon: "BookMarked",
+  },
+  {
+    number: 16,
+    slug: "16-tools",
+    title: "כלים אינטראקטיביים",
+    summary: "בונה בקשות ו-Skills, ומחשבון טוקנים שמראה כמה חוסכים עם /compact וקריאה ממוקדת.",
+    icon: "Calculator",
   },
 ];

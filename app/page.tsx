@@ -1,9 +1,11 @@
 import Link from "next/link";
 import {
   ArrowLeft,
+  BookMarked,
   BookOpen,
   Bot,
   Bug,
+  Calculator,
   Columns2,
   Download,
   FileCode2,
@@ -41,6 +43,8 @@ const chapterIcons: Record<Chapter["icon"], LucideIcon> = {
   Bot,
   MonitorSmartphone,
   Library,
+  BookMarked,
+  Calculator,
 };
 
 const FIRST_CHAPTER = `/docs/${chapters[0].slug}`;
@@ -82,7 +86,7 @@ function Hero() {
             לראות את כל הפרקים
           </a>
         </div>
-        <p className="mt-8 text-sm text-muted">14 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
+        <p className="mt-8 text-sm text-muted">16 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
       </div>
       <HeroTerminal />
     </section>
@@ -176,8 +180,8 @@ function Syllabus() {
         <h3 className="mt-12 text-lg font-bold">המסלול הבסיסי</h3>
         <ChapterGrid items={core} className="mt-4 lg:grid-cols-5" />
 
-        <h3 className="mt-12 text-lg font-bold">פרקי העשרה למתקדמים</h3>
-        <ChapterGrid items={bonus} className="mt-4 lg:grid-cols-4" />
+        <h3 className="mt-12 text-lg font-bold">פרקי העשרה וכלים</h3>
+        <ChapterGrid items={bonus} className="mt-4 lg:grid-cols-3" />
       </div>
     </section>
   );

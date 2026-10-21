@@ -1,6 +1,10 @@
 import { Children, isValidElement, type ReactElement } from "react";
 import type { MDXComponents } from "mdx/types";
 import { Callout } from "@/components/callout";
+import { Glossary } from "@/components/Glossary";
+import { MiniQuiz } from "@/components/MiniQuiz";
+import { PromptBuilder } from "@/components/PromptBuilder";
+import { TokenCalculator } from "@/components/TokenCalculator";
 import { Checklist } from "@/components/mdx/checklist";
 import { CodeBlock } from "@/components/mdx/code-block";
 import { Library } from "@/components/mdx/library";
@@ -65,6 +69,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       ),
     Callout,
     Checklist,
+    Glossary,
+    MiniQuiz,
+    PromptBuilder,
+    TokenCalculator,
     Library,
     LibraryItem,
     Prompt,
