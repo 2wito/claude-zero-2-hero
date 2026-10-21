@@ -22,11 +22,14 @@ export function Tabs({
   const [active, setActive] = useState(0);
   const baseId = useId();
   const panels = Children.toArray(children).filter(isValidElement);
+  // MDX passes a new items array on every render; key the effect on its contents instead.
+  const itemsKey = items.join("|");
 
   useEffect(() => {
     if (!groupId) return;
+    const labels = itemsKey.split("|");
     const apply = (label: string | null) => {
-      const index = label ? items.indexOf(label) : -1;
+      const index = label ? labels.indexOf(label) : -1;
       if (index >= 0) setActive(index);
     };
     try {
@@ -38,7 +41,7 @@ export function Tabs({
     };
     window.addEventListener(SYNC_EVENT, onSync);
     return () => window.removeEventListener(SYNC_EVENT, onSync);
-  }, [groupId, items]);
+  }, [groupId, itemsKey]);
 
   function select(index: number) {
     setActive(index);

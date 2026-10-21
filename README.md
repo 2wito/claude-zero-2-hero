@@ -127,6 +127,9 @@ claude-zero-2-hero/
 | `<Checklist id="..." items={[...]} />` | רשימת בדיקה שזוכרת את ההתקדמות |
 | `<RecapCards takeaways={{...}} />` | כרטיסי סיכום עם קישור לכל פרק |
 | `<Library>` + `<LibraryItem type="agent \| command \| skill \| tool" ...>` | ספריית רכיבים עם סינון לפי סוג |
+| `<MiniQuiz questions={[...]} />` | חידון בסוף פרק, שמעדכן את מעקב ההתקדמות |
+| `<PromptBuilder />`, `<TokenCalculator />`, `<TerminalSimulator />`, `<ClaudeConfigGenerator />` | הכלים האינטראקטיביים (עמוד 17) |
+| `<Glossary />`, `<PromptHub />` | המילון וספריית הבקשות (עמודים 15 ו-16) |
 
 בלוקי קוד מקבלים צביעת תחביר אוטומטית. כדי להוסיף תווית, כותבים `title` אחרי שם השפה, למשל ` ```bash title="macOS / Linux" `.
 
