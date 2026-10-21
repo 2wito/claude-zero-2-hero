@@ -12,8 +12,10 @@ import {
   GraduationCap,
   Hammer,
   Heart,
+  Library,
   Lightbulb,
   MessageSquare,
+  MonitorSmartphone,
   Rocket,
   Sparkles,
   SquareTerminal,
@@ -37,6 +39,8 @@ const chapterIcons: Record<Chapter["icon"], LucideIcon> = {
   Rocket,
   Sparkles,
   Bot,
+  MonitorSmartphone,
+  Library,
 };
 
 const FIRST_CHAPTER = `/docs/${chapters[0].slug}`;
@@ -78,7 +82,7 @@ function Hero() {
             לראות את כל הפרקים
           </a>
         </div>
-        <p className="mt-8 text-sm text-muted">12 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
+        <p className="mt-8 text-sm text-muted">14 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
       </div>
       <HeroTerminal />
     </section>
@@ -147,16 +151,20 @@ function Features() {
 }
 
 function Syllabus() {
+  const core = chapters.filter((chapter) => chapter.number <= 10);
+  const bonus = chapters.filter((chapter) => chapter.number > 10);
+
   return (
     <section id="syllabus" aria-labelledby="syllabus-title" className="scroll-mt-20">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 id="syllabus-title" className="font-display text-3xl leading-tight sm:text-4xl">
-              12 פרקים, צעד אחר צעד
+              {chapters.length} פרקים, צעד אחר צעד
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-8 text-muted">
-              כל פרק בונה על הקודם. אפשר לעצור בכל שלב ולחזור כשנוח.
+              {core.length} פרקי המסלול הבסיסי בונים זה על זה. {bonus.length} פרקי ההעשרה מעמיקים, ואפשר לקרוא אותם בכל
+              סדר.
             </p>
           </div>
           <Link href={FIRST_CHAPTER} className="inline-flex items-center gap-2 font-medium text-accent hover:underline">
@@ -165,28 +173,38 @@ function Syllabus() {
           </Link>
         </div>
 
-        <ol className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-          {chapters.map((chapter) => {
-            const Icon = chapterIcons[chapter.icon];
-            return (
-              <li key={chapter.slug} className="bg-surface">
-                <Link
-                  href={`/docs/${chapter.slug}`}
-                  className="group flex h-full flex-col p-6 hover:bg-surface-2 focus-visible:-outline-offset-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-display text-4xl text-accent tabular-nums">{chapter.number}</span>
-                    <Icon className="size-5 text-muted group-hover:text-accent" aria-hidden />
-                  </div>
-                  <h3 className="mt-5 font-bold leading-snug">{chapter.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted">{chapter.summary}</p>
-                </Link>
-              </li>
-            );
-          })}
-        </ol>
+        <h3 className="mt-12 text-lg font-bold">המסלול הבסיסי</h3>
+        <ChapterGrid items={core} className="mt-4 lg:grid-cols-5" />
+
+        <h3 className="mt-12 text-lg font-bold">פרקי העשרה למתקדמים</h3>
+        <ChapterGrid items={bonus} className="mt-4 lg:grid-cols-4" />
       </div>
     </section>
+  );
+}
+
+function ChapterGrid({ items, className }: { items: typeof chapters; className: string }) {
+  return (
+    <ol className={`grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 ${className}`}>
+      {items.map((chapter) => {
+        const Icon = chapterIcons[chapter.icon];
+        return (
+          <li key={chapter.slug} className="bg-surface">
+            <Link
+              href={`/docs/${chapter.slug}`}
+              className="group flex h-full flex-col p-6 hover:bg-surface-2 focus-visible:-outline-offset-2"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-display text-4xl text-accent tabular-nums">{chapter.number}</span>
+                <Icon className="size-5 text-muted group-hover:text-accent" aria-hidden />
+              </div>
+              <h4 className="mt-5 font-bold leading-snug">{chapter.title}</h4>
+              <p className="mt-2 text-sm leading-6 text-muted">{chapter.summary}</p>
+            </Link>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 

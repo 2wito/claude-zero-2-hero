@@ -14,3 +14,8 @@ Sources for chapters 11 (Skills) and 12 (Agents & Sub-agents).
 - [https://www.aitmpl.com/agents/](https://www.aitmpl.com/agents/)
 - [https://code.claude.com/docs/en/sub-agents](https://code.claude.com/docs/en/sub-agents)
 - [https://www.datacamp.com/tutorial/claude-code-agents-guide](https://www.datacamp.com/tutorial/claude-code-agents-guide)
+
+## Templates library & platforms
+
+- [https://www.aitmpl.com/](https://www.aitmpl.com/) (AI Templates & Skills)
+- [https://code.claude.com/docs/en/overview](https://code.claude.com/docs/en/overview) (Claude Platforms & Interfaces)

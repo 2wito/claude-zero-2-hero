@@ -3,6 +3,8 @@ import type { MDXComponents } from "mdx/types";
 import { Callout } from "@/components/callout";
 import { Checklist } from "@/components/mdx/checklist";
 import { CodeBlock } from "@/components/mdx/code-block";
+import { Library } from "@/components/mdx/library";
+import { LibraryItem } from "@/components/mdx/library-item";
 import { Prompt } from "@/components/mdx/prompt";
 import { PromptCompare } from "@/components/mdx/prompt-compare";
 import { RecapCards } from "@/components/mdx/recap-cards";
@@ -63,6 +65,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       ),
     Callout,
     Checklist,
+    Library,
+    LibraryItem,
     Prompt,
     PromptCompare,
     RecapCards,

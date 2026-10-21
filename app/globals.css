@@ -102,3 +102,14 @@ body {
   unicode-bidi: plaintext;
   text-align: start;
 }
+
+/* Templates library filter (components/mdx/library.tsx) */
+.library:not([data-library-filter="all"]) > [data-type] {
+  display: none;
+}
+.library[data-library-filter="agent"] > [data-type="agent"],
+.library[data-library-filter="command"] > [data-type="command"],
+.library[data-library-filter="skill"] > [data-type="skill"],
+.library[data-library-filter="tool"] > [data-type="tool"] {
+  display: block;
+}

@@ -1,0 +1,503 @@
+# ספריית תבניות: סוכנים, פקודות ו-Skills מוכנים
+
+בפרקים 11 ו-12 למדנו לבנות Skills וסוכנים בעצמנו. אבל לא תמיד צריך להתחיל מאפס: הקהילה כבר כתבה מאות כאלה. הפרק הזה הוא **ספרייה מסוננת**, עם הפריטים השימושיים ביותר מתוך [aitmpl.com](https://www.aitmpl.com/), הקטלוג של הפרויקט הפתוח [Claude Code Templates](https://github.com/davila7/claude-code-templates) (רישיון MIT).
+
+לכל פריט יש **הסבר בעברית** מה הוא עושה ומתי להשתמש בו, **פקודת התקנה** להעתקה, **בקשה מוכנה** להפעלה, ו**דוגמה לתוצאה**.
+
+<Callout type="note" title="איך להשתמש בפרק הזה">
+- **לא צריך להתקין הכול.** התחילו מ-2 או 3 פריטים שפותרים בעיה שיש לכם עכשיו.
+- **השתמשו בכפתורי הסינון** כדי לראות רק סוכנים, רק פקודות, רק Skills או רק כלי עזר.
+- **הדוגמאות לתוצאה הן להמחשה.** הקבצים בקטלוג נכתבים ומתעדכנים על ידי הקהילה, ולכן התוצאה אצלכם יכולה להיראות קצת אחרת.
+</Callout>
+
+## לפני שמתחילים
+
+### מה צריך
+
+- **Node.js** (פרק 6), כי ההתקנה רצה עם `npx`.
+- **פרויקט עם Git**, כדי שתוכלו לראות בדיוק אילו קבצים ההתקנה הוסיפה, ולבטל בקלות.
+- להריץ את פקודות ההתקנה **מתוך תיקיית הפרויקט**.
+
+### איך ההתקנה עובדת
+
+לכל סוג רכיב יש דגל משלו:
+
+```bash title="המבנה הכללי"
+npx claude-code-templates@latest --agent   <קטגוריה>/<שם>  --yes
+npx claude-code-templates@latest --command <קטגוריה>/<שם>  --yes
+```
+
+`--yes` מדלג על שאלות האישור. ובלי שום דגל, מקבלים מסך בחירה אינטראקטיבי:
+
+```bash title="מסך בחירה אינטראקטיבי"
+npx claude-code-templates@latest
+```
+
+<Callout type="warning" title="אחרי כל התקנה: לבדוק מה נכנס">
+כל רכיב מהקטלוג הוא **הוראות ש-Claude יבצע**, ולפעמים גם הרשאות לכלים. אחרי התקנה:
+
+1. הריצו `git status` כדי לראות אילו קבצים נוספו. בדרך כלל הם בתוך התיקייה `.claude`.
+2. **קראו את הקבצים**, או בקשו מ-Claude לעשות את זה בשבילכם (הבקשה מיד למטה).
+3. בסוכנים, בדקו את השדה `tools`. סוכן "סוקר" שמבקש הרשאות כתיבה מלאות צריך להדליק נורה אדומה.
+4. לא מתאים? `git restore` ו-`git clean` מחזירים את המצב, או פשוט מוחקים את הקובץ.
+</Callout>
+
+<Prompt>הרגע התקנתי רכיבים מ-claude-code-templates. תריץ git status, תקרא כל קובץ חדש בתיקייה .claude, ותסביר לי בעברית מה כל אחד עושה, לאילו כלים הוא מקבל גישה, ואם יש בו משהו חשוד או מיותר. אל תפעיל אף אחד מהם</Prompt>
+
+## הספרייה
+
+<Library>
+
+<LibraryItem
+  type="agent"
+  title="סוקר קוד (Code Reviewer)"
+  name="development-tools/code-reviewer"
+  when="לפני כל Pull Request, אחרי שינוי גדול, או כשאתם רוצים עין שנייה על קוד שClaude כתב. הסוכן בודק איכות, אבטחה ותחזוקה, ומחזיר רשימת ממצאים."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --agent development-tools/code-reviewer --yes
+```
+
+<Prompt>תשתמש בסוכן code-reviewer כדי לסקור את כל השינויים בענף הנוכחי לעומת main. תדווח בעברית, לפי חומרה, עם קובץ ושורה לכל ממצא, ואל תתקן כלום</Prompt>
+
+```text title="תוצאה לדוגמה (להמחשה)"
+סקירה: 4 קבצים, 3 ממצאים
+
+חומרה גבוהה
+  app/add/actions.ts:31  קלט מהטופס נשמר בלי בדיקה. שם מתכון ריק עובר.
+
+חומרה בינונית
+  components/RecipeCard.tsx:12  לתמונה אין טקסט חלופי (alt).
+
+חומרה נמוכה
+  lib/recipes.ts:88  פונקציה לא בשימוש: formatOldDate.
+
+השורה התחתונה: לתקן את הממצא בחומרה גבוהה לפני מיזוג.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="צייד באגים (Debugger)"
+  name="development-tools/debugger"
+  when="כשמשהו נשבר ולא ברור למה: שגיאה בטרמינל, בדיקה שנכשלת או התנהגות מוזרה. הסוכן מתמחה במציאת שורש הבעיה, לא רק בהשתקת השגיאה. יש גם אח קרוב, development-tools/error-detective, שמתמקד בפענוח הודעות שגיאה ולוגים."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --agent development-tools/debugger --yes
+```
+
+<Prompt>תשתמש בסוכן debugger כדי לחקור את השגיאה הזאת: [הדבקה של כל השגיאה]. אני רוצה את שורש הבעיה, את הראיות, והצעה לתיקון מינימלי. לא לתקן עדיין</Prompt>
+
+```text title="תוצאה לדוגמה (להמחשה)"
+שורש הבעיה: app/add/actions.ts שומר את המצרכים בשדה ingredientsList,
+ודף המתכון קורא את השדה ingredients. במתכונים מהטופס הוא undefined.
+
+ראיות:
+  - data/recipes.json: 3 מתכונים עם ingredientsList, 0 עם ingredients
+  - app/recipes/[slug]/page.tsx:24 קורא recipe.ingredients.map
+
+תיקון מוצע: לשנות את שם השדה בשמירה, ולהמיר את 3 המתכונים הקיימים.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="מומחה ריפקטורינג (Refactoring Specialist)"
+  name="development-tools/refactoring-specialist"
+  when="כשהקוד עובד אבל קשה לקרוא אותו או לשנות אותו: קובץ ענק, קוד שחוזר על עצמו, פונקציות ארוכות. ריפקטורינג משפר את מבנה הקוד בלי לשנות את מה שהוא עושה. לניקוי קוד מת יש גם development-tools/unused-code-cleaner."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --agent development-tools/refactoring-specialist --yes
+```
+
+<Prompt>תשתמש בסוכן refactoring-specialist כדי להציע ריפקטורינג לקובץ app/recipes/[slug]/page.tsx. בלי לשנות שום התנהגות באתר. קודם תציג תוכנית בשלבים קטנים, ורק אחרי שאאשר תבצע שלב אחד בכל פעם ותריץ build אחרי כל שלב</Prompt>
+
+```text title="תוצאה לדוגמה (להמחשה)"
+תוכנית ריפקטורינג: page.tsx (180 שורות)
+  1. להוציא את רשימת המצרכים לרכיב IngredientList
+  2. להוציא את מחשבון המנות ל-hook בשם useServings
+  3. לאחד שלוש פונקציות עיגול כמעט זהות לפונקציה אחת
+סיכון: נמוך. אין שינוי בממשק או בנתונים.
+ממתין לאישור לפני שלב 1.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="מהנדס תיעוד (Documentation Engineer)"
+  name="documentation/documentation-engineer"
+  when="כשהתיעוד חסר או מיושן: README, הוראות התקנה, הסבר על מבנה הפרויקט. בקטגוריה documentation יש גם technical-writer, api-documenter ו-changelog-generator."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --agent documentation/documentation-engineer --yes
+```
+
+<Prompt>תשתמש בסוכן documentation-engineer כדי לעדכן את README.md לפי הקוד הנוכחי. כל משפט צריך להתבסס על הקוד ועל package.json, בלי להמציא יכולות. כתוב בעברית, ולפני שמירה תציג לי מה השתנה</Prompt>
+
+```text title="תוצאה לדוגמה (להמחשה)"
+שינויים מוצעים ב-README.md:
+  + נוסף: פרק "פקודות זמינות" (dev, build, start, lint מתוך package.json)
+  ~ עודכן: מבנה התיקיות. נוספו components/mdx ו-content/docs
+  - הוסר: הוראה ל-yarn. הפרויקט משתמש ב-npm
+  ? TODO: כתובת האתר החי לא נמצאה בקוד. השארתי מקום למילוי
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="כותב בדיקות (Test Automator)"
+  name="development-tools/test-automator"
+  when="כשיש קוד חשוב בלי בדיקות, למשל מחשבון, טפסים או חישובים, ואתם רוצים רשת ביטחון לפני שינויים גדולים."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --agent development-tools/test-automator --yes
+```
+
+<Prompt>תשתמש בסוכן test-automator כדי לכתוב בדיקות למחשבון המנות. כולל מקרי קצה: אפס, מספרים גדולים, שברים, ומצרכים בלי כמות. תריץ את הבדיקות ותדווח מה עבר ומה נכשל. אם בדיקה נכשלת, אל תחליש אותה: תגיד לי אם הבעיה בקוד או בבדיקה</Prompt>
+
+```text title="תוצאה לדוגמה (להמחשה)"
+נוצר: lib/servings.test.ts (9 בדיקות)
+  ✓ 7 עברו
+  ✗ 2 נכשלו:
+    - scaleAmount(1.5, 3, 0): חלוקה באפס מחזירה Infinity  ← באג בקוד
+    - "מלח לפי הטעם" עם כמות ריקה מוצג כ-NaN               ← באג בקוד
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="בודק נגישות (Accessibility Tester)"
+  name="development-tools/accessibility-tester"
+  when="באתרים שמשתמשים בהם אנשים מבוגרים, או כל מי שצריך טקסט גדול, ניגודיות טובה וניווט במקלדת. מתאים במיוחד לאתר משפחתי."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --agent development-tools/accessibility-tester --yes
+```
+
+<Prompt>תשתמש בסוכן accessibility-tester כדי לבדוק את כל הדפים באתר: טקסט חלופי לתמונות, ניגודיות צבעים, גודל טקסט, כפתורים עם תווית, וניווט במקלדת בלבד. תדווח בעברית לפי דף ולפי חומרה</Prompt>
+
+```text title="תוצאה לדוגמה (להמחשה)"
+דף הבית: 2 ממצאים
+  - ניגודיות נמוכה: טקסט אפור (#9CA3AF) על רקע לבן, יחס 2.5:1 (נדרש 4.5:1)
+  - כפתור החיפוש הוא אייקון בלי תווית נגישה
+דף מתכון: 1 ממצא
+  - כפתורי +/- של מחשבון המנות קטנים מ-44 פיקסלים
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="יוצר Pull Requests אוטומטי"
+  name="git-workflow/create-pr"
+  when="כשסיימתם עבודה בענף ורוצים PR מסודר בלחיצה: הודעות שמירה, דחיפה, ותיאור מלא. דורש את gh מחובר (פרק 8)."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --command git-workflow/create-pr --yes
+```
+
+הפקודה נוספת לתפריט `/` של Claude Code, בדרך כלל בשם `/create-pr`. הקלידו `/` כדי לוודא את השם המדויק.
+
+```text title="שימוש, בתוך Claude Code"
+/create-pr
+```
+
+```text title="תוצאה לדוגמה (להמחשה)"
+ענף: feature/print-recipe (3 שמירות)
+נדחף ל-origin/feature/print-recipe
+נפתח Pull Request #12: Add clean print view for recipes
+  https://github.com/your-username/grandma-recipes/pull/12
+תיאור: מה השתנה, איך לבדוק, צילום מסך של תצוגת ההדפסה
+```
+
+<Callout type="tip" title="חגורות הבטיחות מפרק 8 ממשיכות לעבוד">
+אם הגדרתם חוק `ask` ל-`git push`, הפקודה תבקש אישור לפני הדחיפה, וזה בדיוק מה שאתם רוצים.
+</Callout>
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="סקירת Pull Request"
+  name="git-workflow/pr-review"
+  when="כשרוצים סקירה של PR קיים, שלכם או של מישהו אחר, לפני שממזגים. משלים את /code-review המובנה."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --command git-workflow/pr-review --yes
+```
+
+```text title="שימוש, בתוך Claude Code"
+/pr-review
+```
+
+<Prompt>תסקור את PR מספר 12 עם הפקודה pr-review, ותסכם לי בעברית בשלוש שורות: האם למזג, מה חייב לתקן קודם, ומה אפשר לדחות</Prompt>
+
+```text title="תוצאה לדוגמה (להמחשה)"
+PR #12: Add clean print view for recipes
+המלצה: למזג אחרי תיקון אחד
+  חובה: בתצוגת ההדפסה, שם המתכון נחתך בשמות ארוכים
+  אפשר לדחות: להוסיף לתצוגה גם את תאריך ההוספה
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="הודעות שמירה מסודרות (Commit)"
+  name="git-workflow/commit"
+  when="כשרוצים שכל שמירה ב-Git תקבל הודעה ברורה ועקבית, ושינויים לא קשורים יפוצלו לשמירות נפרדות."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --command git-workflow/commit --yes
+```
+
+```text title="שימוש, בתוך Claude Code"
+/commit
+```
+
+```text title="תוצאה לדוגמה (להמחשה)"
+זוהו שני נושאים שונים, ונוצרו שתי שמירות:
+  a1b2c3d  feat: add print button to recipe page
+  d4e5f6a  fix: round servings to one decimal place
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="יצירת בדיקות לקובץ"
+  name="testing/generate-tests"
+  when="כמו הסוכן test-automator, אבל כפקודה מהירה לקובץ אחד: מפעילים, מקבלים בדיקות."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --command testing/generate-tests --yes
+```
+
+```text title="שימוש, בתוך Claude Code"
+/generate-tests lib/servings.ts
+```
+
+<Callout type="note" title="שימו לב לשמות כפולים">
+אם בניתם בפרק 11 Skill משלכם בשם `generate-tests`, הפקודה הזאת עלולה להתנגש בו. במקרה כזה, שנו את שם אחת מהן.
+</Callout>
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="עדכון תיעוד אחרי שינויים"
+  name="documentation/update-docs"
+  when="אחרי שינוי משמעותי בקוד, כדי שהתיעוד לא יישאר מאחור."
+>
+
+```bash title="התקנה"
+npx claude-code-templates@latest --command documentation/update-docs --yes
+```
+
+```text title="שימוש, בתוך Claude Code"
+/update-docs
+```
+
+```text title="תוצאה לדוגמה (להמחשה)"
+נבדקו 2 קבצי תיעוד מול 6 קבצים שהשתנו מאז השמירה האחרונה
+  README.md: עודכן החלק "הפעלה מקומית" (נוסף npm run test)
+  docs/recipes.md: ללא שינוי
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="skill"
+  title="ריפקטורינג בטוח (Skill שכותבים בעצמכם)"
+  name=".claude/skills/refactor-safely"
+  when="כשרוצים שכל ריפקטורינג בפרויקט יעבור באותו תהליך בטוח: בדיקות לפני, צעדים קטנים, build אחרי כל צעד, ובלי לשנות התנהגות. זה Skill במבנה מפרק 11, מוכן להעתקה."
+>
+
+```markdown title=".claude/skills/refactor-safely/SKILL.md"
+---
+name: refactor-safely
+description: Safely refactor a file or module without changing behavior. Use when the user asks to clean up, simplify, split, or restructure existing code.
+argument-hint: [file-path]
+---
+
+Refactor $0 without changing any user-visible behavior.
+
+1. Read $0 and list the problems (long functions, duplication, unclear names).
+2. If there are no tests covering $0, write minimal tests that lock in
+   current behavior FIRST, and run them.
+3. Propose a plan of small steps. WAIT for approval.
+4. Apply one step at a time. After each step run the tests and `npm run build`.
+   If anything fails, revert that step and explain why.
+5. Finish with a Hebrew summary: what changed, what did not, and why it is safer.
+```
+
+```text title="שימוש, בתוך Claude Code"
+/refactor-safely components/RecipeCard.tsx
+```
+
+```text title="תוצאה לדוגמה (להמחשה)"
+נמצאו 3 בעיות ב-RecipeCard.tsx. לא היו בדיקות, אז נכתבו 4 בדיקות שמקבעות את
+ההתנהגות הנוכחית (4/4 עברו). תוכנית: 3 שלבים. ממתין לאישור.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="skill"
+  title="Skill מהקטלוג: רשימת בדיקה לסקירת קוד"
+  name="skills/development/code-review-checklist"
+  when="כשרוצים להוסיף Skill מוכן מהקטלוג. מדפדפים ב-aitmpl.com/skills, בוחרים, ומעתיקים את התיקייה שלו ל-.claude/skills. כאן נראה איך עושים את זה ידנית."
+>
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+git clone --depth 1 https://github.com/davila7/claude-code-templates.git $env:TEMP\cct
+Copy-Item -Recurse $env:TEMP\cct\cli-tool\components\skills\development\code-review-checklist .claude\skills\
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+git clone --depth 1 https://github.com/davila7/claude-code-templates.git %TEMP%\cct
+xcopy /E /I %TEMP%\cct\cli-tool\components\skills\development\code-review-checklist .claude\skills\code-review-checklist
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux"
+git clone --depth 1 https://github.com/davila7/claude-code-templates.git /tmp/cct
+cp -r /tmp/cct/cli-tool/components/skills/development/code-review-checklist .claude/skills/
+```
+
+</Tab>
+</Tabs>
+
+<Prompt>תקרא את .claude/skills/code-review-checklist/SKILL.md ותסביר לי בעברית מתי הוא יופעל ומה הוא עושה. אם יש בו פקודות מוזרקות או סקריפטים, תסביר מה הם מריצים</Prompt>
+
+```text title="תוצאה לדוגמה (להמחשה)"
+ה-Skill נטען כשמבקשים סקירת קוד. הוא מוסיף רשימת בדיקה (קריאות, טיפול
+בשגיאות, אבטחה, בדיקות). אין בו פקודות מוזרקות ואין סקריפטים.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="tool"
+  title="חבילת התחלה: כמה רכיבים בפקודה אחת"
+  name="--agent ... --command ... --yes"
+  when="כשרוצים להקים פרויקט חדש עם ערכת הכלים המומלצת מהפרק הזה, בלי להריץ פקודה לכל רכיב."
+>
+
+```bash title="התקנה של ערכה שלמה"
+npx claude-code-templates@latest \
+  --agent development-tools/code-reviewer \
+  --agent development-tools/debugger \
+  --agent documentation/documentation-engineer \
+  --command git-workflow/create-pr \
+  --command git-workflow/commit \
+  --yes
+```
+
+<Callout type="note" title="ב-Windows">
+הלוכסן ההפוך בסוף שורה (`\`) מחלק פקודה ארוכה לכמה שורות ב-macOS וב-Linux. ב-PowerShell ו-CMD פשוט כתבו את כל הפקודה בשורה אחת.
+</Callout>
+
+</LibraryItem>
+
+<LibraryItem
+  type="tool"
+  title="בדיקת תקינות להגדרות"
+  name="--health-check"
+  when="כשמשהו בהגדרות של Claude Code לא עובד כמו שצריך, או סתם פעם בכמה זמן, כדי לקבל המלצות לשיפור."
+>
+
+```bash title="הרצה"
+npx claude-code-templates@latest --health-check
+```
+
+```text title="תוצאה לדוגמה (להמחשה)"
+✓ Claude Code מותקן ומעודכן
+✓ .claude/settings.json תקין
+⚠ CLAUDE.md ארוך מ-200 שורות. כדאי לקצר
+⚠ נמצא סוכן בלי שדה description
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="tool"
+  title="לוח בקרה לשימוש (Analytics)"
+  name="--analytics"
+  when="כשרוצים לראות בעין מה קורה בסשנים: מצב, ביצועים ושימוש בטוקנים. משלים את /usage ואת /context מפרקים 10 ו-12."
+>
+
+```bash title="הרצה"
+npx claude-code-templates@latest --analytics
+```
+
+נפתח לוח בקרה מקומי בדפדפן, עם נתונים מהסשנים במחשב שלכם.
+
+</LibraryItem>
+
+</Library>
+
+## להשתמש נכון ברכיבים מותקנים
+
+רכיב מותקן הוא רק נקודת התחלה. הבקשה שלכם עדיין קובעת את איכות התוצאה:
+
+<PromptCompare
+  bad="תעשה review"
+  good="תשתמש בסוכן code-reviewer על השינויים בענף הזה לעומת main. תתמקד בנגישות ובתצוגה מימין לשמאל, כי זה אתר משפחתי למבוגרים. תדווח בעברית לפי חומרה, עם קובץ ושורה, ובלי לתקן."
+  why="הבקשה החזקה בוחרת את הסוכן במפורש, מגדירה מה לסקור ועל מה להתמקד, וקובעת את פורמט הדיווח. ההוראות הכלליות של הסוכן מתחברות להקשר הספציפי שלכם."
+/>
+
+<Callout type="tip" title="להתאים לפרויקט שלכם">
+רכיבים מהקהילה כתובים בצורה כללית. אחרי התקנה, שווה לבקש: "תתאים את הסוכן code-reviewer לפרויקט שלנו: תוסיף לו את הכללים מ-CLAUDE.md על RTL ונגישות, ותגביל את הכלים שלו לקריאה בלבד". כך מקבלים את הטוב משני העולמות: בסיס מוכן, ועם הכללים שלכם.
+</Callout>
+
+## רשימת בדיקה
+
+<Checklist
+  id="ch14-library"
+  title="הספרייה שלי"
+  items={[
+    "התקנתי לפחות סוכן אחד ופקודה אחת מהספרייה",
+    "בדקתי עם git status מה נוסף, וקראתי את הקבצים",
+    "בדקתי את השדה tools בכל סוכן שהתקנתי",
+    "הפעלתי סוכן בבקשה מפורשת עם הקשר ופורמט דיווח",
+    "יצרתי את ה-Skill refactor-safely והרצתי אותו על קובץ אחד",
+    "התאמתי רכיב אחד מהקהילה לכללים של הפרויקט שלי",
+    "שמרתי את הכול ב-git, כדי שכל מי שעובד על הפרויקט יקבל את אותם כלים",
+  ]}
+/>
+
+## סיכום
+
+- **[aitmpl.com](https://www.aitmpl.com/)** הוא קטלוג של סוכנים, פקודות, Skills ועוד, מבוסס על פרויקט קוד פתוח ברישיון MIT.
+- **התקנה**: `npx claude-code-templates@latest --agent ...` או `--command ...`, ובלי דגלים מקבלים מסך בחירה.
+- **הפריטים המומלצים**: code-reviewer, debugger, refactoring-specialist, documentation-engineer, test-automator ו-accessibility-tester, הפקודות create-pr, pr-review ו-commit, ו-Skill ריפקטורינג משלכם.
+- **בטיחות**: אחרי כל התקנה, `git status`, קריאת הקבצים ובדיקת `tools`.
+- **התאמה**: בסיס מהקהילה, ועליו הכללים שלכם.
+
+<Callout type="tip" title="סיימתם את כל הקורס!">
+עברתם את כל 14 הפרקים: מהפעם הראשונה בטרמינל, דרך פרויקט שלם שעלה לאוויר, ועד צוות סוכנים, ממשקים בכל מכשיר וספרייה של כלים מוכנים. עכשיו הזמן לחזור לחלק "לאן ממשיכים מכאן" בפרק 10, לבחור פרויקט, ולבנות.
+</Callout>

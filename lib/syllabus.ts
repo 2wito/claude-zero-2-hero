@@ -15,7 +15,9 @@ export type Chapter = {
     | "Globe"
     | "Rocket"
     | "Sparkles"
-    | "Bot";
+    | "Bot"
+    | "MonitorSmartphone"
+    | "Library";
 };
 
 export const chapters: Chapter[] = [
@@ -102,5 +104,19 @@ export const chapters: Chapter[] = [
     title: "סוכנים וסוכני משנה",
     summary: "סוכני משנה במקביל וברקע, טוקנים, חלון הקשר ו-Prompt Caching, ו-README שנכתב לבד.",
     icon: "Bot",
+  },
+  {
+    number: 13,
+    slug: "13-platforms-and-apps",
+    title: "הפלטפורמות של Claude",
+    summary: "טרמינל, אפליקציית Desktop, Web, מובייל ותוסף Chrome: מתי להשתמש בכל אחד, ואיך מעבירים סשנים ביניהם.",
+    icon: "MonitorSmartphone",
+  },
+  {
+    number: 14,
+    slug: "14-templates-library",
+    title: "ספריית תבניות מוכנות",
+    summary: "סוכנים, פקודות ו-Skills מהקהילה: מה כל אחד עושה, פקודת התקנה, בקשה מוכנה ודוגמה לתוצאה.",
+    icon: "Library",
   },
 ];
