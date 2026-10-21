@@ -1,0 +1,366 @@
+# Installation & Setup, Step by Step
+
+In this chapter we'll install Claude Code and connect it to your account. It usually takes 5 to 10 minutes, and in most cases a single command is enough.
+
+<Callout type="note" title="Before you start">
+- A computer with **Windows 10** (version 1809 or later), **macOS 13** or later, or **Linux** (for example Ubuntu 20.04 or later, or Debian 10 or later).
+- At least **4GB of memory** and an internet connection.
+- **A paid Claude account** (Pro, Max, Team or Enterprise) or **a Claude Console account**. The free plan doesn't include Claude Code. More on the differences in step 4.
+- You don't need administrator rights, and you don't need to install anything else first.
+</Callout>
+
+<Callout type="tip" title="Pick your operating system once">
+Throughout this chapter there are tabs for Windows and macOS/Linux. When you pick one tab, every tab on the page switches to it, and the site remembers your choice next time too.
+</Callout>
+
+## Step 1: Open a terminal
+
+The terminal is a window where you type commands to the computer instead of clicking buttons. Each operating system opens it a little differently:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+1. Click the **Start** button (or press the Windows key).
+2. Type `PowerShell`.
+3. Click **Windows PowerShell** in the results.
+
+The line will start with something like `PS C:\Users\YourName>`. The letters **PS** tell you you're in PowerShell.
+
+</Tab>
+<Tab>
+
+1. Click the **Start** button (or press the Windows key).
+2. Type `cmd`.
+3. Click **Command Prompt**.
+
+The line will start with something like `C:\Users\YourName>`, **without** the letters PS.
+
+</Tab>
+<Tab>
+
+**On Mac:** press `Cmd + Space`, type `Terminal` and press Enter.
+
+**On Linux (e.g. Ubuntu):** press `Ctrl + Alt + T`, or search for **Terminal** in the app menu.
+
+</Tab>
+</Tabs>
+
+<Callout type="info" title="PowerShell or CMD?">
+Windows has two kinds of terminal, and each has its own install command. If you have no preference, **use PowerShell**. Most important: copy the command from the tab that matches the window you opened.
+</Callout>
+
+## Step 2: Install Claude Code
+
+Copy the right command (there's a **Copy** button in the corner of the box), paste it into the terminal and press **Enter**:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+irm https://claude.ai/install.ps1 | iex
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux / WSL"
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="note" title="What does this command do?">
+It downloads the official installer from the website of Anthropic, the company that makes Claude, and runs it. The install **shows no progress bar**, so if nothing seems to happen for a few seconds, that's normal. Wait until the terminal gives you back the prompt.
+</Callout>
+
+<Callout type="tip" title="Windows only: install Git too">
+We recommend installing [Git for Windows](https://git-scm.com/downloads/win). Claude Code works without it, but with Git it can run more kinds of commands, and in chapter 8 we'll use Git to save our work. It's a normal install: download, run, and click Next until it's done.
+</Callout>
+
+### Other install methods (optional)
+
+If you already use a package manager, you can install through it too. Note: with this kind of install **Claude Code doesn't update itself**, and you'll need to update it manually from time to time.
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="WinGet"
+winget install Anthropic.ClaudeCode
+```
+
+</Tab>
+<Tab>
+
+```bat title="WinGet"
+winget install Anthropic.ClaudeCode
+```
+
+</Tab>
+<Tab>
+
+```bash title="Homebrew (Mac)"
+brew install --cask claude-code
+```
+
+</Tab>
+</Tabs>
+
+## Step 3: Check that the install worked
+
+**Close the terminal window and open a new one.** This matters: the old window doesn't "know" new software was installed. In the new window, type:
+
+```bash title="Any operating system"
+claude --version
+```
+
+If all is well, you'll see a version number, for example:
+
+```text title="Sample output"
+2.1.211 (Claude Code)
+```
+
+Your number will probably be different, and that's fine. It just shows the install worked.
+
+<Callout type="warning" title="Got 'command not found' or 'is not recognized'?">
+The install probably succeeded, but your computer doesn't know where to find it. It's the most common problem, and the fix is in the [Troubleshooting](#troubleshooting) section at the end of this chapter.
+</Callout>
+
+For a more thorough check, there's a built-in diagnostic command. It checks the install and settings and suggests fixes if something is off:
+
+```bash title="Any operating system"
+claude doctor
+```
+
+## Step 4: Sign in to your account
+
+There are two main ways to pay for Claude Code. The difference is mostly **how** you pay:
+
+| | Claude subscription (Pro / Max) | Claude Console account (API key) |
+| --- | --- | --- |
+| How you pay | A fixed monthly price | By usage, from prepaid credit |
+| Good for | Most people, especially beginners | Developers, businesses, and anyone who wants precise cost control |
+| Upside | No surprise bills, and you get Claude on the web and apps too | You only pay for what you use |
+| Downside | There's a usage limit per period | Heavy use can get expensive |
+
+<Callout type="tip" title="Our recommendation for beginners">
+**A Claude Pro subscription** is the simplest way to start: a fixed price, no keys to manage and no surprises. If you find yourself hitting the usage limit, you can upgrade to Max later. Current prices are at [claude.com/pricing](https://claude.com/pricing).
+</Callout>
+
+### Option A: Sign in with a Claude subscription (recommended)
+
+1. In the terminal, type `claude` and press Enter:
+
+   ```bash
+   claude
+   ```
+
+2. The first time, Claude Code asks a few setup questions, for example which color theme you prefer. Choose with the arrow keys and press Enter.
+3. When asked to choose a sign-in method, pick the **Claude account** (subscription) option.
+4. **A browser window opens.** Sign in to your Claude account and approve access.
+5. Go back to the terminal. When `Login successful` appears, press Enter, and that's it: you're signed in.
+
+<Callout type="info" title="The browser didn't open?">
+Press the `c` key in the terminal to copy the sign-in link, and paste it into your browser. If after signing in the browser shows a **code** instead of returning to the terminal, copy the code and paste it into the terminal where it says `Paste code here if prompted`.
+</Callout>
+
+### Option B: Sign in with Claude Console (pay as you go)
+
+1. Go to [platform.claude.com](https://platform.claude.com), create an account and add credit.
+2. In the terminal, type `claude`.
+3. Choose the **Anthropic Console** option and sign in through the browser. You can sign in with the account itself, without creating an API key at all.
+
+#### Advanced: using an existing API key
+
+If you already have an API key from the Console, you can store it in an environment variable called `ANTHROPIC_API_KEY`. The next time you run `claude`, it asks whether to use the key, and once you approve, it skips the browser sign-in.
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell (current window only)"
+$env:ANTHROPIC_API_KEY = "sk-ant-..."
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD (current window only)"
+set ANTHROPIC_API_KEY=sk-ant-...
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux (current window only)"
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+</Tab>
+</Tabs>
+
+Replace `sk-ant-...` with your real key.
+
+<Callout type="warning" title="Guard your key like a password">
+- **Don't share the key** with anyone, and don't paste it into chats, emails or screenshots.
+- **Don't store it in project files** that go to GitHub. Anyone who gets the key can use it on your account.
+- **If you have both a subscription and a key**, once you approve the key, Claude Code uses **it** instead of the subscription, so you'll be billed by usage. To check which account you're using, type `/status` inside Claude Code.
+</Callout>
+
+### Switching accounts and signing out
+
+Your sign-in is saved on the computer, so you don't need to sign in every time. To switch accounts, type inside Claude Code:
+
+```text title="Inside Claude Code"
+/logout
+/login
+```
+
+## Updates
+
+The official install (the command from step 2) **updates itself in the background**, so you don't need to do anything. If you want to update right away anyway:
+
+```bash title="Any operating system"
+claude update
+```
+
+If you installed with WinGet or Homebrew, updating is manual:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="WinGet"
+winget upgrade Anthropic.ClaudeCode
+```
+
+</Tab>
+<Tab>
+
+```bat title="WinGet"
+winget upgrade Anthropic.ClaudeCode
+```
+
+</Tab>
+<Tab>
+
+```bash title="Homebrew"
+brew upgrade claude-code
+```
+
+</Tab>
+</Tabs>
+
+## Troubleshooting
+
+Something didn't work? Don't worry, almost every install problem is one of these.
+
+### "claude: command not found" or "'claude' is not recognized"
+
+**What happened:** the install succeeded, but the folder Claude Code was installed into isn't on your **PATH**. The PATH is the list of folders your computer searches for programs when you type a command name. If the folder isn't on the list, the computer simply can't find `claude`.
+
+**First:** make sure you closed the terminal and opened a **new** window. If the terminal is inside a code editor like Cursor or VS Code, close the **whole editor** and open it again.
+
+If that didn't help, add the folder to your PATH:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+$currentPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
+[Environment]::SetEnvironmentVariable('PATH', "$currentPath;$env:USERPROFILE\.local\bin", 'User')
+```
+
+Then close the terminal, open a new one and try `claude --version` again.
+
+</Tab>
+<Tab>
+
+The fix is easiest through PowerShell. Open **PowerShell** (see step 1) and run:
+
+```powershell title="Windows PowerShell"
+$currentPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
+[Environment]::SetEnvironmentVariable('PATH', "$currentPath;$env:USERPROFILE\.local\bin", 'User')
+```
+
+Then close all terminal windows, open a new CMD and try `claude --version` again.
+
+</Tab>
+<Tab>
+
+On Mac (**zsh** shell, the default):
+
+```bash title="macOS (zsh)"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+On Linux (**bash** shell, the default on most distributions):
+
+```bash title="Linux (bash)"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+The first line saves the setting for every future window, and the second applies it to the current one. If you're not sure which shell you're in, type `echo $SHELL`.
+
+</Tab>
+</Tabs>
+
+### "'irm' is not recognized" or "The token '&&' is not a valid statement separator"
+
+**What happened:** the command you copied is meant for a different kind of terminal.
+
+- **`irm` is not recognized**: you're in **CMD** but ran the PowerShell command. Switch to the **Windows CMD** tab in step 2, or open PowerShell.
+- **`&&` is not a valid statement separator**: you're in **PowerShell** but ran the CMD command. Switch to the **Windows PowerShell** tab.
+- **`A parameter cannot be found that matches parameter name 'fsSL'`** or **`'bash' is not recognized`**: you ran the Mac/Linux command on Windows. Use the PowerShell command.
+
+### "running scripts is disabled on this system" (PowerShell execution policy)
+
+**What happened:** PowerShell has a security feature called the **execution policy** that blocks running script files. This error does **not** appear with the official install from step 2. It shows up mainly if you installed Claude Code through `npm`, the Node.js package manager.
+
+There are three ways to fix it, most recommended first:
+
+1. **Reinstall the official way** with the PowerShell command from step 2. It isn't affected by the policy.
+2. **Run `claude.cmd` instead of `claude`**. It's the same program, and the policy doesn't apply to it.
+3. **Allow local scripts** for your user only:
+
+```powershell title="Windows PowerShell"
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+<Callout type="note" title="Is this safe?">
+`RemoteSigned` is a common, accepted setting: it lets scripts created on your computer run, and requires a digital signature on scripts downloaded from the internet. The `-Scope CurrentUser` part means the change only applies to your user, not the whole computer.
+</Callout>
+
+### The install fails with a different error
+
+- **`syntax error near unexpected token '<'`** or **`403`**: a web page arrived instead of the installer, usually because of a network problem, a VPN or a blocked workplace network. Try another network, or use WinGet or Homebrew.
+- **`App unavailable in region`**: Claude Code isn't available in the country you're connecting from. [List of supported countries](https://www.anthropic.com/supported-countries).
+
+### Sign-in problems
+
+- **The browser doesn't open**: press `c` in the terminal to copy the link, and paste it into your browser.
+- **You signed in to the wrong account**: type `/logout` and then `/login` inside Claude Code.
+- **A message says you don't have access**: make sure you have a paid plan. The free Claude plan doesn't include Claude Code.
+
+<Callout type="tip" title="Still stuck?">
+Run `claude doctor` in the terminal. It checks the install and prints what's wrong and how to fix it. If Claude Code already works and something is just odd, type `/doctor` inside it. And you can always ask it directly: it knows its own documentation.
+</Callout>
+
+## Summary
+
+- We installed Claude Code with one command, and checked it with `claude --version`.
+- We signed in: a Claude subscription (recommended for beginners) or a Console account.
+- We learned to fix the common problems: PATH, the wrong terminal type, and the execution policy.
+
+In the next chapter we'll start Claude Code for the first time and ask it to build something real.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "You installed, but you see 'claude is not recognized'. What's most likely?", "options": [{"text": "The install failed, so reinstall", "why": "Usually not. The install worked, and the folder just isn't on the PATH."}, {"text": "Claude Code's folder isn't on the PATH, or you didn't open a new terminal", "why": "Right. Open a new terminal, and if needed, add the folder to the PATH."}, {"text": "You need a Max subscription", "why": "Your plan has nothing to do with this error."}], "answer": 1}, {"q": "You have a Pro subscription and an API key you approved. Which will Claude Code use?", "options": [{"text": "The subscription, always", "why": "No. An approved API key takes priority over the subscription."}, {"text": "The API key, and you'll be billed by usage", "why": "Right. To check which one you're using, run /status."}, {"text": "Both, alternately", "why": "No, there's a clear order of priority."}], "answer": 1}]} />

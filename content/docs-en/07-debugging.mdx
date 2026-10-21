@@ -1,0 +1,432 @@
+# Finding and Fixing Bugs Automatically
+
+Bugs aren't a sign you did something wrong. They're a normal part of every project, even for the most experienced developers in the world. The difference between a beginner and a pro isn't how many bugs there are, it's **how fast they find and fix them**.
+
+This is where Claude Code really shines. It can read scary error messages, follow a problem across several files, find the source and fix it. Your job: give it the right clues, make sure it fixes the **problem** and doesn't just hide it, and know how to go back when something didn't work out.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- How to read an error message, and pass it to Claude in the most effective way.
+- How to get Claude to find the **root cause**, even when it's spread across several files.
+- How to undo a fix that did harm, with `/rewind` or with Git.
+- How to think about edge cases before your users find them.
+- How to fix build errors from `npm run build`.
+</Callout>
+
+## Anatomy of an error message
+
+An error message looks like gibberish, but it has a fixed structure. Here's a typical error from a Next.js project:
+
+```text title="Sample error"
+TypeError: Cannot read properties of undefined (reading 'map')
+    at RecipePage (app/recipes/[slug]/page.tsx:24:38)
+    at renderWithHooks (node_modules/react-dom/cjs/react-dom-server.js:1523:18)
+    at renderElement (node_modules/react-dom/cjs/react-dom-server.js:2104:9)
+```
+
+| Part | In the example | What it says |
+| --- | --- | --- |
+| **Error type** | `TypeError` | Which category of problem. TypeError usually means "I tried to use something that isn't what I thought" |
+| **Message** | `Cannot read properties of undefined (reading 'map')` | What happened: something tried to run `map` on something that doesn't exist (`undefined`) |
+| **Location** | `page.tsx:24:38` | The file, line (24) and character (38) where it happened |
+| **Stack trace** | All the `at` lines | The path the code took until it crashed, from closest to the problem to farthest |
+
+<Callout type="tip" title="You don't have to understand it, but you do have to copy it">
+You don't need to decode the error yourself. That's Claude's job. But you do need to pass it **the whole error**. Lines that look unimportant to you, like `at` lines pointing into `node_modules`, help it understand the context.
+</Callout>
+
+## Step 1: Pass the error to Claude
+
+### A good bug report
+
+Before pasting, take a moment to think like in chapter 4. Claude needs to know **what you did, what you expected to happen, and what actually happened**.
+
+<PromptCompare
+  bad="It doesn't work, fix it"
+  good="When I open the page of a recipe I added through the form, the page crashes. I expected to see the recipe with its ingredients. Older recipes work normally. This started after we added the add-recipe form. Here's the error from the terminal: [paste the whole error]"
+  why="The strong prompt gives five clues: where, what I expected, what happened, what does work, and since when. Each one narrows the search."
+/>
+
+A template to copy:
+
+<Prompt>What I did: [the action]. What I expected: [the desired result]. What actually happened: [what I saw]. What does work: [similar things that are fine]. Since when: [after which change]. The full error: [paste]</Prompt>
+
+### Four ways to pass an error
+
+**1. Copy and paste.** The simplest: select the whole error in the terminal or browser, copy it and paste it to Claude. An error of a few lines goes through in one paste.
+
+**2. Run the command inside Claude Code, with `!`.** Instead of running it in another window and copying, run it right in the conversation. The output, including errors, goes into the conversation, and Claude sees it all:
+
+```text title="Inside Claude Code"
+! npm run build
+```
+
+And once the output appears, just write:
+
+<Prompt>The build failed. Explain what the error means and find the cause</Prompt>
+
+**3. Pipe output straight from the terminal.** If you haven't entered Claude Code yet, you can pipe a command's output to it. `2>&1` makes sure errors go through too, not just the regular output:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+npm run build 2>&1 | claude -p "Explain in plain English why the build failed and what needs fixing"
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+npm run build 2>&1 | claude -p "Explain in plain English why the build failed and what needs fixing"
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux"
+npm run build 2>&1 | claude -p "Explain in plain English why the build failed and what needs fixing"
+```
+
+</Tab>
+</Tabs>
+
+**4. A screenshot.** An error that appears in the browser, like Next.js's red error overlay or a page that looks broken, you can simply screenshot and paste: `Ctrl + V`, and on Windows `Alt + V`.
+
+<Callout type="info" title="Don't forget the browser console">
+Many client-side errors, like a button that doesn't respond, appear **only** in the browser console and not in the terminal. Press `F12` (Mac: `Cmd + Option + I`), go to the **Console** tab, and copy the red lines. And if you work in Cursor, Claude sees the errors in the **Problems** panel on its own (chapter 5).
+</Callout>
+
+## Step 2: Find the root cause
+
+### Symptom vs. cause
+
+When you have a fever, you can take a painkiller and the fever goes down. But if there's an infection, it's still there. Code is the same: **the place where the error shows up isn't always the place where the problem is.**
+
+In our example, the error shows up in `page.tsx`, on the line that displays the ingredients:
+
+```tsx title="app/recipes/[slug]/page.tsx"
+<ul>
+  {recipe.ingredients.map((item) => (
+    <li key={item.name}>{item.amount} {item.unit} {item.name}</li>
+  ))}
+</ul>
+```
+
+This code is perfectly fine. The problem is **in a different file**: the add-recipe form saves the ingredients under a different name:
+
+```ts title="app/add/actions.ts"
+const newRecipe = {
+  title: formData.get("title"),
+  slug: makeSlug(formData.get("title")),
+  ingredientsList: parseIngredients(formData.get("ingredients")), // ← name doesn't match
+  steps: parseSteps(formData.get("steps")),
+};
+```
+
+Recipes from the form are saved with `ingredientsList`, and the recipe page looks for `ingredients`. For it, the field simply doesn't exist, meaning `undefined`, and that's where the crash comes from.
+
+Notice: to find this you have to follow the data **through several files**: the form, the save file, the JSON file and the recipe page. That's exactly what Claude does well, if you ask it to.
+
+### Ask for an investigation, not a fix
+
+<PromptCompare
+  bad="Fix the error in page.tsx"
+  good="The recipe page crashes, only for recipes added through the form. Don't fix anything yet. Follow the data of such a recipe from the moment the form is submitted, through saving, until the page displays it. Tell me exactly where the data changes or gets lost, and what the root cause is."
+  why="The weak prompt points Claude to where the error shows up, and it might “fix” it there, for example with a check that hides the problem. The strong prompt sends it to look for the source, and separates investigating from fixing."
+/>
+
+<Callout type="tip" title="Plan mode is the perfect investigation mode">
+Press `Shift + Tab` until `plan mode on`. In this mode Claude can read, search and run commands that only check things, but it can't change files. That guarantees the investigation stays an investigation, and no "fix" sneaks in before you understand what's going on.
+</Callout>
+
+### More investigation techniques
+
+**Ranked hypotheses.** When the problem isn't clear, ask Claude to think like a detective:
+
+<Prompt>Suggest three possible causes for the problem, from most to least likely. For each: how we'll check whether it's right, without changing code</Prompt>
+
+**What changed?** If something worked yesterday and doesn't today, the answer is almost always in the latest changes. This is where Git (chapter 8) pays off:
+
+<Prompt>This page worked in yesterday's commit and has been broken since. Compare the current code to the latest git commits, and tell me which change most likely caused the problem</Prompt>
+
+**Temporary logging.** Sometimes you need to see what happens at runtime:
+
+<Prompt>Add temporary logging (console.log) at the key points along the data's path, so we can see where it changes. Mark each log with a TEMP-DEBUG comment, so it's easy to remove them all once we've found the problem</Prompt>
+
+**Investigating a big project.** If you need to search many files, you can ask Claude to use **subagents**. They read the files in a separate context window and return only the conclusions, so the main conversation doesn't fill up:
+
+<Prompt>Use subagents to investigate every place in the project where recipes are saved or read, and give me a list of all the field names used in each place</Prompt>
+
+## Step 3: Fix and verify
+
+### A real fix vs. a cover-up
+
+Once you understand the root cause, ask for a fix, and make sure it addresses **the cause**:
+
+<Prompt>Now fix the root cause: unify the field name so the form saves ingredients, like all the other recipes. Also fix recipes already saved under the old name in the JSON file. In addition, add a friendly message to the recipe page if a recipe has no ingredients at all, instead of crashing</Prompt>
+
+```diff title="app/add/actions.ts: the fix"
+-  ingredientsList: parseIngredients(formData.get("ingredients")),
++  ingredients: parseIngredients(formData.get("ingredients")),
+```
+
+<Callout type="warning" title="Red flags: fixes that hide the problem">
+When you review Claude's fix, watch out for any of these. They all make the error **disappear** without solving the problem:
+
+- **A `try / catch` that swallows errors** without handling them: the error still happens, just quietly.
+- **`// @ts-ignore`** or **`as any`**: turning off TypeScript's type checking exactly where it found a problem.
+- **`// eslint-disable`**: turning off the code checker.
+- **Deleting or disabling a failing test**.
+- **`?.` or `|| []` on everything**: sometimes that's right, but if it's the whole fix, the data is probably still wrong.
+
+Spotted one of these? Ask: "Does this fix the root cause or just hide it?"
+</Callout>
+
+The simplest approach is to write this into the request up front:
+
+<PromptCompare
+  bad="Make the error go away"
+  good="Fix the root cause. Don't hide the error with try/catch, ts-ignore or checks that skip the case. If you think there's no choice but to work around it, stop and explain why."
+  why="“Go away” is a goal you can reach with a cover-up too. “Root cause” plus the list of what's off-limits makes clear what counts as a real fix."
+/>
+
+### Reproduce first, then fix
+
+The safest way to know a bug is fixed: **see it happen, fix it, and see that it no longer happens.**
+
+<Prompt>Before you fix it, write a small test that reproduces the bug and fails. Then fix it, and run the test again to show it passes. Show me the output of both runs</Prompt>
+
+If the project doesn't have automated tests yet, you can ask for a simpler version:
+
+<Prompt>Write me a list of exact steps to reproduce the bug in the browser. I'll confirm it happens, and after the fix I'll check again using the same steps</Prompt>
+
+### The rule of two
+
+If Claude has tried to fix something **twice** and still hasn't succeeded, don't keep asking "try again". The conversation is already full of failed attempts, and they confuse it. Instead:
+
+1. Go back to before the failed attempts (next section).
+2. Run `/clear`.
+3. Write a new request that includes **what you learned**: "We already tried X and Y and it didn't work, because Z".
+
+## Step 4: When the fix did harm, go back
+
+Sometimes a "fix" breaks something else, or Claude changed more than you asked. No problem: there are several ways to go back, each suited to a different situation.
+
+### Instant stop: `Esc`
+
+See Claude heading the wrong way? One `Esc` stops it immediately. The conversation is kept, and you can explain what to do differently.
+
+### Back in time: `/rewind`
+
+Claude Code saves a **checkpoint** before every message you send, including a copy of the files it's about to change. To go back:
+
+```text title="Inside Claude Code"
+/rewind
+```
+
+Or press `Esc` twice. A menu of your previous messages opens. Choose the point you want to go back to, and then choose **what** to restore:
+
+| Option | What happens | When to use it |
+| --- | --- | --- |
+| **Code and conversation** | Both the files and the conversation go back to the point you chose | The "fix" was a total mistake, and you want to start again from that point |
+| **Code only** | The files go back, the conversation stays | You want to undo the changes, but have Claude remember what it tried and why it didn't work |
+| **Conversation only** | The conversation goes back, the files stay | The code is fine, but the conversation got tangled and you need to restart it |
+| **Summarize from here** | Messages from this point on are summarized | The conversation is long, and you want to free up space without losing what happened |
+
+<Callout type="tip" title="Checkpoints don't disappear when you close">
+Checkpoints are saved with the conversation. You can close the terminal, come back to the conversation tomorrow with `claude -c`, and still go back.
+</Callout>
+
+<Callout type="warning" title="What /rewind can't restore">
+Checkpoints track **only files Claude edited with its editing tools**. They don't undo:
+
+- **Terminal commands**: installing packages (`npm install`), deleting files (`rm`), Git operations.
+- **Actions outside your computer**: pushing to GitHub, submitting a form, changing a database.
+- **Changes you made yourself** in Cursor.
+
+For those you need Git.
+</Callout>
+
+### Going back with Git
+
+Git is the strongest safety net, because it saves the **whole** state of the project no matter who changed it. If you saved a safe point before you started fixing (chapter 8), you can always go back to it.
+
+**Undoing unsaved changes in a specific file:**
+
+<Prompt>Show me what changed in app/page.tsx since the last git commit. If it's only the failed fix, restore just this file to the state of the last commit</Prompt>
+
+```bash title="What Claude will run (example)"
+git diff app/page.tsx
+git restore app/page.tsx
+```
+
+<Callout type="warning" title="git restore deletes unsaved changes">
+`git restore` returns a file to the state of the last commit, and any unsaved change in it is deleted. So look at the diff first, and only then approve. And never `git restore .` (with a dot) or `git reset --hard` without knowing exactly what will be deleted. Those delete **all** changes across the whole project.
+</Callout>
+
+**Undoing a commit that was already made:**
+
+<Prompt>The last git commit broke the search. Undo it with git revert, so a new commit is created that reverses it, without deleting history</Prompt>
+
+```bash title="What Claude will run (example)"
+git log --oneline -3
+git revert a3f9c21
+```
+
+`git revert` doesn't delete the problematic commit. It adds a **new** commit that reverses it, so it's safe even after the code is already on GitHub.
+
+### Which tool when?
+
+| Situation | Tool |
+| --- | --- |
+| Claude is mid-task and heading the wrong way | `Esc` |
+| Claude edited files in this conversation, and the edit did harm | `/rewind` (or `Esc` twice) |
+| The change includes terminal commands, or you made changes yourself | Git: `git restore` for a specific file, after checking the diff |
+| The change is already committed to git | `git revert` |
+| The change is already on GitHub | `git revert`, then a normal push. Never force push (chapter 8) |
+
+## Step 5: Edge cases, the bugs that haven't happened yet
+
+An **edge case** is an unusual situation the code isn't always ready for: an empty field, the number zero, very long text, a slow connection. Most bugs real users find are exactly these. The best way to deal with them: find them **before** your users do.
+
+| Type | Example on the recipe site | What might happen |
+| --- | --- | --- |
+| **Empty** | A search containing only spaces | All recipes disappear, or none do |
+| **Zero or negative** | A servings calculator set to 0 | Division by zero, `NaN` quantities |
+| **Missing** | A recipe with no emoji or no steps | A hole in the layout, or a crash |
+| **Very long** | An 80-character recipe name | The text overflows the card |
+| **Special characters** | A name with quotes or an apostrophe: "Mom's 'Famous' Pie" | Breaks a link or the search |
+| **Mixed languages** | A recipe name mixing English and another script | Words appear in the wrong order |
+| **Storage unavailable** | Browsing in a private window | Favorites or step tracking crash |
+
+<PromptCompare
+  bad="Check that there are no bugs"
+  good="Go over the servings calculator feature and think about edge cases: empty values, zero, very large numbers, fractional quantities, and ingredients with no quantity (like “salt to taste”). For each case tell me what happens today, and if it's a problem, suggest a fix. Don't fix anything yet."
+  why="“No bugs” is a claim you can't check. A defined list of cases to check, with “what happens today” for each, is a real test."
+/>
+
+<Callout type="tip" title="Turn Claude into a tester who tries to break things">
+A request that works great, especially in a new conversation: "Try to break this feature. Think like a confused user, a user in a hurry and a user trying to do silly things. What will they do, and what will happen?". Then decide together what's worth fixing.
+</Callout>
+
+## Step 6: Fixing build errors (npm run build)
+
+### Why does it work in dev and break in build?
+
+`npm run dev` is forgiving: it runs the site even with small problems, so you can keep working. `npm run build` prepares the version that goes live, and it's **strict**: it checks every file, TypeScript's types, and sometimes runs a code checker (lint) too. So it's not unusual for a site to work great in dev and fail in build.
+
+**The rule:** run `npm run build` often, not just right before deploying. That way every problem stays small and easy to fix.
+
+### The common errors
+
+**Type error**: the code passes a value of one type to a place that expects another type.
+
+```text title="Sample output"
+./components/ServingsCalculator.tsx:14:7
+Type error: Type 'string' is not assignable to type 'number'.
+
+  12 |   const [servings, setServings] = useState(recipe.servings);
+  13 |   function onChange(e) {
+> 14 |     setServings(e.target.value);
+     |                 ^
+```
+
+Here the value from the input box is text (`"4"`), and the code expects a number (`4`).
+
+**Module not found**: a file or package the code tries to import doesn't exist, usually because of a wrong name, an uppercase or lowercase letter, or a package that wasn't installed.
+
+```text title="Sample output"
+Module not found: Can't resolve '@/components/recipeCard'
+```
+
+(Notice: the file is called `RecipeCard`, with a capital R. On Windows this sometimes works in dev, and only breaks in the build or on the server.)
+
+**A client component without the directive**: code that uses browser capabilities, like `useState` or clicks, without marking the file as a Client Component:
+
+```text title="Sample output"
+You're importing a component that needs `useState`. This React Hook only works
+in a Client Component. To fix, mark the file (or its parent) with the
+`"use client"` directive.
+```
+
+**Prerender error**: the build tries to generate a page ahead of time, and something in it crashes. It's usually a data problem, like the `ingredients` example we saw.
+
+```text title="Sample output"
+Error occurred prerendering page "/recipes/grandma-cheesecake".
+TypeError: Cannot read properties of undefined (reading 'map')
+```
+
+### The loop: build, fix, repeat
+
+<Prompt>Run npm run build. If there are errors, fix the root cause of each one, and run it again. Repeat until the build passes without errors. You may not disable checks to get it to pass: no ts-ignore, no eslint-disable, and no config changes that ignore errors. At the end show me the final output, and summarize each fix you made in one sentence</Prompt>
+
+<Callout type="warning" title="The biggest red flag: turning off the checks">
+Next.js has settings that make the build **ignore** errors. If you see Claude adding something like this to `next.config`, stop:
+
+```ts title="next.config.ts: don't approve!"
+const nextConfig = {
+  typescript: { ignoreBuildErrors: true }, // ← hides all type errors
+};
+```
+
+That's like disconnecting a car's "check engine" light instead of fixing the engine. The build will pass, and the bugs will reach the live site.
+</Callout>
+
+<Callout type="note" title="A weird error that doesn't make sense?">
+Sometimes the problem isn't in the code, but in temporary files left over from a previous build. Ask Claude: "Delete the .next folder and run the build again". That folder is rebuilt every time, so it's safe to delete.
+</Callout>
+
+## Exercise: bug hunt
+
+In this exercise Claude plants bugs, and you find them with its help, but **in a different conversation**, without knowing what it did. Work on the recipe site from chapter 6, or any project with Git.
+
+**Part A: Planting**
+
+1. Make sure all your work is committed to git and the build passes.
+2. Ask Claude:
+
+<Prompt>Create a new branch called bug-hunt. In this branch, deliberately introduce three different bugs: one that crashes a specific page, one that produces a wrong result with no error at all, and one that only shows up in an edge case. Don't tell me what you did or where. Write a description of the bugs to a file called BUGS-ANSWERS.md and commit everything to git</Prompt>
+
+3. **Don't open BUGS-ANSWERS.md!** Run `/clear`, so Claude "forgets" what it did.
+
+**Part B: Hunting**
+
+4. Run `npm run build` and `npm run dev`, and try the site like a user. Found something odd?
+5. For each bug: a good bug report, an investigation in plan mode without fixing, and only then a fix of the root cause.
+6. Did the fix for one of the bugs do harm? Practice `/rewind`.
+7. Ask Claude to look for edge cases in the feature where you suspect the third bug is hiding.
+
+**Part C: Checking**
+
+8. Only now open `BUGS-ANSWERS.md` and compare.
+9. Ask Claude to switch back to main and delete the `bug-hunt` branch. The original site wasn't affected, because everything happened in a separate branch.
+
+<Checklist
+  id="ch7-exercise"
+  title="Finished the exercise?"
+  items={[
+    "I wrote a bug report with what I did, what I expected and what happened, plus the full error",
+    "I passed an error to Claude with ! npm run build",
+    "I asked for an investigation in plan mode, before a fix",
+    "I made sure the fix addresses the root cause and doesn't hide it",
+    "I went back with /rewind at least once",
+    "I asked Claude to find edge cases",
+    "npm run build passes at the end without errors",
+    "I found all three bugs, and the bug-hunt branch was deleted",
+  ]}
+/>
+
+## Summary
+
+- **Pass the whole error**: copy-paste, `!` inside Claude Code, `2>&1 | claude -p`, or a screenshot. With a bug report: what I did, what I expected, what happened, since when.
+- **Investigate first, fix later**: plan mode, following the data through every file, hypotheses, and checking what changed in git.
+- **A real fix, not a cover-up**: no swallowing `try/catch`, no `ts-ignore` and no turning off checks. Reproduce the bug, fix it, and verify.
+- **Going back**: `Esc` to stop, `/rewind` for Claude's edits, `git restore` and `git revert` for everything else.
+- **Edge cases**: empty, zero, missing, long, special characters. Find them before your users do.
+- **Build errors**: run `npm run build` often, and fix in a loop until it passes.
+
+In the next chapter we'll get to know Git and GitHub in depth: branches, pull requests, code review and safety belts that protect your code.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "Claude 'fixed' a bug with a try/catch that swallows the error. What's the problem?", "options": [{"text": "No problem, the error is gone", "why": "The error is out of sight, but the problem is still there."}, {"text": "It's a cover-up: the problem wasn't solved, just hidden", "why": "Right. Ask for a fix of the root cause."}, {"text": "try/catch isn't allowed in JavaScript", "why": "It's allowed, just not for silencing errors."}], "answer": 1}, {"q": "What can't /rewind undo?", "options": [{"text": "File edits Claude made", "why": "Those it actually can undo."}, {"text": "Terminal commands, like npm install or git push", "why": "Right. For those you need Git."}, {"text": "The conversation", "why": "It can take the conversation back to an earlier point."}], "answer": 1}]} />

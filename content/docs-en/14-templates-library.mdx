@@ -1,0 +1,507 @@
+# Template Library: Ready-Made Agents, Commands and Skills
+
+In chapters 11 and 12 we learned to build skills and agents ourselves. But you don't always need to start from scratch: the community has already written hundreds of them. This chapter is a **curated library**, with the most useful items from [aitmpl.com](https://www.aitmpl.com/), the catalog of the open-source project [Claude Code Templates](https://github.com/davila7/claude-code-templates) (MIT license).
+
+Each item has an **explanation** of what it does and when to use it, an **install command** to copy, a **ready-made prompt** to run it, and a **sample result**.
+
+<Callout type="note" title="How to use this chapter">
+- **You don't need to install everything.** Start with 2 or 3 items that solve a problem you have right now.
+- **Use the filter buttons** to see only agents, only commands, only skills or only utilities.
+- **The sample results are illustrations.** The files in the catalog are written and updated by the community, so your results may look a bit different.
+</Callout>
+
+## Before you start
+
+### What you need
+
+- **Node.js** (chapter 6), since the install runs with `npx`.
+- **A project with Git**, so you can see exactly which files the install added, and undo easily.
+- Run the install commands **from inside the project folder**.
+
+### How the install works
+
+Each kind of component has its own flag:
+
+```bash title="The general structure"
+npx claude-code-templates@latest --agent   <category>/<name>  --yes
+npx claude-code-templates@latest --command <category>/<name>  --yes
+```
+
+`--yes` skips the confirmation questions. And with no flag at all, you get an interactive selection screen:
+
+```bash title="Interactive selection screen"
+npx claude-code-templates@latest
+```
+
+<Callout type="warning" title="After every install: check what came in">
+Every component from the catalog is **instructions Claude will carry out**, and sometimes tool permissions too. After installing:
+
+1. Run `git status` to see which files were added. They're usually inside the `.claude` folder.
+2. **Read the files**, or ask Claude to do it for you (the prompt is right below).
+3. For agents, check the `tools` field. A "reviewer" agent asking for full write permissions should set off a red light.
+4. Not a fit? `git restore` and `git clean` bring things back, or just delete the file.
+</Callout>
+
+<Prompt>I just installed components from claude-code-templates. Run git status, read every new file in the .claude folder, and explain to me what each one does, which tools it gets access to, and whether there's anything suspicious or unnecessary in it. Don't run any of them</Prompt>
+
+## The library
+
+<Library>
+
+<LibraryItem
+  type="agent"
+  title="Code Reviewer"
+  name="development-tools/code-reviewer"
+  when="Before every pull request, after a big change, or when you want a second pair of eyes on code Claude wrote. The agent checks quality, security and maintainability, and returns a list of findings."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --agent development-tools/code-reviewer --yes
+```
+
+<Prompt>Use the code-reviewer agent to review all the changes in the current branch against main. Report by severity, with file and line for each finding, and don't fix anything</Prompt>
+
+```text title="Sample result (illustration)"
+Review: 4 files, 3 findings
+
+High severity
+  app/add/actions.ts:31  Form input is saved without validation. An empty recipe name gets through.
+
+Medium severity
+  components/RecipeCard.tsx:12  The image has no alt text.
+
+Low severity
+  lib/recipes.ts:88  Unused function: formatOldDate.
+
+Bottom line: fix the high-severity finding before merging.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="Debugger"
+  name="development-tools/debugger"
+  when="When something breaks and it's not clear why: an error in the terminal, a failing test or odd behavior. The agent specializes in finding the root cause, not just silencing the error. There's also a close sibling, development-tools/error-detective, which focuses on decoding error messages and logs."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --agent development-tools/debugger --yes
+```
+
+<Prompt>Use the debugger agent to investigate this error: [paste the whole error]. I want the root cause, the evidence, and a proposed minimal fix. Don't fix it yet</Prompt>
+
+```text title="Sample result (illustration)"
+Root cause: app/add/actions.ts saves the ingredients in the field ingredientsList,
+and the recipe page reads the field ingredients. For recipes from the form it's undefined.
+
+Evidence:
+  - data/recipes.json: 3 recipes with ingredientsList, 0 with ingredients
+  - app/recipes/[slug]/page.tsx:24 reads recipe.ingredients.map
+
+Proposed fix: rename the field when saving, and convert the 3 existing recipes.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="Refactoring Specialist"
+  name="development-tools/refactoring-specialist"
+  when="When the code works but is hard to read or change: a huge file, repeated code, long functions. Refactoring improves the code's structure without changing what it does. For cleaning dead code there's also development-tools/unused-code-cleaner."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --agent development-tools/refactoring-specialist --yes
+```
+
+<Prompt>Use the refactoring-specialist agent to propose a refactor of app/recipes/[slug]/page.tsx. Without changing any behavior on the site. First show a plan in small steps, and only after I approve, carry out one step at a time and run the build after each step</Prompt>
+
+```text title="Sample result (illustration)"
+Refactoring plan: page.tsx (180 lines)
+  1. Extract the ingredients list into an IngredientList component
+  2. Extract the servings calculator into a hook called useServings
+  3. Merge three nearly identical rounding functions into one
+Risk: low. No change to the interface or the data.
+Waiting for approval before step 1.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="Documentation Engineer"
+  name="documentation/documentation-engineer"
+  when="When documentation is missing or outdated: a README, install instructions, an explanation of the project structure. The documentation category also has technical-writer, api-documenter and changelog-generator."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --agent documentation/documentation-engineer --yes
+```
+
+<Prompt>Use the documentation-engineer agent to update README.md according to the current code. Every sentence should be based on the code and package.json, without inventing features. Before saving, show me what changed</Prompt>
+
+```text title="Sample result (illustration)"
+Proposed changes to README.md:
+  + Added: an "Available commands" section (dev, build, start, lint from package.json)
+  ~ Updated: the folder structure. Added components/mdx and content/docs
+  - Removed: a yarn instruction. The project uses npm
+  ? TODO: the live site URL wasn't found in the code. Left a placeholder
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="Test Automator"
+  name="development-tools/test-automator"
+  when="When there's important code without tests, for example a calculator, forms or calculations, and you want a safety net before big changes."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --agent development-tools/test-automator --yes
+```
+
+<Prompt>Use the test-automator agent to write tests for the servings calculator. Include edge cases: zero, large numbers, fractions, and ingredients with no quantity. Run the tests and report what passed and what failed. If a test fails, don't weaken it: tell me whether the problem is in the code or the test</Prompt>
+
+```text title="Sample result (illustration)"
+Created: lib/servings.test.ts (9 tests)
+  ✓ 7 passed
+  ✗ 2 failed:
+    - scaleAmount(1.5, 3, 0): division by zero returns Infinity  ← bug in the code
+    - "salt to taste" with an empty quantity displays as NaN     ← bug in the code
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="agent"
+  title="Accessibility Tester"
+  name="development-tools/accessibility-tester"
+  when="For sites used by older people, or anyone who needs large text, good contrast and keyboard navigation. Especially suitable for a family site."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --agent development-tools/accessibility-tester --yes
+```
+
+<Prompt>Use the accessibility-tester agent to check every page on the site: alt text for images, color contrast, text size, labeled buttons, and keyboard-only navigation. Report by page and by severity</Prompt>
+
+```text title="Sample result (illustration)"
+Home page: 2 findings
+  - Low contrast: gray text (#9CA3AF) on a white background, ratio 2.5:1 (4.5:1 required)
+  - The search button is an icon with no accessible label
+Recipe page: 1 finding
+  - The servings calculator's +/- buttons are smaller than 44 pixels
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="Automatic Pull Request Creator"
+  name="git-workflow/create-pr"
+  when="When you've finished work in a branch and want a tidy PR in one step: commit messages, push, and a full description. Requires gh signed in (chapter 8)."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --command git-workflow/create-pr --yes
+```
+
+The command is added to Claude Code's `/` menu, usually named `/create-pr`. Type `/` to confirm the exact name.
+
+```text title="Usage, inside Claude Code"
+/create-pr
+```
+
+```text title="Sample result (illustration)"
+Branch: feature/print-recipe (3 commits)
+Pushed to origin/feature/print-recipe
+Opened pull request #12: Add clean print view for recipes
+  https://github.com/your-username/grandma-recipes/pull/12
+Description: what changed, how to test, a screenshot of the print view
+```
+
+<Callout type="tip" title="The safety belts from chapter 8 keep working">
+If you set an `ask` rule for `git push`, the command asks for approval before pushing, which is exactly what you want.
+</Callout>
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="Pull Request Review"
+  name="git-workflow/pr-review"
+  when="When you want a review of an existing PR, yours or someone else's, before merging. Complements the built-in /code-review."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --command git-workflow/pr-review --yes
+```
+
+```text title="Usage, inside Claude Code"
+/pr-review
+```
+
+<Prompt>Review PR number 12 with the pr-review command, and summarize for me in three lines: whether to merge, what must be fixed first, and what can wait</Prompt>
+
+```text title="Sample result (illustration)"
+PR #12: Add clean print view for recipes
+Recommendation: merge after one fix
+  Must fix: in the print view, long recipe names get cut off
+  Can wait: also show the date added in the view
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="Tidy Commit Messages"
+  name="git-workflow/commit"
+  when="When you want every Git commit to get a clear, consistent message, and unrelated changes to be split into separate commits."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --command git-workflow/commit --yes
+```
+
+```text title="Usage, inside Claude Code"
+/commit
+```
+
+```text title="Sample result (illustration)"
+Two different topics detected, and two commits created:
+  a1b2c3d  feat: add print button to recipe page
+  d4e5f6a  fix: round servings to one decimal place
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="Generate Tests for a File"
+  name="testing/generate-tests"
+  when="Like the test-automator agent, but as a quick command for a single file: run it, get tests."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --command testing/generate-tests --yes
+```
+
+```text title="Usage, inside Claude Code"
+/generate-tests lib/servings.ts
+```
+
+<Callout type="note" title="Watch out for duplicate names">
+If you built your own skill called `generate-tests` in chapter 11, this command may collide with it. In that case, rename one of them.
+</Callout>
+
+</LibraryItem>
+
+<LibraryItem
+  type="command"
+  title="Update Docs After Changes"
+  name="documentation/update-docs"
+  when="After a significant code change, so the documentation doesn't fall behind."
+>
+
+```bash title="Install"
+npx claude-code-templates@latest --command documentation/update-docs --yes
+```
+
+```text title="Usage, inside Claude Code"
+/update-docs
+```
+
+```text title="Sample result (illustration)"
+Checked 2 documentation files against 6 files changed since the last commit
+  README.md: updated the "Running locally" section (added npm run test)
+  docs/recipes.md: no change
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="skill"
+  title="Safe Refactoring (a skill you write yourself)"
+  name=".claude/skills/refactor-safely"
+  when="When you want every refactor in the project to go through the same safe process: tests first, small steps, a build after every step, and no behavior changes. This is a skill in the structure from chapter 11, ready to copy."
+>
+
+```markdown title=".claude/skills/refactor-safely/SKILL.md"
+---
+name: refactor-safely
+description: Safely refactor a file or module without changing behavior. Use when the user asks to clean up, simplify, split, or restructure existing code.
+argument-hint: [file-path]
+---
+
+Refactor $0 without changing any user-visible behavior.
+
+1. Read $0 and list the problems (long functions, duplication, unclear names).
+2. If there are no tests covering $0, write minimal tests that lock in
+   current behavior FIRST, and run them.
+3. Propose a plan of small steps. WAIT for approval.
+4. Apply one step at a time. After each step run the tests and `npm run build`.
+   If anything fails, revert that step and explain why.
+5. Finish with a summary: what changed, what did not, and why it is safer.
+```
+
+```text title="Usage, inside Claude Code"
+/refactor-safely components/RecipeCard.tsx
+```
+
+```text title="Sample result (illustration)"
+Found 3 problems in RecipeCard.tsx. There were no tests, so 4 tests were written that lock in
+the current behavior (4/4 passed). Plan: 3 steps. Waiting for approval.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="skill"
+  title="A Catalog Skill: Code Review Checklist"
+  name="skills/development/code-review-checklist"
+  when="When you want to add a ready-made skill from the catalog. Browse aitmpl.com/skills, pick one, and copy its folder into .claude/skills. Here's how to do it manually."
+>
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+git clone --depth 1 https://github.com/davila7/claude-code-templates.git $env:TEMP\cct
+Copy-Item -Recurse $env:TEMP\cct\cli-tool\components\skills\development\code-review-checklist .claude\skills\
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+git clone --depth 1 https://github.com/davila7/claude-code-templates.git %TEMP%\cct
+xcopy /E /I %TEMP%\cct\cli-tool\components\skills\development\code-review-checklist .claude\skills\code-review-checklist
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux"
+git clone --depth 1 https://github.com/davila7/claude-code-templates.git /tmp/cct
+cp -r /tmp/cct/cli-tool/components/skills/development/code-review-checklist .claude/skills/
+```
+
+</Tab>
+</Tabs>
+
+<Prompt>Read .claude/skills/code-review-checklist/SKILL.md and explain to me when it will trigger and what it does. If it has injected commands or scripts, explain what they run</Prompt>
+
+```text title="Sample result (illustration)"
+The skill loads when you ask for a code review. It adds a checklist (readability, error
+handling, security, tests). It has no injected commands and no scripts.
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="tool"
+  title="Starter Kit: Several Components in One Command"
+  name="--agent ... --command ... --yes"
+  when="When you want to set up a new project with the recommended toolkit from this chapter, without running a command for each component."
+>
+
+```bash title="Installing a full kit"
+npx claude-code-templates@latest \
+  --agent development-tools/code-reviewer \
+  --agent development-tools/debugger \
+  --agent documentation/documentation-engineer \
+  --command git-workflow/create-pr \
+  --command git-workflow/commit \
+  --yes
+```
+
+<Callout type="note" title="On Windows">
+The backslash at the end of a line (`\`) splits a long command across several lines on macOS and Linux. In PowerShell and CMD just write the whole command on one line.
+</Callout>
+
+</LibraryItem>
+
+<LibraryItem
+  type="tool"
+  title="Settings Health Check"
+  name="--health-check"
+  when="When something in your Claude Code settings isn't working as it should, or just every once in a while, to get recommendations for improvement."
+>
+
+```bash title="Run"
+npx claude-code-templates@latest --health-check
+```
+
+```text title="Sample result (illustration)"
+✓ Claude Code is installed and up to date
+✓ .claude/settings.json is valid
+⚠ CLAUDE.md is longer than 200 lines. Consider shortening it
+⚠ Found an agent with no description field
+```
+
+</LibraryItem>
+
+<LibraryItem
+  type="tool"
+  title="Usage Dashboard (Analytics)"
+  name="--analytics"
+  when="When you want to see at a glance what's happening in your sessions: status, performance and token usage. Complements /usage and /context from chapters 10 and 12."
+>
+
+```bash title="Run"
+npx claude-code-templates@latest --analytics
+```
+
+A local dashboard opens in your browser, with data from the sessions on your computer.
+
+</LibraryItem>
+
+</Library>
+
+## Using installed components well
+
+An installed component is only a starting point. Your prompt still determines the quality of the result:
+
+<PromptCompare
+  bad="Do a review"
+  good="Use the code-reviewer agent on the changes in this branch against main. Focus on accessibility and mobile layout, since this is a family site for older users. Report by severity, with file and line, and without fixing."
+  why="The strong prompt picks the agent explicitly, defines what to review and what to focus on, and sets the report format. The agent's general instructions connect to your specific context."
+/>
+
+<Callout type="tip" title="Adapt it to your project">
+Community components are written in general terms. After installing, it's worth asking: "Adapt the code-reviewer agent to our project: add the rules from CLAUDE.md about accessibility and text size, and limit its tools to read only". That way you get the best of both worlds: a ready-made base, plus your rules.
+</Callout>
+
+## Checklist
+
+<Checklist
+  id="ch14-library"
+  title="My library"
+  items={[
+    "I installed at least one agent and one command from the library",
+    "I checked what was added with git status, and read the files",
+    "I checked the tools field in every agent I installed",
+    "I ran an agent with an explicit prompt including context and a report format",
+    "I created the refactor-safely skill and ran it on one file",
+    "I adapted one community component to my project's rules",
+    "I committed everything to git, so everyone working on the project gets the same tools",
+  ]}
+/>
+
+## Summary
+
+- **[aitmpl.com](https://www.aitmpl.com/)** is a catalog of agents, commands, skills and more, based on an MIT-licensed open-source project.
+- **Installing**: `npx claude-code-templates@latest --agent ...` or `--command ...`, and with no flags you get a selection screen.
+- **The recommended items**: code-reviewer, debugger, refactoring-specialist, documentation-engineer, test-automator and accessibility-tester, the commands create-pr, pr-review and commit, and a refactoring skill of your own.
+- **Safety**: after every install, `git status`, read the files and check `tools`.
+- **Adapting**: a community base, with your rules on top.
+
+<Callout type="tip" title="You've finished the whole course!">
+You've been through all 14 chapters: from your first time in the terminal, through a complete project that went live, to a team of agents, interfaces on every device and a library of ready-made tools. Now's the time to go back to the "Where to go from here" section in chapter 10, pick a project, and build.
+</Callout>
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "You installed an agent from the catalog. What do you do first?", "options": [{"text": "Run it on the main project", "why": "Too early. First check what it is."}, {"text": "Check what was added with git status, and read the file and its tools field", "why": "Right. An outside component means outside instructions and permissions."}, {"text": "Delete CLAUDE.md", "why": "There's no reason to do that."}], "answer": 1}, {"q": "Why is it worth adapting a community component to your project?", "options": [{"text": "Because it's written in general terms", "why": "Right. You add your rules to it, for example about accessibility."}, {"text": "Because it won't work otherwise", "why": "It will work, just less well for your project."}, {"text": "Because you're not allowed to use it as is", "why": "You are, under the MIT license."}], "answer": 0}]} />

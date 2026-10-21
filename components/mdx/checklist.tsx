@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useEffect, useId, useState } from "react";
+import { useUi } from "@/components/use-locale";
 
 const STORAGE_PREFIX = "checklist:";
 
@@ -9,6 +10,7 @@ const STORAGE_PREFIX = "checklist:";
 export function Checklist({ id, title, items }: { id: string; title?: string; items: string[] }) {
   const [done, setDone] = useState<boolean[]>(() => items.map(() => false));
   const baseId = useId();
+  const t = useUi().checklist;
 
   useEffect(() => {
     try {
@@ -32,13 +34,13 @@ export function Checklist({ id, title, items }: { id: string; title?: string; it
 
   return (
     <section
-      aria-label={title ?? "רשימת בדיקה"}
+      aria-label={title ?? t.title}
       className={`mt-6 rounded-xl border p-4 sm:p-5 ${complete ? "border-accent/50 bg-accent/[0.07]" : "border-line bg-surface"}`}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="font-bold">{title ?? "רשימת בדיקה"}</p>
+        <p className="font-bold">{title ?? t.title}</p>
         <p className={`text-sm tabular-nums ${complete ? "font-medium text-accent" : "text-muted"}`} aria-live="polite">
-          {complete ? "הכול בוצע" : `${count} מתוך ${items.length}`}
+          {complete ? t.done : `${count} ${t.of} ${items.length}`}
         </p>
       </div>
       <ul className="mt-3 space-y-1">
@@ -65,7 +67,7 @@ export function Checklist({ id, title, items }: { id: string; title?: string; it
                 >
                   {done[i] && <Check className="size-3.5" strokeWidth={3} />}
                 </span>
-                <span className={`leading-7 ${done[i] ? "text-muted line-through decoration-muted/60" : ""}`}>{item}</span>
+                <span className={`min-w-0 leading-7 [overflow-wrap:anywhere] ${done[i] ? "text-muted line-through decoration-muted/60" : ""}`}>{item}</span>
               </label>
             </li>
           );

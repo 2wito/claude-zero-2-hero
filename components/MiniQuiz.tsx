@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useId, useState } from "react";
 import { recordAnswer } from "@/lib/progress";
+import { useUi } from "@/components/use-locale";
 
 export type QuizQuestion = {
   q: string;
@@ -30,6 +31,7 @@ function QuizCard({ index, total, question }: { index: number; total: number; qu
     recordAnswer(slug, index, total, i === question.answer);
   }
   const baseId = useId();
+  const t = useUi().quiz;
   const correct = picked === question.answer;
 
   return (
@@ -71,7 +73,7 @@ function QuizCard({ index, total, question }: { index: number; total: number; qu
       <div aria-live="polite" className="min-h-0">
         {picked !== null && (
           <p className="mt-3 leading-7">
-            <span className="font-bold">{correct ? "נכון מאוד! 🎉 " : "לא מדויק, נסה שוב 💡 "}</span>
+            <span className="font-bold">{correct ? t.correct : t.wrong}</span>
             {question.options[picked].why}
           </p>
         )}

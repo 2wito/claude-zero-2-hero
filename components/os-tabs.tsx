@@ -30,7 +30,7 @@ export function OsTabs() {
 
   return (
     <div>
-      <div role="tablist" aria-label="מערכת הפעלה" className="flex gap-1 rounded-full bg-surface-2 p-1">
+      <div role="tablist" aria-label="Operating system" className="flex gap-1 rounded-full bg-surface-2 p-1">
         {systems.map((s) => (
           <button
             key={s.id}
@@ -40,7 +40,7 @@ export function OsTabs() {
             aria-selected={s.id === active}
             aria-controls="os-panel"
             onClick={() => setActive(s.id)}
-            className={`flex-1 rounded-full px-3 py-1.5 text-sm ${
+            className={`min-w-0 flex-1 rounded-full px-2 py-1.5 text-sm sm:px-3 ${
               s.id === active ? "bg-surface font-medium text-ink shadow-sm" : "text-muted hover:text-ink"
             }`}
           >

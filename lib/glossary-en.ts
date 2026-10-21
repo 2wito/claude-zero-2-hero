@@ -1,0 +1,41 @@
+import type { GlossaryTerm } from "@/lib/glossary";
+
+export const glossaryEn: GlossaryTerm[] = [
+  // Basic
+  { term: "Token", category: "basic", chapter: 12, definition: "The unit language models measure text in: a small chunk, roughly part of a word. Everything Claude reads and writes is counted in tokens, which drives speed, cost and how much fits in the context window." },
+  { term: "Context window", category: "basic", chapter: 12, definition: "Everything Claude \"sees\" at a given moment: instructions, CLAUDE.md, messages, and every file and output it has read. It's large (hundreds of thousands of tokens, a million on some models) but it fills up, quality drops when it's full, and Claude Code then compacts automatically." },
+  { term: "CLAUDE.md", category: "basic", chapter: 4, definition: "A file of standing instructions loaded at the start of every session: the project's purpose, working rules, test commands. Keep it short (under 200 lines) and specific. It guides Claude; it doesn't enforce anything." },
+  { term: "Prompt", category: "basic", chapter: 4, definition: "The request you write to Claude. A good prompt follows the golden rule: specificity, context, step by step, and verification." },
+  { term: "Agent", category: "basic", chapter: 1, definition: "An AI that doesn't just answer but acts in a loop: read, decide, act, check, until the task is done. Claude Code is an agent." },
+  { term: "Terminal", category: "basic", chapter: 3, definition: "A window where you type commands to the computer. On Windows: PowerShell or CMD. On Mac and Linux: Terminal." },
+  { term: "Permission prompt", category: "basic", chapter: 3, definition: "The moment Claude stops and asks before editing a file or running a command. Read what it plans to do before approving." },
+  { term: "Commit", category: "basic", chapter: 8, definition: "A Git save point of the whole project, with a message describing what changed. You can always go back to it." },
+  { term: "Pull Request (PR)", category: "basic", chapter: 8, definition: "A formal proposal on GitHub to merge a branch into main, with a description, the list of changes, and room for review before merging." },
+  // Advanced
+  { term: "MCP", en: "Model Context Protocol", category: "advanced", chapter: 10, definition: "An open standard for connecting Claude to external tools and data such as Notion, databases and task trackers. Add servers with claude mcp add, and only from sources you trust." },
+  { term: "Sub-agent", category: "advanced", chapter: 12, definition: "A helper Claude starts for a specific task, with its own context window, instructions and tools. It returns only a summary, keeping the main conversation clean. Define your own in .claude/agents." },
+  { term: "Auto mode", category: "advanced", chapter: 3, definition: "A permission mode where Claude works without asking, while a separate safety model checks each action in the background and blocks risky ones like force push. It's the starting mode in recent versions. Switch modes with Shift+Tab." },
+  { term: "Prompt caching", category: "advanced", chapter: 12, definition: "Every message resends the whole conversation, but the server briefly remembers what it already processed and reads the identical beginning from cache at a much lower price. Switching models or compacting mid-task breaks the cache." },
+  { term: ".claudeignore", category: "advanced", chapter: 10, definition: "A common myth: according to the official docs, this file has no effect. To stop Claude from reading files, use Read rules under deny in .claude/settings.json, e.g. Read(./.env)." },
+  { term: "Skill", category: "advanced", chapter: 11, definition: "A written work recipe: a folder with a SKILL.md file. Only its name and description load up front; the body loads when needed. Claude runs it on its own based on the description, or you run it with /name." },
+  { term: "Hook", category: "advanced", chapter: 10, definition: "A script that runs automatically at a specific point in Claude's work, e.g. before every command. Unlike CLAUDE.md, it's enforced every time." },
+  { term: "Permission rules", category: "advanced", chapter: 8, definition: "allow, ask and deny rules in .claude/settings.json that decide what Claude Code allows, asks about, or blocks, in every permission mode. For example deny Bash(git push --force *)." },
+  { term: "Worktree", category: "advanced", chapter: 13, definition: "A separate copy of the project on its own branch, so several sessions can work in parallel without colliding." },
+  { term: "Cloud session", category: "advanced", chapter: 13, definition: "Claude Code running on an Anthropic virtual machine that pulls your code from GitHub. It keeps going even when your computer is off." },
+  // CLI
+  { term: "/compact", category: "cli", chapter: 3, definition: "Summarizes the conversation to free space in the context window and continues the same task. You can add what to keep. Best at natural breaks." },
+  { term: "/clear", category: "cli", chapter: 3, definition: "Starts a fresh conversation. Files are not deleted. Use it between unrelated tasks." },
+  { term: "/context", category: "cli", chapter: 10, definition: "Shows what's taking up space in the context window right now, by category." },
+  { term: "/usage", category: "cli", chapter: 10, definition: "Shows usage, costs and plan limits, including the prompt cache line and savings recommendations." },
+  { term: "/rewind", category: "cli", chapter: 7, definition: "Goes back to an earlier point in the conversation and files (also Esc twice). Doesn't undo terminal commands or edits you made yourself." },
+  { term: "/init", category: "cli", chapter: 4, definition: "Creates a starter CLAUDE.md based on what Claude understands about the project." },
+  { term: "/memory", category: "cli", chapter: 10, definition: "Opens your CLAUDE.md files and auto memory for editing." },
+  { term: "/mcp", category: "cli", chapter: 10, definition: "Lists MCP servers and their connection status, and lets you sign in to or disable them." },
+  { term: "/code-review", category: "cli", chapter: 8, definition: "Reviews the current changes for bugs in a separate agent. Also works with a PR number." },
+  { term: "claude -c", category: "cli", chapter: 3, definition: "Continues the most recent conversation in the current folder." },
+  { term: "claude --teleport", category: "cli", chapter: 13, definition: "Pulls a cloud session into your terminal, including its branch and conversation. Needs a clean Git state and the same repository." },
+  { term: "claude --chrome", category: "cli", chapter: 13, definition: "Starts Claude Code connected to the Chrome extension, so it can test sites in a real browser." },
+  { term: "Shift + Tab", category: "cli", chapter: 3, definition: "Cycles permission modes: manual, accept edits, plan and auto." },
+  { term: "@file", category: "cli", chapter: 4, definition: "Attaches a file to your prompt, with autocomplete. Saves Claude a search." },
+  { term: "!command", category: "cli", chapter: 4, definition: "Runs a terminal command straight from Claude Code, and the output joins the conversation." },
+];

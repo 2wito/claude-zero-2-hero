@@ -1,0 +1,368 @@
+# Smart Agents, Subagents and Advanced Planning
+
+So far you've worked with one Claude. In this chapter you'll discover that it can manage a **team**: split a big task among several helpers, each working in its own room, with its own tools, and returning a short report.
+
+And to understand why that's so useful, we'll also stop for an in-depth explanation that's been waiting since the start of the course: what **tokens** really are, how the **context window** works, and what **prompt caching** is.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- What an agent is, and what a subagent is.
+- Tokens, the context window and prompt caching, in plain language.
+- How Claude runs subagents in parallel, and the difference between foreground and background agents.
+- How to build three agents: a code reviewer, a bug hunter and a docs writer, including automatic README.md generation.
+- When **not** to use agents.
+</Callout>
+
+## What is an agent?
+
+An **agent** is an AI that doesn't just answer, but **acts**, in a loop: it reads, decides, acts, checks the result, and repeats until the task is done. Claude Code itself is an agent, and that's exactly what you've seen throughout the course.
+
+A **subagent** is a helper Claude launches for a defined task. What makes it special:
+
+- **Its own context window.** It starts "clean", reads what it needs, and doesn't fill up the main conversation.
+- **Its own instructions.** You can give it a role: "you're a strict code reviewer".
+- **Its own tools.** You can give it only read tools, so even if it wanted to, it couldn't change files.
+- **Returns only a summary.** All the files it read and commands it ran stay with it. Only the report comes back to the main conversation.
+
+<Callout type="tip" title="An analogy: a project manager and consultants">
+Picture a project manager who needs to decide on a renovation. She doesn't go check the plumbing, the electrics and the roof herself. She sends three consultants, each an expert in their field, and each comes back with one page of conclusions. Her desk stays clean, she gets the full picture, and the checks happened in parallel.
+
+The main Claude is the manager. The subagents are the consultants.
+</Callout>
+
+## Deep dive: tokens, the context window and prompt caching
+
+### What is a token?
+
+A language model doesn't read letters or words, but **tokens**: small chunks of text. A short, common English word is usually one token, and a long or rare word breaks into several. In languages not written in the Latin alphabet, a word usually breaks into more tokens than in English.
+
+Why does this matter to you? Because **everything is measured in tokens**: how much information Claude can hold, how long a response takes, and how much it costs (or how much of your plan's limit it uses).
+
+### The context window: short-term memory
+
+The **context window** is everything Claude "sees" at a given moment. It's large, hundreds of thousands of tokens, and for some models even a million, but it fills up fast. What's in it?
+
+| What | When it enters |
+| --- | --- |
+| Claude Code's system instructions and tools | At the start of the conversation |
+| CLAUDE.md, auto memory and rules without `paths` | At the start of the conversation |
+| Names and descriptions of skills and MCP tools | At the start of the conversation (names only, not content) |
+| Every message of yours and every reply from Claude | Throughout the conversation |
+| **Every file Claude reads** | When it's read, and it stays |
+| **Every command output** | When it runs, and it stays |
+| Rules with `paths` and subfolder CLAUDE.md files | When matching files are touched |
+
+<Callout type="warning" title="Why a full window is a problem">
+As the context window fills up, the model's performance drops: Claude may "forget" earlier instructions and make more mistakes. When the window is almost full, Claude Code **automatically summarizes** the conversation. In the summary some details are kept and some aren't: CLAUDE.md is reloaded from disk, as are up to five of the most recently read files, but instructions you gave only in the conversation may get shortened. That's why the habits from chapter 10, `/clear` and `/compact` at times you choose, matter so much.
+</Callout>
+
+`/context` shows at any moment what's taking up space in the window, by category.
+
+### Prompt caching: why the second message is cheaper than the first
+
+**A surprising fact:** the model doesn't remember anything between messages. Every time you send a message, Claude Code resends **the whole conversation**: the instructions, CLAUDE.md, every file read, and every message. Sounds wasteful? This is where **prompt caching** comes in.
+
+The server briefly remembers what it already processed. If the beginning of the new request is **exactly identical** to the beginning of the previous one, it doesn't process it again, but reads it from the cache, at a much lower price. Only the new part at the end is fully processed.
+
+To make this work well, Claude Code arranges the request so that whatever changes least comes first:
+
+| Layer | What's in it | Changes when |
+| --- | --- | --- |
+| **1. System instructions** | Base instructions and tool definitions | The set of tools changes |
+| **2. Project context** | CLAUDE.md, memory, rules | A new conversation, `/clear` or `/compact` |
+| **3. The conversation** | Messages, replies and tool outputs | With every message (only at the end) |
+
+<Callout type="info" title="How long is the cache kept?">
+The cache is cleared after a period of inactivity. The default on a Claude subscription, for the main conversation, is **one hour**. With an API key, and for subagents, the default is **five minutes**. Every message "refreshes" the timer. That's why the first message after a long break is slower and more "expensive": the whole conversation is processed again.
+</Callout>
+
+**What breaks the cache** (the next turn is slower and more expensive, once):
+
+- **Switching models** with `/model`: each model has its own cache.
+- **Compacting** with `/compact`: the conversation is replaced by a new summary. That's fine at a natural stopping point, less so mid-task.
+- **Connecting or disconnecting an MCP server**, and changes to plugins that add tools, in some cases.
+- **Upgrading Claude Code**, in the first conversation after it.
+
+**What doesn't break the cache:**
+
+- **Editing files in the project**, even files Claude already read.
+- **Switching permission modes** with `Shift + Tab`.
+- **Triggering skills**: their content is added at the end of the conversation.
+- **`/rewind`**: you go back to a point that's already in the cache.
+- **Launching a subagent**: it builds its own cache, and leaves the main conversation's as it is.
+
+<Callout type="tip" title="Three habits that make the most of the cache">
+1. **Choose a model at the start of the conversation**, not mid-task.
+2. **Compact (`/compact`) at natural breaks**, between tasks, not in the middle.
+3. **Edited CLAUDE.md mid-conversation?** The change won't take effect until `/clear`, `/compact` or a restart. That's not a bug: it's what preserves the cache.
+</Callout>
+
+To check how the cache works for you, run `/usage`. On the `Prompt cache` line you'll see how much of the input came from the cache.
+
+### And how does all this relate to agents?
+
+Now the picture comes together. Say you need to search 40 files. If the main Claude does it itself, the 40 files enter its context window, stay there, and are resent with every message until the end of the conversation. If it sends a **subagent**, the 40 files enter the agent's window, and a summary of a few lines comes back to the main conversation.
+
+<Callout type="warning" title="Agents aren't free">
+A subagent saves space in the **main** conversation, but it still uses tokens itself, and that counts toward your usage limits. Ten agents each reading dozens of files is a lot of work. Use them when they actually save something, not as a default.
+</Callout>
+
+## The built-in agents
+
+Claude Code comes with ready-made subagents, and uses them on its own when appropriate:
+
+| Agent | What it does | Tools |
+| --- | --- | --- |
+| **Explore** | Fast searching and analysis of code | Read only |
+| **Plan** | Researching the code during plan mode | Read only |
+| **General-purpose** | Complex tasks that need both investigation and action | All tools |
+| **claude-code-guide** | Answers questions about Claude Code itself | Reading docs |
+
+When you asked in chapter 4 "plan before you write code", or in chapter 7 "use subagents to investigate", these are the agents that worked behind the scenes.
+
+## Foreground, parallel and background agents
+
+### In parallel: several consultants at once
+
+When a task splits into parts that don't depend on each other, Claude can launch **several subagents at once**, and each comes back with its findings:
+
+<Prompt>I want to understand the project before I add a sign-in system. Launch three subagents in parallel: one that investigates how the pages and routing are built, one that investigates how data is saved and read, and one that checks which packages are installed and their versions. Each agent returns a report of up to 10 lines. After they all return, merge the reports into one document and tell me the main risks of adding sign-in</Prompt>
+
+<Callout type="note" title="How many in parallel?">
+By default, you can run up to 20 subagents at the same time, and a subagent can launch subagents of its own, up to three levels deep. In practice, three to five focused agents are almost always enough. Every report that comes back enters the main conversation, so more agents also means more text to read.
+</Callout>
+
+### Foreground or background?
+
+| | **Foreground** | **Background** |
+| --- | --- | --- |
+| The main conversation | Waits for the agent to finish | Continues. You can keep working |
+| Approval prompts | Reach you as usual | Appear in the main conversation, with the agent's name |
+| Good for | When you need the result to continue | A long, independent task: review, tests, docs |
+
+An agent already running in the foreground can be moved to the background with **`Ctrl + B`**. You can also ask in advance:
+
+<Prompt>Launch a background subagent that goes over every page on the site and checks accessibility: alt text for images, color contrast and buttons with text. Meanwhile I'll keep working with you on the home page design. When it finishes, show me the report</Prompt>
+
+## Building your own agents
+
+### Where they live
+
+| Location | For |
+| --- | --- |
+| `.claude/agents/<name>.md` | The project, everyone working on it (saved in Git) |
+| `~/.claude/agents/<name>.md` | You, in all projects |
+
+Each agent is **a single Markdown file**: a frontmatter with settings, and a body that becomes the agent's "role instructions". The `/agents` command reminds you how to create agents, and you can always just ask Claude to write one.
+
+### The important fields
+
+| Field | What it does |
+| --- | --- |
+| `name` | **Required.** The agent's name |
+| `description` | **Required.** When Claude should hand it a task. "use proactively" encourages it to do so on its own |
+| `tools` | The list of **allowed** tools. Without this field, the agent gets all tools |
+| `disallowedTools` | Tools that are blocked |
+| `model` | `sonnet`, `opus`, `haiku`, or `inherit` (same as the main conversation) |
+| `permissionMode` | A permission mode for the agent: for example `plan` for read only |
+| `maxTurns` | The maximum number of steps before the agent stops |
+| `skills` | Skills preloaded into the agent (chapter 11) |
+| `memory` | Persistent memory for the agent, kept between conversations: `project`, `user` or `local` |
+| `background` | `true` = always runs in the background |
+| `isolation` | `worktree` = works on a separate copy of the project, in a temporary Git worktree |
+| `color` | A color for identification in the terminal |
+
+### Agent 1: a code reviewer
+
+```markdown title=".claude/agents/code-reviewer.md"
+---
+name: code-reviewer
+description: Reviews code changes for bugs, accessibility and layout issues. Use proactively after any significant code change and before opening a PR.
+tools: Read, Glob, Grep, Bash
+model: sonnet
+color: blue
+---
+
+You are a meticulous senior reviewer for a Next.js family website
+whose main users are older adults.
+
+When invoked:
+1. Run `git diff main...HEAD` to see what changed.
+2. Read every changed file in full, not just the diff lines.
+3. Check: correctness, edge cases, mobile layout, text size (min 18px),
+   buttons with text labels, no secrets, no swallowed errors.
+4. Report grouped by severity, each item with file:line
+   and a concrete suggested fix.
+
+Never edit files. You report; the main conversation decides.
+```
+
+**Notice:** the agent has no editing tools (`Edit`, `Write`). Even if it wanted to "fix something small", it can't. A reviewer who fixes things itself is no longer a reviewer.
+
+### Agent 2: a bug hunter
+
+```markdown title=".claude/agents/bug-hunter.md"
+---
+name: bug-hunter
+description: Investigates errors, stack traces and failing builds to find the root cause. Use when the user reports a bug, pastes an error, or a build fails.
+tools: Read, Glob, Grep, Bash
+model: inherit
+memory: project
+---
+
+You are a debugging specialist. Your job is to find ROOT CAUSES, not to
+make errors disappear.
+
+1. Reproduce: find the exact command or steps that trigger the error.
+2. Trace the data flow across files until you find where it goes wrong.
+3. Rank up to three hypotheses and verify each without changing code.
+4. Return: the root cause, the evidence, and a proposed minimal fix.
+5. Check your memory for similar past bugs in this project, and record
+   this one (symptom → cause) when you are done.
+
+Never suggest try/catch that swallows errors, ts-ignore, or disabling checks.
+```
+
+**Notice `memory: project`:** the agent gets its own memory folder (`.claude/agent-memory/bug-hunter/`), which survives between conversations. Over time it "remembers" which bugs already happened in the project and what caused them.
+
+### Agent 3: a docs writer, and automatic README generation
+
+```markdown title=".claude/agents/docs-writer.md"
+---
+name: docs-writer
+description: Writes and updates project documentation (README.md, setup guides, code comments) based on the actual code. Use when docs are missing or out of date.
+tools: Read, Glob, Grep, Bash, Write, Edit
+model: sonnet
+---
+
+You write clear documentation for beginners.
+
+Rules:
+- Base every statement on the actual code and package.json. Never invent
+  features, commands or URLs. If unsure, leave a TODO and say so.
+- README.md structure: title, one-paragraph description, live URL
+  (placeholder if unknown), requirements, install & run steps
+  (git clone → npm install → npm run dev), available scripts,
+  project structure, how to contribute, credits.
+- Plain language, short sentences, no unexplained jargon.
+- Only edit documentation files. Never touch source code.
+```
+
+And now, a README that's generated and updated automatically:
+
+<Prompt>Use the docs-writer agent to update README.md according to the current state of the code: the commands in package.json, the folder structure and the chapters in lib/syllabus.ts. Before it writes, have it show me a list of what changed compared to the existing README</Prompt>
+
+<Callout type="tip" title="Agent + skill = full automation">
+You can combine what we learned in chapter 11: a skill that runs the agent itself. That way `/update-readme` becomes a one-word command.
+
+```markdown title=".claude/skills/update-readme/SKILL.md"
+---
+name: update-readme
+description: Regenerate README.md from the current code
+context: fork
+agent: docs-writer
+disable-model-invocation: true
+---
+
+Update README.md to match the current code. Package scripts:
+!`npm run`
+
+Show a summary of what changed in the README when done.
+```
+
+`context: fork` runs the skill in a subagent, and `agent: docs-writer` chooses which agent.
+</Callout>
+
+### How to trigger an agent
+
+| Way | How |
+| --- | --- |
+| **Automatically** | Claude reads the `description` and hands off matching tasks on its own |
+| **By request** | "Use the code-reviewer agent to check my changes" |
+| **By mention** | Type `@` and choose the agent from the list |
+| **The whole conversation** | `claude --agent code-reviewer` starts a whole conversation with the agent as the main one |
+
+## A complete workflow with agents
+
+Here's what a big feature looks like when you combine everything we've learned. The sequence **investigate → plan → review the plan → execute → verify** appears both in the official docs and in community guides:
+
+| Step | Who does it | How |
+| --- | --- | --- |
+| **1. Investigate** | 2-3 Explore agents in parallel | "Investigate X, Y and Z in parallel" |
+| **2. Plan** | The main Claude, in plan mode | `Shift + Tab` until `plan mode on` |
+| **3. Review the plan** | A new subagent, "with fresh eyes" | "Use a subagent to find holes in the plan" |
+| **4. Execute** | The main Claude, in a new branch | After the plan is approved |
+| **5. Verify** | `code-reviewer` and `bug-hunter` | Review and checks before a PR |
+| **6. Document** | `docs-writer` | Updating the README |
+
+<PromptCompare
+  bad="Add a sign-in system to the site"
+  good="We're adding sign-in. Step 1: launch two Explore agents in parallel, one for routing and pages and one for data storage, each with a short report. Step 2: based on the reports, prepare a plan in plan mode. Step 3: before I approve, use a separate subagent to try to find holes and edge cases in the plan. Don't write code until I approve."
+  why="The strong prompt breaks the work into steps, sends the heavy investigation to agents and adds an independent review of the plan. The main conversation stays clean for execution."
+/>
+
+## Community agents
+
+- **[aitmpl.com/agents](https://www.aitmpl.com/agents/)**: a catalog of hundreds of ready-made agents, in areas like development, security and DevOps, based on the open-source claude-code-templates project. Installing a specific agent:
+
+```bash title="In the terminal"
+npx claude-code-templates@latest --agent development-tools/code-reviewer --yes
+```
+
+- **[alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills)**: beyond skills, the repository also has dozens of agent "personas", and an explanation of how to combine them with skills.
+
+<Callout type="warning" title="Same rules as with skills">
+An outside agent comes with instructions and tool permissions. Before installing, read the file and especially check `tools`: a "reviewer" agent asking for full write and Bash permissions should set off a red light. And if there's no `tools` field at all, the agent gets **all tools**.
+</Callout>
+
+## When not to use agents
+
+Agents are a powerful tool, but not for everything:
+
+- **Small, clear tasks**, like renaming a variable or fixing a typo. Explaining it to an agent takes longer than doing it.
+- **Work with lots of back-and-forth.** An agent doesn't see the main conversation. If every step depends on your response, it's better to stay in the main conversation.
+- **When the steps share a lot of context.** Each agent starts from zero and takes time to "get up to speed".
+- **When speed matters.** A subagent needs time to gather context before it starts working.
+
+<Callout type="info" title="What about agent teams?">
+Beyond subagents, Claude Code also has an experimental **agent teams** capability: several full conversations working together, with shared tasks and a lead agent. It's off by default, and uses many more tokens, about seven times a regular conversation when team members work in plan mode. For beginners, subagents are almost always enough.
+</Callout>
+
+## Exercise: your team
+
+1. Create the three agents from the chapter in `.claude/agents/`.
+2. Ask Claude for **three investigations in parallel** on the project, and see that each comes back as a short report.
+3. Make a small code change, and write "I finished the change". Did `code-reviewer` trigger on its own, thanks to "use proactively"?
+4. Paste some error (you can use one from the bug-hunt exercise in chapter 7) and ask `bug-hunter` to investigate.
+5. Launch an agent in the background, and keep working while it runs.
+6. Create the `update-readme` skill and run `/update-readme`.
+7. Run `/context` before and after a big investigation with an agent, and see how much space was saved.
+
+<Checklist
+  id="ch12-exercise"
+  title="Finished the exercise?"
+  items={[
+    "I can explain in my own words what a token, the context window and prompt caching are",
+    "I have three agents in .claude/agents, with tools limited by role",
+    "I ran three investigations in parallel and got a merged report",
+    "code-reviewer can't edit files, and I checked that",
+    "bug-hunter with memory: project found the root cause",
+    "I launched an agent in the background and kept working in parallel",
+    "README.md was updated automatically with /update-readme",
+    "I compared /context before and after using an agent",
+  ]}
+/>
+
+## Summary
+
+- **An agent** works in a loop: it reads, decides, acts and checks. **A subagent** is a helper with its own context window, instructions and tools, that returns only a summary.
+- **Tokens** are the unit of measurement for everything. **The context window** fills up with every file and output, and performance drops when it's full.
+- **Prompt caching** saves reprocessing the start of the conversation. Don't switch models mid-task, and compact at natural breaks.
+- **In parallel** for independent investigations, **in the background** for long tasks (`Ctrl + B`), and **in the foreground** when you need the result to continue.
+- **Your own agents** in `.claude/agents/`: a good description, minimal `tools`, a suitable model, and sometimes `memory`.
+- **A skill with `context: fork`** runs an agent in one command, for example `/update-readme`.
+
+In the next chapter we'll step out of the terminal and meet all of Claude Code's interfaces: the Desktop app, the browser, the Chrome extension and mobile, and how to move a session from one to another.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "What's the main advantage of a subagent?", "options": [{"text": "It's free", "why": "No. It uses tokens too."}, {"text": "It has its own context window, and only the summary returns to the main conversation", "why": "Right. The main conversation stays clean."}, {"text": "It's always faster", "why": "Not always: it needs time to gather context."}], "answer": 1}, {"q": "What breaks prompt caching?", "options": [{"text": "Editing files in the project", "why": "No. Edits are appended at the end."}, {"text": "Switching models mid-task", "why": "Right. Each model has its own cache."}, {"text": "Switching permission modes", "why": "No, it doesn't change the start of the request."}], "answer": 1}]} />

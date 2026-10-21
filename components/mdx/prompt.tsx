@@ -7,7 +7,7 @@ export function Prompt({ children }: { children: string }) {
       <span aria-hidden className="pt-0.5 font-mono text-sun">
         &gt;
       </span>
-      <p className="flex-1 leading-7">{children}</p>
+      <p className="min-w-0 flex-1 leading-7 [overflow-wrap:anywhere]">{children}</p>
       <CopyButton text={children} className="text-term-dim hover:bg-white/10 hover:text-term-ink" />
     </div>
   );

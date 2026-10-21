@@ -2,6 +2,7 @@
 
 import { Check, Copy, X } from "lucide-react";
 import { useState } from "react";
+import { useUi } from "@/components/use-locale";
 
 // navigator.clipboard only exists in secure contexts (https, localhost). Fall back to a hidden
 // textarea + execCommand so copying still works on e.g. a LAN address over http.
@@ -33,6 +34,7 @@ export function CopyButton({
   className?: string;
 }) {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const t = useUi().copy;
 
   async function copy() {
     const ok = await writeClipboard(getText ? getText() : (text ?? ""));
@@ -40,13 +42,13 @@ export function CopyButton({
     setTimeout(() => setStatus("idle"), 1800);
   }
 
-  const label = status === "copied" ? "הועתק" : status === "failed" ? "לא הועתק" : "העתקה";
+  const label = status === "copied" ? t.copied : status === "failed" ? t.failed : t.copy;
 
   return (
     <button
       type="button"
       onClick={copy}
-      aria-label={status === "idle" ? "העתקה ללוח" : label}
+      aria-label={status === "idle" ? t.aria : label}
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${className}`}
     >
       {status === "copied" ? (

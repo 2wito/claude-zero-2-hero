@@ -1,0 +1,287 @@
+# Your First Session & Basic Commands
+
+Claude Code is installed and signed in. Now comes the fun part: in this chapter you'll start it for the first time, ask it to build a small web page, and learn to approve its actions safely.
+
+<Callout type="note" title="What we'll do in this chapter">
+1. Create a practice folder and start Claude Code in it.
+2. Ask a first question and give a first task.
+3. Learn to read approval prompts (permissions) and decide when to approve.
+4. Meet the basic commands: `/help`, `/clear`, `/compact` and `/exit`.
+</Callout>
+
+## Step 1: Create a project folder and go into it
+
+Claude Code works **inside a folder**. Everything it reads and changes is in the folder where you started it. So the first habit: **always go into the project folder before starting `claude`**.
+
+Three terminal commands worth knowing:
+
+| Command | What it does | Example |
+| --- | --- | --- |
+| `mkdir` | Creates a new folder | `mkdir my-project` |
+| `cd` | Goes into a folder | `cd my-project` |
+| `cd ..` | Goes up one folder | `cd ..` |
+
+Open a terminal and create a practice folder. The commands are the same on every operating system:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+cd ~\Desktop
+mkdir my-project
+cd my-project
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+cd %USERPROFILE%\Desktop
+mkdir my-project
+cd my-project
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux"
+cd ~/Desktop
+mkdir my-project
+cd my-project
+```
+
+</Tab>
+</Tabs>
+
+The first line goes to your desktop, the second creates a folder called `my-project` there, and the third goes into it. You'll see the new folder on your desktop.
+
+<Callout type="tip" title="A trick that saves typing">
+Start typing a folder name and press **Tab**: the terminal completes the name for you. It works on every operating system.
+</Callout>
+
+## Step 2: Start Claude Code
+
+Once you're inside the folder, type:
+
+```bash title="Any operating system"
+claude
+```
+
+The first time in each folder, Claude Code asks whether you **trust the files in this folder**. You just created this folder, so it's fine to approve.
+
+<Callout type="warning" title="Why does it ask?">
+Projects can contain settings that affect what Claude Code does. If you downloaded a project from a source you don't know, it's better not to approve until you understand what's in it. For your own folders, it's always fine.
+</Callout>
+
+Now the welcome screen appears. Above the input line you'll see the **version**, the **model** (which Claude is working with you) and the **folder** it's working in. Check that it's the right folder.
+
+## Step 3: The first question
+
+You write to Claude the way you'd write to a friend. Let's start with a simple question:
+
+<Prompt>What's in this folder?</Prompt>
+
+Since the folder is empty, it'll tell you there's nothing in it. Now let's try something more interesting, a real task:
+
+<Prompt>Create a web page in index.html with a birthday greeting for grandma. Colorful and cheerful design, with a big headline and a button that launches confetti</Prompt>
+
+Claude will plan what to do and then, depending on the permission mode (explained in a moment), ask for your approval to create the file. Approve it, then open `index.html` from the folder in your browser (double-click it). You have a web page!
+
+<Callout type="tip" title="Keep improving">
+It's a conversation, so you can keep asking for changes: "make the headline bigger", "add a picture of a cake", "write the greeting as a rhyme". Claude remembers everything said in the conversation, so you don't need to explain it all again.
+</Callout>
+
+## Step 4: Understanding approval prompts (permissions)
+
+This is the most important part of the chapter. Claude Code can take three kinds of actions, each with a different level of risk:
+
+| Kind of action | Example | Risk |
+| --- | --- | --- |
+| **Reading** | Opening a file, searching the project | Low: nothing changes |
+| **Editing files** | Creating a file, changing a line | Medium: can be undone |
+| **Running commands** | Installing software, running a script, deleting | Highest: a command can do almost anything |
+
+When Claude wants to do something that needs approval, it stops and shows an **approval prompt** with exactly what it intends to do. There are usually three options:
+
+1. **Yes**: approve this action.
+2. **Yes, and don't ask again**: approve, and don't ask again about similar actions. The exact wording depends on the kind of action.
+3. **No**: decline, and optionally tell Claude what to do instead. It'll continue based on your explanation.
+
+### How do you decide whether to approve?
+
+**For a file edit**, Claude shows the change: removed lines in red, added lines in green. Ask yourself:
+
+- Is this the file I expected to change?
+- Is the change related to what I asked for?
+
+**For a command**, read the command itself. Most commands are completely harmless: running the site, installing a package you asked for, a check. But there are a few red flags:
+
+<Callout type="warning" title="Stop and think before approving a command with">
+- **`rm`, `del` or `Remove-Item`**: deleting files. Check exactly **what** is being deleted.
+- **`sudo`**: running with administrator rights over the whole computer.
+- **`curl ... | bash`** or **`irm ... | iex`** from an address you don't recognize: downloading and running code from the internet.
+- **`git push`**: uploading code to the internet, for example to GitHub.
+- **Paths outside the project folder**, like your documents or system folders.
+- **Passwords or keys** appearing inside the command.
+
+Not sure? Choose **No** and ask: "Explain what this command does before I approve it". That's a perfectly reasonable question, and it'll happily explain.
+</Callout>
+
+### Permission modes: how much freedom to give Claude
+
+Claude Code works in one of several **permission modes**. The current mode appears in the status line at the bottom of the screen. To switch modes, press **`Shift + Tab`**:
+
+| Mode | Status line shows | What happens |
+| --- | --- | --- |
+| **Manual** | `manual mode on` | Claude reads freely, and asks before every edit and every command |
+| **Accept edits** | `accept edits on` | Edits files without asking, but asks before most commands |
+| **Plan** | `plan mode on` | Only reads and plans, and changes nothing until you approve the plan |
+| **Auto** | `auto mode on` | Works without asking, while a separate safety model checks every action in the background and blocks risky ones |
+
+<Callout type="info" title="Which mode does Claude Code start in?">
+In recent versions, Claude Code usually starts in **auto mode**: it works without stopping for questions, and a built-in safety mechanism checks every action. That's very convenient, but while you're learning it's better to **see** every step.
+</Callout>
+
+<Callout type="tip" title="Our recommendation for beginners">
+For the first few weeks, press `Shift + Tab` until the status line shows **manual mode on**. That way you'll see every file that changes and every command that runs, and understand how Claude works. Once you're comfortable, switch to **accept edits** or **auto**.
+</Callout>
+
+### Made a mistake? You can go back
+
+- **`Esc`** (once): stops Claude mid-action. Then you can tell it what to do instead.
+- **`Esc` twice**, or the **`/rewind`** command: opens a menu of earlier points in the conversation. You can restore the conversation, the files, or both.
+
+<Callout type="warning" title="What going back doesn't undo">
+`/rewind` restores changes Claude made **by editing files**. Things that happened through **terminal commands**, like deleting, installing or uploading, can't always be undone. One more reason to read commands before approving. In chapter 8 we'll use Git as a stronger safety net.
+</Callout>
+
+## Step 5: The basic commands
+
+Inside Claude Code, anything starting with **`/`** (slash) is a **command** to Claude Code itself, not a message to Claude. Type `/` on its own to see a list of all commands.
+
+### `/help`: help
+
+Shows the available commands with a short explanation of each. Whenever you're unsure, start here.
+
+```text title="Inside Claude Code"
+/help
+```
+
+### `/clear`: start a fresh conversation
+
+Clears the current conversation from Claude's memory and starts with a clean slate. **Your files aren't deleted**, only the conversation.
+
+```text title="Inside Claude Code"
+/clear
+```
+
+**When to use it:** when you move on to a new task unrelated to the previous one. For example, you're done with the birthday page and want to work on something else.
+
+<Callout type="note" title="The previous conversation isn't lost">
+Even after `/clear` you can go back to an earlier conversation with `/resume`, which shows a list of past conversations to choose from.
+</Callout>
+
+### `/compact`: free up memory
+
+To understand this command you need one concept: the **context window**.
+
+Think of a whiteboard. Everything said in the conversation, every file Claude read and every command result is written on the board. That's how Claude "remembers" what's going on. But the board has a limited size, and in a long conversation it fills up.
+
+`/compact` **summarizes** the conversation so far: it wipes the board and writes a short summary of the important points. You continue the same task, but with lots of free space.
+
+```text title="Inside Claude Code"
+/compact
+```
+
+You can also tell Claude **what to focus on** in the summary:
+
+```text title="Inside Claude Code"
+/compact keep the list of design changes we made and what's left to do
+```
+
+| | `/clear` | `/compact` |
+| --- | --- | --- |
+| What happens to the conversation | Erased, start from scratch | Summarized, continue from the same point |
+| When to use it | A new, unrelated task | Same task, but the conversation is very long |
+
+<Callout type="tip" title="How do you know the board is filling up?">
+Type `/context` to see how much of the context window is in use. When it gets close to full, Claude Code also **compacts automatically**. But if you're in the middle of a long task, it's better to run `/compact` yourself at a natural stopping point, for example after finishing part of the work.
+</Callout>
+
+### `/exit`: leave
+
+Closes Claude Code and returns you to the regular terminal.
+
+```text title="Inside Claude Code"
+/exit
+```
+
+You can also press **`Ctrl + D` twice** in a row.
+
+### More useful commands
+
+| Command | What it does |
+| --- | --- |
+| `/context` | Shows how much of the context window is in use |
+| `/resume` | Go back to an earlier conversation from a list |
+| `/rewind` | Go back to an earlier point in the conversation and files |
+| `/usage` | Shows usage and cost, and your plan limits |
+| `/status` | Shows version, model and the signed-in account |
+| `/model` | Switch Claude's model |
+
+### Keyboard shortcuts
+
+| Shortcut | What it does |
+| --- | --- |
+| `Esc` | Stops Claude mid-action |
+| `Esc` twice | Opens the rewind menu |
+| `Shift + Tab` | Switches permission mode |
+| `↑` (up arrow) | Brings back messages you wrote earlier |
+| `@` | Mention a specific file, e.g. `@index.html` |
+| `!` at the start of a line | Run a terminal command directly, without going through Claude |
+| `Ctrl + C` | Stops an action, or clears the line. Twice in a row exits |
+
+## Starting from the terminal: handy shortcuts
+
+You type these in the regular terminal, **before** entering Claude Code:
+
+```bash title="In the terminal"
+# Start Claude Code with a task ready to go
+claude "add a button to the page that plays music"
+
+# Continue the last conversation in this folder
+claude -c
+
+# Pick an earlier conversation from a list
+claude -r
+```
+
+## Exercise: your first project
+
+Time to work on your own. In the `my-project` folder:
+
+1. Switch to **manual** mode with `Shift + Tab`.
+2. Ask Claude to add a **photo gallery** to the birthday page (sample photos from the internet are fine).
+3. Read every approval prompt before you approve. Notice which files it touches.
+4. Ask for some design change, and at the approval prompt choose **No** and tell it to do something else.
+5. Try `Esc` twice and go back to the previous version of the page.
+6. Run `/context`, then `/compact`, and see how much space was freed.
+7. Leave with `/exit`, and return to the conversation with `claude -c`.
+
+<Callout type="tip" title="Did it work?">
+Well done! You now know how to start Claude Code, give it tasks, approve actions safely and manage the conversation. Everything else builds on these foundations.
+</Callout>
+
+## Summary
+
+- Always go into the project folder (`cd`) before starting `claude`.
+- Write to Claude in plain language, and keep improving through conversation.
+- **Read approval prompts** before approving, especially commands that delete, upload, or touch things outside the project.
+- `Shift + Tab` switches permission modes, and beginners should start in manual.
+- `/help` for help, `/clear` for a new conversation, `/compact` to free space, `/exit` to leave.
+
+In the next chapter we'll learn **how to ask well**: how to write prompts that get good results the first time.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "Claude asks you to approve a command with rm -rf. What do you do?", "options": [{"text": "Approve, it knows what it's doing", "why": "Risky. rm deletes files, and you need to check exactly what."}, {"text": "Stop, check what's being deleted, and if unsure choose No and ask", "why": "Right. Deletion is a red flag you always check."}, {"text": "Close the terminal", "why": "No need. Just choose No and ask."}], "answer": 1}, {"q": "What's the difference between /clear and /compact?", "options": [{"text": "/clear starts a new conversation, /compact summarizes and continues", "why": "Right. /clear for a new task, /compact for a long conversation on the same task."}, {"text": "/clear deletes files", "why": "No. Files aren't deleted, only the conversation."}, {"text": "There's no difference", "why": "There is: one starts over, the other summarizes."}], "answer": 0}]} />

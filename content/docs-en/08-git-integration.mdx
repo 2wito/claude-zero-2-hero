@@ -1,0 +1,534 @@
+# Version Control: Git and GitHub with Claude Code
+
+In the previous chapters we asked Claude again and again to "commit the current state to git", and promised to explain later. The time has come.
+
+**Git** is like a "save game" button for your project. Every time you save, Git remembers exactly what every file looked like at that moment. If something breaks later, you can go back to any earlier save point. **GitHub** is a website that keeps a copy of your project in the cloud, so it doesn't get lost, so you can share it with others, and so it can be deployed (chapter 9).
+
+The good news: you don't need to memorize Git commands. Claude knows them very well. You need to understand **what** you want, and **what** to watch out for.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- The basic concepts of Git, in plain language.
+- How to ask Claude to create branches, show what changed and write tidy commit messages.
+- How to put a project on GitHub, open a pull request and get a code review.
+- **Safety belts**: how to prevent destructive commands like `git push --force` and protect the main branch.
+</Callout>
+
+## A short glossary
+
+| Term | What it is, simply |
+| --- | --- |
+| **Repository** (repo) | A project folder that Git tracks |
+| **Commit** | A save point with a short message describing what changed |
+| **Branch** | A parallel copy of the project where you can try things without touching the main version |
+| **main** | The "official" version of the project, the one that goes live |
+| **Diff** | A list of exactly what changed: lines added and lines removed |
+| **Remote** | The copy of the project on GitHub |
+| **Push** | Sending commits from your computer to GitHub |
+| **Pull** | Downloading changes from GitHub to your computer |
+| **Pull request** (PR) | A formal proposal to merge a branch into main, with a chance to review and comment before merging |
+| **Merge** | Combining the changes from one branch into another |
+
+<Callout type="tip" title="A branch is like a draft">
+Picture an important document. Instead of editing the original, you make a copy, try changes in it, and only when they're good do you copy them into the original. A Git branch is exactly that copy, and main is the original.
+</Callout>
+
+## Step 0: Install and configure Git
+
+### Check whether Git is already installed
+
+```bash title="Any operating system"
+git --version
+```
+
+If you see something like `git version 2.47.0`, skip to configuration. If not:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+winget install Git.Git
+```
+
+Or download [Git for Windows](https://git-scm.com/downloads/win) and install it with the defaults.
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+winget install Git.Git
+```
+
+Or download [Git for Windows](https://git-scm.com/downloads/win) and install it with the defaults.
+
+</Tab>
+<Tab>
+
+On a Mac, this command offers to install Apple's developer tools, which include Git:
+
+```bash title="macOS"
+xcode-select --install
+```
+
+On Linux (Ubuntu / Debian):
+
+```bash title="Linux"
+sudo apt install git
+```
+
+</Tab>
+</Tabs>
+
+After installing, close and reopen the terminal, and check again with `git --version`.
+
+### Tell Git who you are
+
+Every Git commit is signed with a name and an email. You set this **once** per computer. Do it yourself, in a regular terminal, with your own details:
+
+```bash title="Any operating system"
+git config --global user.name "Your Name"
+git config --global user.email "your-email@example.com"
+```
+
+<Callout type="info" title="Which email?">
+If you'll use GitHub, it's best to use the same email you sign up there with. The name and email appear next to every commit, and are visible to anyone who sees the project if it's public.
+</Callout>
+
+## Part 1: Commits and tidy messages
+
+### Start a repository
+
+A Next.js project (like in chapter 6) already comes with Git. In any other project, ask:
+
+<Prompt>Initialize git in this folder, make sure there's a .gitignore suitable for the project (excluding node_modules and .env files), and commit the current state as a starting point</Prompt>
+
+<Callout type="warning" title="What is .gitignore and why does it matter?">
+`.gitignore` is a list of files Git will **not** save. Two things must be on it: `node_modules` (thousands of files you can always reinstall) and `.env` files, where passwords and keys are stored. A key that was committed to Git and pushed to GitHub should be treated as exposed, even if you deleted it afterwards.
+</Callout>
+
+### "What changed?"
+
+Before committing, it's always worth knowing what's about to be saved:
+
+<Prompt>What changed since the last commit? Summarize it for me file by file, one sentence per file</Prompt>
+
+Behind the scenes Claude will run a command like `git status`. Here's what its output looks like:
+
+```text title="git status (sample output)"
+On branch main
+Changes not staged for commit:
+        modified:   app/page.tsx
+        modified:   lib/recipes.ts
+
+Untracked files:
+        components/SearchBar.tsx
+```
+
+`modified` means an existing file changed, and `Untracked` means it's a new file Git doesn't know yet.
+
+### Commit messages that say something
+
+A commit message is a letter to your future self. A month from now, when you're looking for "when did we break the search?", the messages are what will help you find it.
+
+<PromptCompare
+  bad="Make a commit"
+  good="Look at all the changes and commit them to git. The message should start with a short line describing what changed and why, followed by a short list of the main changes. If there are unrelated changes, split them into separate commits."
+  why="One commit per topic, with a clear message, turns the history into a readable log. “commit” with no guidance usually gets a generic message like “update files”."
+/>
+
+Here's what good messages look like next to weak ones:
+
+```text title="Weak messages"
+update
+fix
+changes
+asdf
+```
+
+```text title="Good messages"
+Add search and category filter to home page
+Fix servings calculator rounding to 1 decimal
+Increase ingredient list font size for readability
+```
+
+<Callout type="note" title="Pick a style once">
+Decide once how you want commit messages written, and put the decision in CLAUDE.md: "git messages: one sentence in the first line, in the imperative (Add, Fix, Update)". That way you don't need to mention it on every commit.
+</Callout>
+
+### Look at the history
+
+<Prompt>Show me the last 10 commits, and briefly explain what happened in each</Prompt>
+
+```text title="git log --oneline (sample output)"
+a3f9c21 Add search and category filter to home page
+7be4d10 Add recipe page with ingredients and steps
+19c0e85 Set up layout and Nunito font
+e6d2b47 Initial commit from Create Next App
+```
+
+Each line is a save point. The odd number at the start is its "ID". You don't need to remember it, but you can ask by it: "What changed in commit 7be4d10?".
+
+## Part 2: Branches, a safe place to experiment
+
+### Why work in a branch?
+
+Say you want to try a completely new design for the site. If you work straight on main and change your mind halfway, you'll have a mess. In a separate branch, main stays exactly as it is, and if the experiment didn't work out, you simply throw the branch away.
+
+**Rule of thumb:** every new feature or experiment gets its own branch.
+
+<Prompt>I want to add the ability to mark recipes as favorites. Create a new branch called feature/favorites from main, switch to it, and tell me when we can start</Prompt>
+
+```text title="What Claude runs (example)"
+$ git switch -c feature/favorites
+Switched to a new branch 'feature/favorites'
+```
+
+Now all work is saved in the `feature/favorites` branch. The current branch name also appears in Cursor's bottom corner, so you always see where you are.
+
+<Callout type="tip" title="Branch names">
+It's common to use a word describing the type of change, followed by a short description: `feature/favorites` for a new feature, `fix/search-empty-results` for a bug fix, `design/new-colors` for a design experiment. No spaces.
+</Callout>
+
+### Switch between branches
+
+<Prompt>Commit what we did in this branch, and take me back to main. I want to see that the original site hasn't changed</Prompt>
+
+Refresh the browser: the site is back to main's state. Ask to switch back to `feature/favorites`, and the changes return. That's the magic of branches.
+
+<Callout type="warning" title="Before switching branches: commit">
+If there are uncommitted changes, Git sometimes refuses to switch branches, or carries the changes with you to the other branch. The safe habit: before every switch, "commit what we have".
+</Callout>
+
+## Part 3: See exactly what changed
+
+Before something goes into main, you need to know exactly what it is. There are three ways, from the most visual to the most textual:
+
+**1. Source Control in Cursor** (`Ctrl + Shift + G`): a list of files, and a side-by-side comparison with one click. The easiest on the eyes, as we learned in chapter 5.
+
+**2. The `/diff` command inside Claude Code**: shows all the changes in the folder, including the ones Claude made in the current conversation.
+
+```text title="Inside Claude Code"
+/diff
+```
+
+**3. Ask Claude for a summary**, which is the most useful way when there are lots of changes:
+
+<Prompt>Compare the current branch to main and summarize for me: which files changed, what the feature does now, and what might break because of these changes. Be honest, even if it's code you wrote</Prompt>
+
+Here's what a raw diff looks like, in case you want to peek:
+
+```diff title="git diff main (sample output)"
+--- a/components/RecipeCard.tsx
++++ b/components/RecipeCard.tsx
+@@ -12,6 +12,10 @@ export function RecipeCard({ recipe }: Props) {
+       <h3 className="text-xl font-bold">{recipe.title}</h3>
++      <FavoriteButton slug={recipe.slug} />
+       <p className="text-gray-600">{recipe.time} minutes</p>
+-      <span>{recipe.category}</span>
++      <span className="rounded-full px-3">{recipe.category}</span>
+```
+
+Lines with `+` were added, lines with `-` were removed. Lines without a sign are context, so you understand where it happens.
+
+## Part 4: Put it on GitHub
+
+### What you need
+
+1. **A GitHub account**: sign up for free at [github.com](https://github.com). You do this yourself.
+2. **GitHub CLI** (`gh`): a tool that lets Claude work with GitHub, meaning create repositories and pull requests:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+winget install GitHub.cli
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+winget install GitHub.cli
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS (Homebrew)"
+brew install gh
+```
+
+On Linux, instructions for each distribution are at [cli.github.com](https://cli.github.com).
+
+</Tab>
+</Tabs>
+
+3. **Sign in**: in a regular terminal (not inside Claude), run this command and follow the instructions. It opens a browser for approval:
+
+```bash title="In a regular terminal"
+gh auth login
+```
+
+<Callout type="warning" title="Sign in yourself">
+`gh auth login` asks questions and requests approval in the browser. It's your own interactive process, so it's better to run it in a regular terminal and not ask Claude to. Once you've signed in, Claude can use the connection.
+</Callout>
+
+### Create a GitHub repository and push
+
+<Prompt>Create a new private repository on GitHub called grandma-recipes using gh, connect it to this project, and push the main branch. At the end give me the link to the repository</Prompt>
+
+```text title="Sample output"
+✓ Created repository your-username/grandma-recipes on GitHub
+  https://github.com/your-username/grandma-recipes
+✓ Added remote https://github.com/your-username/grandma-recipes.git
+✓ Pushed commits to https://github.com/your-username/grandma-recipes.git
+```
+
+Open the link in your browser: all your files are there.
+
+<Callout type="info" title="Private or public?">
+**Private**: only you, and whoever you invite, can see the code. It's the safe default. **Public**: the whole world can see the code. Good for open-source projects or a portfolio. When in doubt, start private. You can always change it later.
+</Callout>
+
+## Part 5: Pull requests and code review
+
+### What is a pull request, and why do you need one if you work alone?
+
+A pull request (PR) is a formal request: "here's a branch with changes, I propose merging it into main". On GitHub it gets its own page, with a description, all the changes and room for comments.
+
+Even when you work alone, a PR is a deliberate pause before something enters the official version: a place to review, run checks and think once more. And in chapter 9, once the site is connected to Vercel, every PR also gets its own **preview URL**, so you can see the change live before it reaches the real site.
+
+### The full process
+
+| # | Step | The command you'll see |
+| --- | --- | --- |
+| 1 | A new branch from main | `git switch -c feature/favorites` |
+| 2 | Work and commits, several times | `git commit` |
+| 3 | Push the branch to GitHub | `git push -u origin feature/favorites` |
+| 4 | Open a PR | `gh pr create` |
+| 5 | Review and fixes | `/code-review`, and more commits as needed |
+| 6 | Merge into main | The **Merge** button on GitHub |
+| 7 | Update main on your computer | `git switch main` then `git pull` |
+
+You don't need to type any of these commands. They're here so you'll recognize them in Claude's approval prompts.
+
+### Open a PR
+
+When the feature is ready and committed in its branch:
+
+<Prompt>The favorites feature is ready. Push the branch to GitHub and open a pull request into main. In the description: what the feature does, why we added it, which files changed, and how to test it manually step by step. If there are risks or things you didn't test, write those too</Prompt>
+
+Claude will use `gh pr create`, and at the end return a link to the PR page:
+
+```text title="Sample output"
+Creating pull request for feature/favorites into main in your-username/grandma-recipes
+
+https://github.com/your-username/grandma-recipes/pull/3
+```
+
+<PromptCompare
+  bad="Open a PR"
+  good="Open a PR into main. In the description: what changed and why, how to test manually, and what the risks are. Show me the description before you create the PR."
+  why="A good description turns the PR into a document you can come back to. “Show me first” gives you a chance to correct it before it's published."
+/>
+
+### Code review: Claude checks Claude
+
+Here are three ways to get a review, from the simplest to the most formal:
+
+**1. A regular request, in a new conversation.** After `/clear`, Claude looks at the changes with fresh eyes, without being attached to code it wrote itself:
+
+<Prompt>Review the changes in the current branch against main like a strict senior developer. Look for bugs, unhandled edge cases, accessibility problems and mobile layout issues. Show a list ordered by severity, with references to file and line, and don't fix anything yet</Prompt>
+
+**2. The built-in `/code-review` command** (or `/review` for short): reviews the current changes and looks for bugs, in a separate agent with a clean context.
+
+```text title="Inside Claude Code"
+/code-review
+```
+
+You can also review a PR by its number, for example `/code-review 3`, and add `--comment` so the comments are posted directly on the PR on GitHub.
+
+**3. A security review with `/security-review`**: checks the changes in the branch against main and looks for security problems, like exposed sensitive data or unchecked input. Especially recommended before merging anything involving forms, sign-in or saving data.
+
+```text title="Inside Claude Code"
+/security-review
+```
+
+After the review, decide what to fix:
+
+<Prompt>Fix the high and medium severity issues from the review, commit each fix separately with a clear message, and push to the same branch. The PR will update on its own</Prompt>
+
+<Callout type="tip" title="Advanced: Claude inside GitHub">
+The `/install-github-app` command installs the Claude app on GitHub for your repository. After installing it, you can write `@claude` in a comment on a PR or issue on GitHub, and Claude will answer, review or fix right there. This is especially useful when working in a team.
+</Callout>
+
+### Merge
+
+**Do the merge yourself**, on GitHub: open the PR page, go through the **Files changed** tab to see all the changes, and if everything's good, click **Merge pull request** and then **Confirm merge**.
+
+<Callout type="note" title="Why not let Claude merge?">
+It can, with `gh pr merge`. But merging into main is exactly the moment when a human should decide. One click in the browser after a final look is the healthy habit.
+</Callout>
+
+After merging, update your computer:
+
+<Prompt>I merged the PR on GitHub. Switch back to main, pull the updates from GitHub, and delete the local feature/favorites branch since it's already merged</Prompt>
+
+## Part 6: Safety belts
+
+Git is a great safety net, but a few commands can tear holes in it. Here they are, and how to build protection in several layers.
+
+### The commands to know (so you don't approve them)
+
+| Command | What it does | Why it's dangerous |
+| --- | --- | --- |
+| `git push --force` (or `-f`) | Pushes and overwrites what's on GitHub | Deletes commits from GitHub that you don't have, for example someone else's work or commits from another computer |
+| `git reset --hard` | Returns the folder to an earlier commit | Every uncommitted change is deleted, with no way to recover |
+| `git clean -fd` | Deletes files Git doesn't know about | New files that weren't committed yet are deleted entirely |
+| `git checkout -- .` / `git restore .` | Discards all uncommitted changes | Unsaved work is lost |
+| `git branch -D` | Deletes a branch even if it wasn't merged | Work saved only in that branch may be lost |
+| `git commit --amend` after a push | Rewrites a commit that was already pushed | Local history and GitHub's history diverge, and then a force push is "needed" |
+
+<Callout type="warning" title="The simple rule">
+If an approval prompt contains the words **force**, **hard**, **clean**, **-D** or **amend**, stop. Choose **No** and ask Claude: "Why do we need this command, and what will happen if we use it? Is there a safer way?". There almost always is.
+</Callout>
+
+### Layer 1: your eyes
+
+In **manual** mode, every command goes through you, and you read before approving, just like in chapter 3.
+
+In **auto** mode, Claude Code's safety mechanism blocks dangerous commands like force push, `git reset --hard` and `git clean -fd` by default. It also respects boundaries you set in the conversation. If you write "don't push to GitHub without asking me", the mechanism blocks pushes until you say otherwise.
+
+### Layer 2: rules in CLAUDE.md
+
+```markdown title="CLAUDE.md"
+## Git
+- Never git push --force, and never push directly to main.
+- Every feature in its own branch, and merge into main only via a pull request.
+- Before any command that discards changes (reset, clean, restore), stop and ask.
+- Commit messages: a short first line describing what and why.
+```
+
+This strongly influences Claude's behavior, but it's **guidance, not a lock**. For a real lock you need the next layers.
+
+### Layer 3: permission rules in Claude Code
+
+In the project's settings file you can define commands Claude Code **always blocks** (`deny`), and commands it **always asks** about (`ask`), in every permission mode, including auto mode:
+
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)"
+    ],
+    "ask": [
+      "Bash(git push *)"
+    ]
+  }
+}
+```
+
+- **`deny`**: these commands are blocked, period.
+- **`ask`**: any other `git push` will ask for your approval, even in auto mode.
+
+You can also ask Claude to create the file:
+
+<Prompt>Create a .claude/settings.json file in the project, with permission rules that block git push --force, git push -f, git reset --hard and git clean, and that ask for approval before any other git push. Explain each line to me</Prompt>
+
+And you can view and edit the existing rules at any time with the `/permissions` command.
+
+<Callout type="info" title="Where does the file go?">
+`.claude/settings.json` in the project folder applies to everyone who works on the project, and is saved in Git with the code. `~/.claude/settings.json` in your home folder applies to you across all projects. It's worth putting the Git safety rules **in both**.
+</Callout>
+
+<Callout type="warning" title="Why do you need another layer?">
+These rules check the **text** of the command. A command written slightly differently, for example `git -C . push --force`, might not match the pattern. It's a strong layer, but not perfect. The next layer doesn't depend on wording at all.
+</Callout>
+
+### Layer 4: protecting main on GitHub
+
+This is the strongest layer, because it's enforced **on GitHub's server**. It doesn't matter who sends the command or how it's worded: Claude, you, or anyone else.
+
+On the repository page on GitHub:
+
+1. Click **Settings** (in the repository's top menu).
+2. In the side menu, under **Code and automation**, choose **Rules → Rulesets**.
+3. Click **New ruleset → New branch ruleset**.
+4. Give it a name, for example `protect-main`, and set **Enforcement status** to **Active**.
+5. Under **Target branches** click **Add target → Include default branch**.
+6. Check the rules:
+   - **Restrict deletions**: main can't be deleted.
+   - **Block force pushes**: main can't be overwritten.
+   - **Require a pull request before merging**: changes enter main only via a PR.
+7. Click **Create**.
+
+From now on, if anyone tries to force push to main, GitHub refuses:
+
+```text title="A force push attempt to a protected main (sample output)"
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: - Cannot force-push to this branch
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+```
+
+<Callout type="note" title="Mind the repository type">
+On a free GitHub account, branch protection is available for **public** repositories. For **private** repositories it usually requires a paid plan (like GitHub Pro). If your repository is private and the option isn't available, layers 1 to 3 still protect you well.
+</Callout>
+
+### And if something gets deleted anyway?
+
+Git almost never truly forgets. Even after a `reset` or deleting a branch, old commits stay for a while in an internal log called the **reflog**. If something happened:
+
+<Prompt>I think I lost some commits. Don't change anything yet. Use git reflog to find the state before the last operation, and explain what you see and how you recommend restoring it</Prompt>
+
+Notice the "don't change anything yet": in an emergency, the first thing is to understand, and only then to act.
+
+## Exercise: a complete feature, the professional way
+
+We'll work on the recipe site from chapter 6 (or any other project with Git) and add **favorites**: a heart button on every recipe card, and a page showing only the recipes you marked.
+
+1. **Safety belts**: create `.claude/settings.json` with the `deny` and `ask` rules from part 6, and add the Git rules to CLAUDE.md.
+2. **GitHub**: if the repository isn't on GitHub yet, create it and push main (part 4).
+3. **Branch**: ask Claude to create `feature/favorites`.
+4. **Work**: ask for the feature:
+
+<Prompt>Add a heart button on every recipe card and on the recipe page, which marks the recipe as a favorite. Favorites are saved in the browser. Add a “My favorites” link to the header that leads to a page showing only the marked recipes, and if there are no favorites, a friendly message. Commit each step separately with a clear message</Prompt>
+
+5. **Check**: in the browser, and in Claude's summary of the changes against main (part 3).
+6. **PR**: ask it to push and open a pull request with a full description.
+7. **Review**: run `/code-review`, and fix what matters.
+8. **Merge**: merge it yourself on GitHub, then ask Claude to update main on your computer.
+9. **Protection test** (only if you enabled protection on GitHub): ask Claude to "try pushing a small change directly to main". GitHub should refuse and require a PR.
+
+<Checklist
+  id="ch8-exercise"
+  title="Finished the exercise?"
+  items={[
+    "git --version works, and user.name and user.email are set",
+    "There's a .gitignore that includes node_modules and .env files",
+    "There's a .claude/settings.json with deny rules for force push and ask for every push",
+    "Git rules were added to CLAUDE.md",
+    "The project is on GitHub",
+    "The feature was built in the feature/favorites branch, with several clear commits",
+    "A pull request was opened with a full description",
+    "I ran /code-review and fixed the important issues",
+    "I merged it myself on GitHub, and main on my computer is up to date",
+  ]}
+/>
+
+## Summary
+
+- **Git** keeps save points, and **GitHub** keeps them in the cloud. You don't need to memorize commands: ask Claude, and understand what you're approving.
+- **Good commits**: one topic per commit, with a message explaining what and why.
+- **Branches** for every feature or experiment. main stays clean.
+- **Seeing what changed**: Source Control in Cursor, `/diff`, or a summary from Claude.
+- **Pull request**: branch → PR with a description → `/code-review` and `/security-review` → a merge you do yourself.
+- **Four safety layers**: your eyes, CLAUDE.md, `deny`/`ask` rules in `.claude/settings.json`, and protecting main on GitHub.
+
+In the next chapter we'll deploy the site with Vercel: every push to main updates the site automatically, and every pull request gets its own preview URL.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "What's the strongest layer against force pushing to main?", "options": [{"text": "A rule in CLAUDE.md", "why": "That's guidance, not a lock."}, {"text": "A deny rule in .claude/settings.json", "why": "Strong, but it checks the command's text, and different wording can slip through."}, {"text": "Branch protection on GitHub", "why": "Right. It's enforced on the server, no matter who sends it or how."}], "answer": 2}, {"q": "Why work in a branch and not straight on main?", "options": [{"text": "Because main is slower", "why": "Nothing to do with speed."}, {"text": "To try things without risking the main version", "why": "Right. Experiment didn't work out? Throw the branch away."}, {"text": "Because Git doesn't let you commit to main", "why": "It does, but it's less safe."}], "answer": 1}]} />

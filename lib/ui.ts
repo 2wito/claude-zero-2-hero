@@ -1,0 +1,121 @@
+// UI strings for components. Chapter content lives in content/docs (Hebrew) and content/docs-en (English).
+
+const he = {
+  brand: { name: "Claude Code", suffix: "בעברית" },
+  nav: { syllabus: "סילבוס", audience: "למי זה מתאים", guide: "למדריך" },
+  theme: { toLight: "מעבר למצב בהיר", toDark: "מעבר למצב כהה" },
+  language: { label: "English", aria: "Switch to English" },
+  fontSize: {
+    button: "גודל טקסט",
+    options: ["רגיל", "גדול", "גדול מאוד"],
+  },
+  copy: { copy: "העתקה", copied: "הועתק", failed: "לא הועתק", aria: "העתקה ללוח" },
+  callout: { note: "הערה", info: "מידע", tip: "טיפ", warning: "שימו לב" },
+  checklist: { title: "רשימת בדיקה", done: "הכול בוצע", of: "מתוך" },
+  compare: { weak: "בקשה חלשה", strong: "בקשה חזקה" },
+  library: {
+    filterLabel: "סינון לפי סוג",
+    filters: { all: "הכול", agent: "סוכנים", command: "פקודות", skill: "Skills", tool: "כלי עזר" },
+    types: { agent: "סוכן", command: "פקודה", skill: "Skill", tool: "כלי עזר" },
+    when: "מתי להשתמש: ",
+  },
+  quiz: { correct: "נכון מאוד! 🎉 ", wrong: "לא מדויק, נסה שוב 💡 " },
+  progress: {
+    title: "ההתקדמות שלכם בקורס",
+    of: "מתוך",
+    chapters: "פרקים",
+    reset: "איפוס",
+    aria: "התקדמות בקורס",
+    markDone: "סמנו את הפרק כהושלם",
+    done: "הפרק הושלם",
+    quizScore: (score: number, total: number) => `בחידון: ${score} מתוך ${total} נכונות בניסיון הראשון.`,
+    quizHint: "פתרון כל שאלות החידון מסמן את הפרק כהושלם אוטומטית.",
+    completed: "הושלם",
+  },
+  sidebar: { aria: "פרקי המדריך", all: "כל הפרקים" },
+  chapter: {
+    label: "פרק",
+    placeholder: "הפרק הזה עדיין בכתיבה. בינתיים אפשר להתחיל מההתחלה.",
+    navAria: "ניווט בין פרקים",
+    prev: "הפרק הקודם",
+    next: "הפרק הבא",
+  },
+  notFound: {
+    title: "הדף לא נמצא",
+    body: "הכתובת לא קיימת, או שהפרק עבר מקום. אפשר לחזור לדף הבית, או להתחיל מהפרק הראשון.",
+    first: "לפרק הראשון",
+    home: "לדף הבית",
+  },
+  glossary: {
+    search: "חיפוש במילון",
+    placeholder: "חיפוש מושג, למשל טוקן או compact",
+    filterLabel: "סינון לפי קטגוריה",
+    tabs: { all: "הכול", basic: "מושגי יסוד", advanced: "מתקדם", cli: "פקודות CLI" },
+    count: (n: number) => `${n} מושגים`,
+    chapter: "פרק",
+    empty: "לא נמצא מושג כזה. נסו מילה אחרת, או בחרו \"הכול\".",
+  },
+  hub: { filterLabel: "סינון לפי קטגוריה", all: "הכול", count: (n: number) => `${n} בקשות` },
+};
+
+type Dict = typeof he;
+
+const en: Dict = {
+  brand: { name: "Claude Code", suffix: "Zero to Hero" },
+  nav: { syllabus: "Syllabus", audience: "Who it's for", guide: "Start the guide" },
+  theme: { toLight: "Switch to light mode", toDark: "Switch to dark mode" },
+  language: { label: "עברית", aria: "מעבר לעברית" },
+  fontSize: {
+    button: "Text size",
+    options: ["Normal", "Large", "Extra large"],
+  },
+  copy: { copy: "Copy", copied: "Copied", failed: "Not copied", aria: "Copy to clipboard" },
+  callout: { note: "Note", info: "Info", tip: "Tip", warning: "Watch out" },
+  checklist: { title: "Checklist", done: "All done", of: "of" },
+  compare: { weak: "Weak prompt", strong: "Strong prompt" },
+  library: {
+    filterLabel: "Filter by type",
+    filters: { all: "All", agent: "Agents", command: "Commands", skill: "Skills", tool: "Utilities" },
+    types: { agent: "Agent", command: "Command", skill: "Skill", tool: "Utility" },
+    when: "When to use: ",
+  },
+  quiz: { correct: "Exactly right! 🎉 ", wrong: "Not quite, try again 💡 " },
+  progress: {
+    title: "Your course progress",
+    of: "of",
+    chapters: "chapters",
+    reset: "Reset",
+    aria: "Course progress",
+    markDone: "Mark chapter as done",
+    done: "Chapter done",
+    quizScore: (score: number, total: number) => `Quiz: ${score} of ${total} right on the first try.`,
+    quizHint: "Answering every quiz question marks the chapter as done automatically.",
+    completed: "done",
+  },
+  sidebar: { aria: "Guide chapters", all: "All chapters" },
+  chapter: {
+    label: "Chapter",
+    placeholder: "This chapter is still being written. In the meantime, start from the beginning.",
+    navAria: "Chapter navigation",
+    prev: "Previous chapter",
+    next: "Next chapter",
+  },
+  notFound: {
+    title: "Page not found",
+    body: "This address doesn't exist, or the chapter has moved. Go back home, or start from the first chapter.",
+    first: "First chapter",
+    home: "Home",
+  },
+  glossary: {
+    search: "Search the glossary",
+    placeholder: "Search a term, e.g. token or compact",
+    filterLabel: "Filter by category",
+    tabs: { all: "All", basic: "Basics", advanced: "Advanced", cli: "CLI commands" },
+    count: (n: number) => `${n} terms`,
+    chapter: "Chapter",
+    empty: "No matching term. Try another word, or pick \"All\".",
+  },
+  hub: { filterLabel: "Filter by category", all: "All", count: (n: number) => `${n} prompts` },
+};
+
+export const ui = { he, en };

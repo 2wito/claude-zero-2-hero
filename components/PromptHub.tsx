@@ -2,18 +2,24 @@
 
 import { useState } from "react";
 import { CopyButton } from "@/components/copy-button";
+import { useLocale } from "@/components/use-locale";
 import { promptHub } from "@/lib/prompt-hub";
+import { promptHubEn } from "@/lib/prompt-hub-en";
+import { ui } from "@/lib/ui";
 
 /** Card library of everyday prompts, filtered by category. */
 export function PromptHub() {
   const [category, setCategory] = useState("all");
-  const visible = promptHub.filter((c) => category === "all" || c.id === category);
+  const locale = useLocale();
+  const t = ui[locale].hub;
+  const hub = locale === "en" ? promptHubEn : promptHub;
+  const visible = hub.filter((c) => category === "all" || c.id === category);
   const total = visible.reduce((n, c) => n + c.prompts.length, 0);
 
   return (
     <div className="mt-6">
-      <div role="toolbar" aria-label="סינון לפי קטגוריה" className="flex flex-wrap gap-2">
-        {[{ id: "all", label: "הכול" }, ...promptHub].map((c) => (
+      <div role="toolbar" aria-label={t.filterLabel} className="flex flex-wrap gap-2">
+        {[{ id: "all", label: t.all }, ...hub].map((c) => (
           <button
             key={c.id}
             type="button"
@@ -28,7 +34,7 @@ export function PromptHub() {
         ))}
       </div>
       <p aria-live="polite" className="mt-3 text-sm text-muted">
-        {total} בקשות
+        {t.count(total)}
       </p>
 
       {visible.map((c) => (

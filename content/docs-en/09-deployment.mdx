@@ -1,0 +1,376 @@
+# Deploying Your Site with Vercel
+
+So far your site has only run on your computer, at `localhost:3000`. In this chapter it gets a real address on the internet, one you can send to the whole family.
+
+We'll use **Vercel**, a hosting service built by the company that develops Next.js. The best part: after a one-time connection to GitHub, **every push to main updates the site on its own**, without clicking any button.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- How to connect your GitHub repository to Vercel, and get automatic deployments.
+- How to set environment variables and build settings.
+- How to connect your own domain, like `grandma-recipes.com`.
+- How to check the live site, and handle deployments that failed.
+</Callout>
+
+<Callout type="info" title="What you need before you start">
+- A working Next.js project, like the recipe site from chapter 6.
+- The project is on **GitHub** (chapter 8).
+- `npm run build` passes on your computer without errors (chapters 6 and 7).
+</Callout>
+
+## How it works: the flow
+
+Before you start clicking, it's worth understanding the big picture:
+
+| # | What happens | Where |
+| --- | --- | --- |
+| 1 | You (or Claude) push a change to GitHub | Your computer |
+| 2 | GitHub tells Vercel there's new code | GitHub |
+| 3 | Vercel downloads the code and runs `npm run build` | Vercel's servers |
+| 4 | If the build succeeds, the new version goes live | The internet |
+| 5 | If the build fails, the previous version **stays** live | The internet |
+
+Notice row 5: a failed deployment doesn't break the site. Visitors keep seeing the last version that worked.
+
+Vercel distinguishes between two kinds of deployments:
+
+| Kind | When it's created | The address | Why it's useful |
+| --- | --- | --- | --- |
+| **Production** | A push to the `main` branch | The site's main address | This is the site everyone sees |
+| **Preview** | A push to any other branch, or a pull request | A temporary, separate address for each deployment | Check a change live before it reaches main |
+
+This connects exactly to the workflow from chapter 8: branch → pull request → **a Vercel preview** → merge → the site updates.
+
+## Step 0: Check before deploying
+
+Before connecting, make sure the project is ready. Claude can do most of the check:
+
+<Prompt>We're about to deploy the site to Vercel. Check that the project is ready: npm run build passes, every package in use is listed in package.json, there are no passwords or keys in the code, .env files are in .gitignore, and there's no code that relies on files that exist only on my computer. Show me a list of what you found, and don't fix anything yet</Prompt>
+
+<Callout type="warning" title="The add-recipe form from chapter 6">
+If you built the bonus from chapter 6, where new recipes are saved to a JSON file, know that it **won't work live**. On Vercel the code runs on temporary servers, and you can't save files on them permanently: an added recipe will vanish, or an error will appear. To make it work live you need a real database, and chapter 10 has a ready-made prompt for that upgrade. Until then, you can ask Claude: "Hide the link to the add-recipe page when the site runs in production, and keep it only in development".
+</Callout>
+
+<Checklist
+  id="ch9-preflight"
+  title="Ready to deploy?"
+  items={[
+    "npm run build passes on my computer without errors",
+    "All changes are committed to git and pushed to main on GitHub",
+    "There are no passwords or keys in the code, and .env files are in .gitignore",
+    "I decided what to do with the add-recipe form, if I built it",
+  ]}
+/>
+
+## Step 1: Connect GitHub to Vercel
+
+### 1.1 Create an account
+
+1. Go to [vercel.com](https://vercel.com) and click **Sign Up**.
+2. Choose the **Hobby** plan, the free plan.
+3. Choose **Continue with GitHub** and sign in with your GitHub account. That way Vercel can access your repositories.
+
+<Callout type="info" title="Hobby or Pro?">
+The **Hobby** plan is free and suitable for **personal, non-commercial** projects, like a family recipe site. If the site is used for a business, for example a site for ordering cakes you sell, you need the paid **Pro** plan. Current terms and prices are at [vercel.com/pricing](https://vercel.com/pricing).
+</Callout>
+
+### 1.2 Import the project
+
+1. In the Vercel dashboard, click **Add New...** → **Project**.
+2. Under **Import Git Repository** a list of your GitHub repositories appears. Find `grandma-recipes` and click **Import**.
+3. The repository isn't listed? Click the link for configuring GitHub access (worded something like **Adjust GitHub App Permissions**), and in GitHub's window grant Vercel access to this repository.
+
+<Callout type="tip" title="Only the repositories it needs">
+When GitHub asks which repositories to give Vercel access to, it's better to choose **Only select repositories** and check only the ones you're deploying, not all of them. That's a good safety principle: give each tool only what it needs.
+</Callout>
+
+### 1.3 The settings screen
+
+After the import, a **Configure Project** screen appears. In most projects you don't need to change anything there:
+
+| Field | What to choose | Explanation |
+| --- | --- | --- |
+| **Project Name** | `grandma-recipes` | Determines the address: `grandma-recipes.vercel.app` (if the name is taken, Vercel adds a suffix) |
+| **Framework Preset** | **Next.js** | Vercel detects this on its own |
+| **Root Directory** | `./` | The folder the project is in. Change it only if the project is in a subfolder of the repository |
+| **Build and Output Settings** | Leave as is | The build command (`npm run build`) and other settings are detected automatically |
+| **Environment Variables** | Empty, for now | More on this in step 2 |
+
+Click **Deploy**.
+
+### 1.4 The first deployment
+
+Vercel starts building, and you'll see the Build Logs running in real time. They look just like what you saw when you ran `npm run build` yourself:
+
+```text title="Vercel build logs (sample output)"
+Cloning github.com/your-username/grandma-recipes (Branch: main)
+Running "npm install"
+added 312 packages in 14s
+Running "npm run build"
+   ▲ Next.js 15.5.4
+ ✓ Compiled successfully
+ ✓ Generating static pages (11/11)
+Build Completed in /vercel/output [42s]
+Deploying outputs...
+Deployment completed
+```
+
+After a minute or two a celebratory screen appears with a screenshot of the site. Click it, or **Continue to Dashboard**. Your site is live, at an address like:
+
+```text
+https://grandma-recipes.vercel.app
+```
+
+Open the link on your phone too. That's the site you built, on the internet, for the whole world.
+
+<Checklist
+  id="ch9-import"
+  title="Step 1: the site is live"
+  items={[
+    "I have a Vercel account connected to GitHub",
+    "I gave Vercel access only to the repositories it needs",
+    "The project was imported, and the framework was detected as Next.js",
+    "The first deployment succeeded, and the site opens at a vercel.app address",
+    "I opened the site on my phone too",
+  ]}
+/>
+
+### 1.5 Testing the automatic deployment
+
+Now the cool part. Go back to Claude Code and ask for a small change:
+
+<Prompt>Change the opening sentence on the home page to “Welcome to Grandma's kitchen”, commit it to git and push to main</Prompt>
+
+After the push, go to the project's **Deployments** tab on Vercel. You'll see a new deployment that started on its own. When it finishes, refresh the site: the new sentence is already there.
+
+<Callout type="tip" title="A preview for every pull request">
+If you work like in chapter 8, in a branch with a pull request, Vercel adds a comment to the PR on GitHub with a **Preview** link. You can send the link to family members and ask "what do you think?" before the change reaches the real site. Merge only once everyone's happy.
+</Callout>
+
+## Step 2: Environment variables and build settings
+
+### What are environment variables?
+
+**Environment variables** are settings the code needs, but that aren't stored in the code itself. Mostly these are secret things, like an API key or a database password, and things that differ between environments, like the site's address.
+
+On your computer they live in a file called `.env.local`, which doesn't go to GitHub, because it's in `.gitignore`:
+
+```bash title=".env.local (on your computer only)"
+SITE_NAME="Grandma's Recipes"
+CONTACT_EMAIL="family@example.com"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+```
+
+Since this file doesn't reach GitHub, Vercel doesn't see it either. So you need to set the variables **in Vercel too**.
+
+### Add variables in Vercel
+
+1. In the project dashboard, click **Settings** → **Environment Variables**.
+2. Enter the variable's name (**Key**) and its value (**Value**).
+3. Choose which environments it belongs to:
+   - **Production**: the main site.
+   - **Preview**: previews of branches and PRs.
+   - **Development**: for anyone pulling the variables to their computer with Vercel's command-line tool.
+4. Click **Save**.
+5. **Important:** new variables apply only to **new** deployments. To make the current site know about them, go to **Deployments**, click the three dots (**...**) next to the latest deployment, and choose **Redeploy**.
+
+<Callout type="warning" title="NEXT_PUBLIC_ = visible to everyone">
+In Next.js, a variable whose name starts with `NEXT_PUBLIC_` is sent **to every visitor's browser**, and anyone can see it. That's fine for public things, like the site's address. **Never put an API key or password in a variable starting with `NEXT_PUBLIC_`.** Variables without that prefix are available only on the server side, and stay secret.
+</Callout>
+
+Claude can help you sort this out:
+
+<Prompt>Go through the code and make a list of every environment variable the project uses. For each variable: whether it's secret, whether it must be available in the browser (and therefore start with NEXT_PUBLIC_), and what its value should be in production. Also create a .env.example file with the names only, no real values, so there's documentation in the project</Prompt>
+
+<Callout type="note" title="What is .env.example?">
+A file with only the variable **names**, without the secret values. This one you do commit to Git, so anyone who downloads the project, or you six months from now, knows which variables need to be set.
+</Callout>
+
+### Build settings
+
+In most projects Vercel detects everything on its own. If you do need to change something, the settings are under **Settings** → **Build and Deployment** (in older interfaces: **General**):
+
+| Setting | Next.js default | When to change |
+| --- | --- | --- |
+| **Build Command** | `npm run build` | If you have a special build script |
+| **Install Command** | `npm install` (detected from the lock file) | Almost never |
+| **Output Directory** | Detected automatically | Almost never |
+| **Root Directory** | `./` | If the project is in a subfolder of the repository |
+| **Node.js Version** | A recent supported version | If the build fails because of the version, it should match the version on your computer (`node -v`) |
+
+<Checklist
+  id="ch9-env"
+  title="Step 2: variables and settings"
+  items={[
+    "I have a list of every environment variable the project needs",
+    "There's no key or password in any variable starting with NEXT_PUBLIC_",
+    "All variables are set in Vercel, for the right environments",
+    "I redeployed after adding the variables",
+    "The project has a .env.example file with no secret values",
+  ]}
+/>
+
+## Step 3: Your own domain
+
+`grandma-recipes.vercel.app` works great, but `grandma-recipes.com` looks much better. Here's how to connect it.
+
+### 3.1 Buy a domain
+
+You buy a domain from a **domain registrar**. There are many, for both generic endings like `.com` and country endings like `.co.uk`, and Vercel itself sells domains too. A domain's yearly price usually ranges from a few dollars to a few dozen, depending on the ending.
+
+<Callout type="tip" title="The simplest: buy through Vercel">
+A domain bought through Vercel (in the **Domains** tab) connects to the project automatically, with no DNS settings at all. If the domain was bought elsewhere, continue to step 3.2.
+</Callout>
+
+### 3.2 Add the domain in Vercel
+
+1. In the project, go to **Settings** → **Domains**.
+2. Click **Add Domain**, type the domain (for example `grandma-recipes.com`) and click **Add**.
+3. Vercel asks how to handle the `www` version. The recommendation: add both, and redirect one to the other, so both addresses work.
+4. Vercel shows **DNS records** you need to set at your registrar, with a warning sign until they're set.
+
+### 3.3 Set DNS at the registrar
+
+**DNS** is the internet's "phone book": it tells browsers where to go when someone types your domain. You need to add two records at your registrar, according to what Vercel shows:
+
+| Record type | Name / Host | Value | For |
+| --- | --- | --- | --- |
+| **A** | `@` | An IP address Vercel shows, usually `76.76.21.21` | The main domain: `grandma-recipes.com` |
+| **CNAME** | `www` | An address Vercel shows, something like `cname.vercel-dns.com` | The www version |
+
+<Callout type="warning" title="Copy the values from Vercel, not from here">
+The values in the table are a common example, but Vercel may show different values for your project. Always copy exactly what appears on the project's **Domains** screen. And if your registrar has old **A** records for the same name (for example the registrar's "parking page"), delete them, otherwise they'll conflict.
+</Callout>
+
+### 3.4 Wait, and check
+
+- DNS changes usually take **a few minutes to a few hours**, and in rare cases up to 48 hours.
+- When everything is set correctly, the sign next to the domain in Vercel turns into a green check (**Valid Configuration**).
+- Vercel issues a **security certificate (HTTPS)** automatically and for free. The padlock in the address bar appears without you doing anything.
+
+<Checklist
+  id="ch9-domain"
+  title="Step 3: domain"
+  items={[
+    "I bought a domain",
+    "I added it under Settings → Domains, including the www version",
+    "I set the records at the registrar exactly as Vercel shows, and deleted old conflicting records",
+    "Vercel shows Valid Configuration",
+    "The site opens on the new domain, with a padlock (HTTPS)",
+  ]}
+/>
+
+## Step 4: Check the live site
+
+The live site isn't exactly the site on your computer: different servers, a different operating system, different environment variables. So you go over it again, this time at the real address.
+
+### The manual check
+
+<Checklist
+  id="ch9-live"
+  title="Live check"
+  items={[
+    "The home page loads fast, also on a phone over mobile data (not just Wi-Fi)",
+    "I clicked every link and button, and they all work",
+    "Search, the servings calculator and step tracking work like on my computer",
+    "An address that doesn't exist shows the friendly 404 page",
+    "The browser console (F12) shows no red errors",
+    "The site's name appears correctly in the browser tab",
+    "I sent the link to someone else, and they managed to open the site",
+  ]}
+/>
+
+<Callout type="tip" title="What does the site look like when shared?">
+Send the link to yourself in a messaging app. Does a preview appear with a title, description and image? If not, ask Claude: "Add Open Graph tags to the site: a title, a description and a share image, so the link looks nice on WhatsApp and Facebook".
+</Callout>
+
+### Logs in Vercel
+
+If something doesn't work live, Vercel provides two kinds of logs:
+
+| Log | Where | What you see in it |
+| --- | --- | --- |
+| **Build Logs** | **Deployments** → click a deployment | Everything that happened during the build, including errors |
+| **Runtime Logs** | The project's **Logs** tab | Errors that happen while visitors use the site, on the server side |
+
+### Claude as a tester of the live site
+
+<Prompt>The site is live at [your address]. Prepare an organized checklist for the live site: every page, every interactive feature, edge cases, and what to check on a phone. For each check: what to do and what should happen</Prompt>
+
+## Step 5: When a deployment fails
+
+It'll happen at some point, and there's no reason to panic: **the live site isn't affected**. Vercel simply doesn't replace it with the broken version.
+
+### Find the error
+
+1. In the **Deployments** tab, the failed deployment is marked in red, with the word **Error**.
+2. Click it and open the **Build Logs**.
+3. Scroll to the red lines, usually near the end, and copy **the whole error**.
+4. Paste it to Claude, just like in chapter 7:
+
+<PromptCompare
+  bad="Vercel failed, fix it"
+  good="The Vercel deployment failed, but npm run build passes on my computer. Here's what the Build Logs show: [paste the whole error]. Explain why it works for me and not on Vercel, and fix the root cause. After the fix, run npm run build on my machine to confirm, and push."
+  why="“Works for me but not there” is an important clue: it points Claude toward differences between environments, not general bugs in the code."
+/>
+
+### "But it works for me!": the usual suspects
+
+| Cause | What it looks like in the log | The fix |
+| --- | --- | --- |
+| **Uppercase vs. lowercase in a file name.** Windows and Mac are forgiving, Vercel's servers (Linux) aren't | `Module not found: Can't resolve './components/recipeCard'` | Fix the file name or the import so they match exactly |
+| **A missing environment variable** | An error about an `undefined` value, or a failed connection | Set the variable in Vercel (step 2), and redeploy |
+| **A package installed on your machine but not listed** in `package.json` | `Module not found: Can't resolve 'some-package'` | `npm install some-package`, commit `package.json` and `package-lock.json`, and push |
+| **A file that's in `.gitignore`** and the code needs it | A missing file | Understand why it's there. If it's secret, turn it into an environment variable |
+| **A different Node.js version** | An error mentioning `engine` or `Node.js version` | Align the Node.js version in the build settings (step 2) |
+| **A regular build error** that wasn't checked locally | `Type error` or a lint error | `npm run build` on your machine before every push (chapter 7) |
+
+<Callout type="info" title="Run it on your computer exactly like Vercel">
+The best way to catch problems before Vercel does: run on your computer what Vercel runs, from scratch. Ask Claude: "Delete node_modules and the .next folder, run npm ci and then npm run build". `npm ci` installs exactly what's listed in `package-lock.json`, like Vercel does.
+</Callout>
+
+### The live site is broken? Go back in a second
+
+Sometimes the deployment **succeeds**, but something on the site doesn't work right. In that case you don't need to wait for a fix:
+
+1. Go to **Deployments**.
+2. Find the last deployment that worked well.
+3. Click the three dots (**...**) and choose **Instant Rollback** (or **Promote to Production**, depending on the interface and plan).
+
+The site goes back to the previous version within seconds. Now you can fix it calmly, with Claude, and push when the fix is ready and tested.
+
+<Callout type="warning" title="A rollback in Vercel isn't a rollback in Git">
+A rollback in Vercel returns **the live site** to an earlier version, but the problematic code is still in main on GitHub. If you don't fix it, the next push will deploy it again. After a rollback, always: fix it, or undo the change with `git revert` (chapter 7), and push.
+</Callout>
+
+## Advanced: Vercel from the terminal
+
+Vercel also has a command-line tool, which lets Claude work with Vercel directly. It's optional, since the Git flow we built is enough, but it's handy for environment variables and checking deployments:
+
+```bash title="Install and sign in (in a regular terminal)"
+npm install -g vercel
+vercel login
+```
+
+```bash title="Useful commands"
+vercel link          # links the folder to a Vercel project
+vercel env pull      # downloads the environment variables to .env.local
+vercel ls            # shows the latest deployments
+```
+
+<Callout type="note" title="Sign in yourself">
+Like `gh auth login` in chapter 8, `vercel login` is an interactive process that happens in the browser. Run it in a regular terminal. After that Claude can use the tool.
+</Callout>
+
+## Summary
+
+- **One-time connection**: Vercel → Import → a GitHub repository → Deploy. From then on, every push to main updates the site, and every branch or PR gets a preview address.
+- **Environment variables** are set under **Settings → Environment Variables**, for the right environments, followed by a redeploy. Secrets never go in `NEXT_PUBLIC_`.
+- **Domain**: **Settings → Domains**, then DNS records at the registrar exactly as Vercel shows. HTTPS comes on its own.
+- **Live check**: a manual checklist, Build Logs and Runtime Logs.
+- **When it fails**: the previous site stays live. Copy the error from the Build Logs to Claude, and check the usual suspects. When the live site is broken: Instant Rollback, then a fix in Git.
+
+In the next chapter we'll collect pro tips: how to save on costs, upgrade CLAUDE.md and connect external tools with MCP, and wrap up everything we've learned.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "The Vercel deployment failed. What happens to the live site?", "options": [{"text": "It goes down", "why": "No. Vercel doesn't replace it with the broken version."}, {"text": "The previous version stays live", "why": "Right. Fix it calmly and push again."}, {"text": "It's deleted", "why": "No, nothing is deleted."}], "answer": 1}, {"q": "Where should you never put an API key?", "options": [{"text": "In an environment variable in Vercel", "why": "That's actually the right place."}, {"text": "In a variable starting with NEXT_PUBLIC_", "why": "Right. It's sent to every visitor's browser."}, {"text": "In the .env.local file", "why": "That's fine, as long as the file is in .gitignore."}], "answer": 1}]} />

@@ -1,0 +1,554 @@
+# Your First Real Project: Building a Website from Scratch
+
+So far you've learned the tools. In this chapter you use them all together: we'll build a **complete family recipe site**, from an empty folder to a site that passes quality checks and is ready to go live.
+
+The site will have:
+
+- **A home page** with a card for each recipe.
+- **A separate page for each recipe**, with ingredients and steps.
+- **Search and filtering by category** (cakes, soups, mains).
+- **A servings calculator**: want to cook for ten people instead of four? The quantities update on their own.
+- **Step tracking**: tick off each step as you cook.
+- **Bonus**: a form for adding a new recipe, saved on the server side.
+
+<Callout type="note" title="What you need before you start">
+- Claude Code installed and signed in (chapter 2).
+- Familiarity with basic commands and approval prompts (chapter 3) and with the principles of writing prompts (chapter 4).
+- **Cursor** installed, and familiarity with the combined workflow from chapter 5. We'll build the whole project inside it.
+- **Node.js** installed on your computer. If not, instructions are right below.
+- About **two hours**. Not all at once: every step ends with a working site, so you can stop and continue tomorrow.
+</Callout>
+
+## The tools we'll use
+
+You don't need to know them in depth. Claude knows them very well, and you only need to know what each one does:
+
+| Tool | What it does | Analogy |
+| --- | --- | --- |
+| **Node.js** | Runs JavaScript code on your computer | The engine |
+| **npm** | Installs code packages and runs project commands (comes with Node.js) | The parts store |
+| **Next.js** | A framework for building websites: pages, navigation, a server | The frame of the house |
+| **Tailwind CSS** | A fast way to style, right inside the code | Paint and furniture |
+
+<Callout type="info" title="Why Next.js?">
+Next.js handles both what visitors see (the frontend) and what happens behind the scenes (the backend), so you can build a whole site in one project. It's also exactly the technology this site you're reading is built with, and it deploys easily to Vercel, which we'll use in chapter 9.
+</Callout>
+
+## Step 0: Install Node.js
+
+First check whether it's already installed:
+
+```bash title="Any operating system"
+node -v
+npm -v
+```
+
+If two version numbers appear, for example `v22.11.0` and `10.9.0`, skip to step 1. If you see an error like "not recognized" or "command not found", install it:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+winget install OpenJS.NodeJS.LTS
+```
+
+Or download the **LTS** version from [nodejs.org](https://nodejs.org) and run the installer.
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+winget install OpenJS.NodeJS.LTS
+```
+
+Or download the **LTS** version from [nodejs.org](https://nodejs.org) and run the installer.
+
+</Tab>
+<Tab>
+
+On a Mac, the simplest way is to download the **LTS** version from [nodejs.org](https://nodejs.org). If you have Homebrew:
+
+```bash title="macOS (Homebrew)"
+brew install node
+```
+
+On Linux, instructions for each distribution are on [nodejs.org](https://nodejs.org/en/download).
+
+</Tab>
+</Tabs>
+
+After installing, **close and reopen the terminal**, and run `node -v` again to confirm.
+
+<Callout type="tip" title="LTS = the stable version">
+LTS (Long Term Support) is the version that gets support and security updates over a long period. Always choose it, not the "Current" version.
+</Callout>
+
+---
+
+## Step 1: Set up the project
+
+### 1.1 Create a folder and open it in Cursor
+
+We'll build the whole project inside Cursor, exactly like in chapter 5: Claude works in the terminal, and you see every file get created and change.
+
+**Create an empty folder** in a regular terminal (or just in your file explorer: right-click → New Folder):
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+cd ~\Desktop
+mkdir grandma-recipes
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+cd %USERPROFILE%\Desktop
+mkdir grandma-recipes
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux"
+cd ~/Desktop
+mkdir grandma-recipes
+```
+
+</Tab>
+</Tabs>
+
+**Open it in Cursor and set up your workspace:**
+
+1. In Cursor: **File → Open Folder...** and choose `grandma-recipes`.
+2. Turn on auto save: **File → Auto Save**. In a project where both you and Claude edit files, this prevents conflicts (chapter 5).
+3. Open a terminal on the side: command palette (`Ctrl + Shift + P`, Mac: `Cmd + Shift + P`) → `Terminal in Editor Area`.
+4. Start Claude in the side terminal:
+
+```bash title="In the side terminal, in Cursor"
+claude
+```
+
+<Callout type="tip" title="For beginners: work in manual mode">
+For your first project, press `Shift + Tab` until **manual mode on** appears. That way every proposed change opens in Cursor's diff view before it happens, and you'll understand what Claude does at each step. In your second project you can give it more freedom.
+</Callout>
+
+### 1.2 Ask Claude to set up Next.js
+
+<Prompt>Set up a new Next.js project in the current folder with TypeScript, Tailwind CSS and the App Router, using create-next-app with the default settings. After the install, briefly explain what each folder in the project does.</Prompt>
+
+Claude will ask you to approve a command that starts with `npx create-next-app`. That's the official Next.js tool for setting up projects, so it's fine to approve. The install takes a minute or two, and you'll see something like this in the terminal:
+
+```text title="What you'll see in the terminal (example, your details may differ)"
+● Bash(npx create-next-app@latest . --typescript --tailwind --app --use-npm --yes)
+  ⎿  Creating a new Next.js app in C:\Users\you\Desktop\grandma-recipes.
+     Installing dependencies:
+     - next
+     - react
+     - react-dom
+     ...
+     Success! Created grandma-recipes
+```
+
+**Watch Cursor's file tree** during the install: the empty folder fills up with files and folders like `app`, `public` and `package.json`. When Claude explains what each folder does, click it in the tree and see for yourself what's inside.
+
+<Callout type="note" title="What is npx?">
+`npx` runs a program from npm without installing it permanently. `create-next-app` runs once, builds the project skeleton, and disappears.
+</Callout>
+
+### 1.3 Run it for the first time
+
+To see the site, you need to start a **dev server**: a program that runs the site on your computer and refreshes it automatically on every change.
+
+The dev server keeps running until you stop it, so it needs **its own terminal**, separate from Claude's. In Cursor, open the bottom terminal with `` Ctrl + ` `` (or **View → Terminal**). It's already in the project folder, so no `cd` is needed. Run:
+
+```bash title="In Cursor's bottom terminal"
+npm run dev
+```
+
+```text title="Sample output"
+   ▲ Next.js 15.5.4 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.12:3000
+
+ ✓ Starting...
+ ✓ Ready in 1820ms
+```
+
+Open **http://localhost:3000** in your browser. You can also hold `Ctrl` (Mac: `Cmd`) and click the address in the terminal. You'll see the default Next.js page. It's not our site yet, but it's a sign everything works.
+
+<Callout type="info" title="What is localhost:3000?">
+`localhost` means "this computer". The site runs only on your machine, and nobody else on the internet can see it. `3000` is the "door" number (port) the server listens on. To stop the server, press `Ctrl + C` in the window where it runs.
+</Callout>
+
+From now on, this is what your workspace looks like for the whole project:
+
+| Where | What runs there | Role |
+| --- | --- | --- |
+| **The editor area** in Cursor | Open files | The eyes: watch the code change |
+| **The side terminal** | Claude Code | The hands: ask and approve |
+| **The bottom terminal** | `npm run dev` | The server: stays open, and shows errors if any |
+| **The browser**, in a separate window | http://localhost:3000 | The result: what visitors will see |
+
+<Callout type="tip" title="Two screens? Great">
+If you have a second monitor, put the browser on it. That way you see the code, Claude and the site at the same time, without switching windows.
+</Callout>
+
+### 1.4 Create CLAUDE.md
+
+Now that there's a project, let's create a rules file for it. In Claude's terminal run:
+
+```text title="Inside Claude Code"
+/init
+```
+
+Claude will scan the project and create a `CLAUDE.md` with the commands and structure it found. Now let's add **our** rules:
+
+<Prompt>Add the following rules to CLAUDE.md: this is a family recipe site, and its main users are older people. Text at least 18 pixels, large buttons with text and not just an icon. Don't add new libraries without asking me first. Always answer me in plain, simple language. After every change, make sure there are no TypeScript errors.</Prompt>
+
+Now **your hands**: click `CLAUDE.md` in Cursor's file tree and read it. It should be short and clear. Missing something that matters to you? Add a line yourself, right in the editor. For example:
+
+```markdown title="CLAUDE.md (a line you added yourself)"
+- Recipe names are written the way grandma calls them, even if that's not the official name.
+```
+
+With Auto Save the change is saved immediately, and Claude will read it at the start of every new conversation.
+
+<Checklist
+  id="ch6-step1"
+  title="End of step 1: check before you continue"
+  items={[
+    "node -v shows a version number",
+    "The project is open in Cursor, and the file tree shows Next.js files (for example package.json and the app folder)",
+    "Auto Save is on",
+    "Claude runs in the side terminal, and npm run dev runs in the bottom terminal",
+    "localhost:3000 opens in the browser",
+    "There's a CLAUDE.md file with our rules, including a line I added myself",
+  ]}
+/>
+
+<Callout type="tip" title="Save a safe point">
+`create-next-app` already set the project up to work with Git, a tool that saves versions of your code. That's why Cursor's **Source Control** tab (`Ctrl + Shift + G`) works in this project from the start. After every step that works, ask Claude: **"Commit the current state to git with a message describing what we did"**. If something breaks later, you can always come back here. Chapter 8 covers Git in depth.
+</Callout>
+
+---
+
+## Step 2: Build structure, design and components, one step at a time
+
+Remember the break-it-down rule from chapter 4? You don't ask for the whole site at once. You build layer by layer, and check each one in the browser.
+
+### 2.1 Plan before you build
+
+Let's switch to plan mode, so Claude proposes a structure before it writes code:
+
+<Prompt>/plan We're building a family recipe site. At this stage only: a data file with 6 sample recipes, a home page that shows a card for each recipe, and a separate page for each recipe with ingredients and steps. Propose a folder structure and a list of components, and explain in one sentence what each component does. No code yet.</Prompt>
+
+Claude will show a plan that looks roughly like this:
+
+```text title="Sample plan"
+lib/recipes.ts                  Recipe data (6 sample recipes)
+app/layout.tsx                  Site frame: language, font, header and footer
+app/page.tsx                    Home page: a grid of recipe cards
+app/recipes/[slug]/page.tsx     Single recipe page
+components/RecipeCard.tsx       Recipe card: emoji, name, prep time, category
+components/SiteHeader.tsx       Site header and navigation
+```
+
+Read the plan. Is something missing or unnecessary? Tell it. When it looks good, approve it, and Claude moves on to building. Meanwhile, watch the file tree: the files from the plan appear one after another.
+
+<Callout type="note" title="What is [slug]?">
+A folder named `[slug]` in square brackets is Next.js's way of saying "one page that serves every recipe". `slug` is the recipe's name in the address, for example `/recipes/grandma-cheesecake`.
+</Callout>
+
+### 2.2 The data file
+
+If Claude didn't start with the data on its own, ask:
+
+<Prompt>Start with the data file lib/recipes.ts. For each recipe: a name, a slug, a category (cakes, soups or mains), prep time in minutes, number of servings, an emoji that represents it, a list of ingredients where each ingredient has a quantity, a unit and a name, and a list of steps. 6 sample home-style recipes, two from each category.</Prompt>
+
+<Callout type="tip" title="Why quantity and unit separately?">
+Notice the request: "quantity, unit and name" separately, not "2 cups flour" as one piece of text. That's planning ahead: in step 3 we'll build a servings calculator, and it needs to know the number is 2 in order to multiply it. Small decisions at the start save big work later.
+</Callout>
+
+**Your hands:** open `lib/recipes.ts` in the editor. Even without knowing TypeScript, you'll quickly recognize the structure: name, category, ingredients. Pick one recipe and **change its name yourself** to a real family recipe, for example:
+
+```ts title="lib/recipes.ts"
+title: "Grandma Rachel's Cheesecake",
+```
+
+Save (or let Auto Save do it), and in your next request to Claude, tell it about the change:
+
+<PromptCompare
+  bad="Continue to the next step"
+  good="I changed the name of one of the recipes in lib/recipes.ts myself, keep it as is. Now let's move on to the site's frame."
+  why="One sentence makes sure Claude doesn't “fix” your change back the next time it touches the file."
+/>
+
+### 2.3 The frame: language and font
+
+<Prompt>I changed the name of one of the recipes in lib/recipes.ts myself, keep it as is. Now update app/layout.tsx: English language, a readable font from Google Fonts via next/font (for example Nunito or Lora), a top header with the site name “Grandma's Recipes” that links to the home page, and a simple footer. Remove the content of the default Next.js page. Use a warm, pleasant background, not glaring white.</Prompt>
+
+Refresh the browser. The page should be almost empty, but with a header in the new font.
+
+### 2.4 The home page and recipe cards
+
+<Prompt>Now the home page: a short headline and a warm opening sentence, and below them a grid of recipe cards. Each card shows a big emoji, the name, the category and the prep time, and clicking it leads to the recipe page. Three cards per row on desktop, one per row on phones.</Prompt>
+
+### 2.5 The recipe page
+
+<Prompt>Now the single recipe page: the recipe name, emoji, prep time and number of servings at the top, then two parts: an ingredients list and a numbered list of steps. On desktop the ingredients sit beside the steps, and on phones one below the other. Add an “Back to all recipes” link. If someone visits the address of a recipe that doesn't exist, show a friendly 404 page.</Prompt>
+
+### The check routine after every layer
+
+Don't send the next request before you've checked the result of the previous one. A mistake caught now is a one-minute fix. A mistake caught five steps later is a dig. After each request in this step, do these three things, in order:
+
+1. **Source Control** (`Ctrl + Shift + G`, Mac: `Cmd + Shift + G`): which files changed? Only the ones you expected? Click a file to see a side-by-side comparison of what changed.
+2. **The browser**: refresh, click cards, and shrink the browser window to see how it'll look on a phone.
+3. **Save**: if everything's good, "commit the current state to git". The file list in Source Control empties, and only starts filling again with the next change.
+
+<Callout type="tip" title="Something unclear? Select and ask">
+Saw code in Source Control you don't understand? Select it in the editor, and write to Claude: "What do the lines I selected do? Explain simply". Claude receives the selection automatically, as we learned in chapter 5.
+</Callout>
+
+<Checklist
+  id="ch6-step2"
+  title="End of step 2: check before you continue"
+  items={[
+    "The home page shows 6 cards in the new font",
+    "Clicking a card opens the right recipe page",
+    "The recipe page has ingredients and steps, and a link back to the home page",
+    "An address that doesn't exist, for example localhost:3000/recipes/abc, shows a friendly 404 page",
+    "When I shrink the browser window to phone width, the cards stack one below the other",
+    "The name I changed myself in lib/recipes.ts is still there, and shows on the site",
+    "There are no red errors in the npm run dev terminal, and Cursor's Problems panel is empty",
+    "I reviewed the changes in Source Control after every layer",
+    "I saved a safe point in git",
+  ]}
+/>
+
+---
+
+## Step 3: Improve based on feedback and add interaction
+
+You have a working site. Now comes the part where it becomes a **good** site: you show it to real people, listen, and improve.
+
+### 3.1 Gather feedback
+
+Show the site to someone in the family. You can do it on your computer, or on their phone if they're on the same Wi-Fi network: type the **Network** address shown in the `npm run dev` window into the phone. Write down every comment, even the small ones.
+
+Say you got this feedback:
+
+> "It's hard to find a recipe when there are lots of them." "I always cook for the whole family, not for four." "When I'm cooking I lose track of which step I'm on." "The letters in the ingredients list are too small for me." "It says 'Welcome', but something warmer would be nicer."
+
+Each comment like that is a task. Most go to Claude, but not all: some of the small changes are faster to make yourself, in the editor. We'll handle them one by one.
+
+### 3.2 Search and category filter
+
+<Prompt>First feedback: it's hard to find recipes. Add a search field to the home page that searches by recipe name, and filter buttons by category (All, Cakes, Soups, Mains). Search and filter work together and update instantly as you type. If there are no results, show a friendly message with a button to clear the search. When you're done, explain what a Client Component is and why it was needed here.</Prompt>
+
+<Callout type="info" title="Why ask for an explanation?">
+The last sentence of the request turns every step of the project into a small lesson. A Client Component is a part of the site that runs in the visitor's browser and can therefore respond to clicks and typing. After this project you'll understand the concept from experience, not from a definition.
+</Callout>
+
+### 3.3 Servings calculator
+
+<Prompt>Second feedback: people want to cook for a different number of people. On the recipe page, next to the number of servings, add plus and minus buttons that change the number of servings, and all quantities in the ingredients list update accordingly. Round sensibly: 1.5 cups, not 1.4999. The number of servings can't go below 1. The buttons should be large and easy to tap on a phone too.</Prompt>
+
+### 3.4 Ticking off steps while cooking
+
+<Prompt>Third feedback: people lose track of which step they're on. Turn each step into an item you can mark as done with a click. A completed step appears in gray with a strikethrough. The marks are saved in the browser, so if you close the page and come back they're still there. Add a “Start over” button that clears all the marks.</Prompt>
+
+### 3.5 Small fixes: by hand or with a selection
+
+The last two comments are small, and this is a chance to work exactly like in chapter 5: **small, known changes with your own hands, changes that need understanding go to Claude**.
+
+**"Something warmer would be nicer"**: this is a single text change, and you know exactly what to write. Press `Ctrl + Shift + F` (Mac: `Cmd + Shift + F`) to search the whole project, type `Welcome`, and click the result. Cursor opens the file right at the correct line. Change the text yourself, for example to "What are we cooking today?", and refresh the browser.
+
+**"The letters in the ingredients list are too small"**: here you need to understand how the styling is built. Open the recipe page file, **select in the editor** the code for the ingredients list, and then ask:
+
+<PromptCompare
+  bad="Make the letters bigger"
+  good="I changed the opening sentence on the home page myself, keep it. In the code I selected, the ingredients list: make the text a size that's comfortable to read from a distance, say from the stove, and add space between the lines. Don't change the text size in the rest of the page."
+  why="The selection shows Claude exactly which list, “from a distance, from the stove” explains the goal, and the first sentence protects the change you made by hand."
+/>
+
+### 3.6 When something breaks
+
+It'll happen, and that's completely fine. Say that after one of the changes, a red error appears in the browser, in the bottom terminal (`npm run dev`), or in a file open in Cursor, with a red squiggly line under the code.
+
+If the error shows up in Cursor, Claude can see it on its own through the **Problems** panel (`Ctrl + Shift + M`, Mac: `Cmd + Shift + M`):
+
+<Prompt>Cursor's Problems panel shows errors after the last change. Look at them, explain the problem to me in one sentence, and fix the root cause. After the fix, make sure the panel is empty and the page loads without errors.</Prompt>
+
+If the error shows up in the browser or the terminal, do exactly what we learned in chapter 4: **copy the whole error** and paste it:
+
+<Prompt>After the last change, this error appears: [paste the whole error message]. Find the cause and fix the root of the problem. After the fix, make sure the page loads without errors.</Prompt>
+
+<Callout type="tip" title="Where do you find errors?">
+- **In Cursor's Problems panel**: errors in the code itself, for example TypeScript mistakes, even before running.
+- **In the bottom terminal, running `npm run dev`**: server-side and build errors.
+- **In the browser**: Next.js shows errors in a popup inside the page during development.
+- **In the browser console**: press `F12` (Mac: `Cmd + Option + I`) and go to the Console tab. Errors show in red.
+</Callout>
+
+<Callout type="warning" title="Claude did something bad? Go back">
+If a change broke more than it fixed, don't start fixing on top of a fix. Source Control shows exactly what changed since the last git save. You can ask Claude: "Restore all files to the state of the last git commit", or press `Esc` twice and pick an earlier point.
+</Callout>
+
+### 3.7 Bonus: adding a recipe from the site
+
+So far the recipes were written in code. In this bonus we'll let family members add recipes through a form on the site, and the recipe is saved **on the server side**. This is the moment the site turns from a showcase into a complete (full stack) app.
+
+<Prompt>/plan I want to add an “Add a recipe” page with a form: name, category, prep time, number of servings, emoji, ingredients and steps. New recipes are saved to a JSON file in a data folder in the project, using a Next.js Server Action, and appear on the home page alongside the existing recipes. Check that all fields are filled in before saving and show clear error messages. Propose a plan before you write code.</Prompt>
+
+<Callout type="warning" title="This works on your computer, not on the internet">
+Saving to a JSON file works great while the site runs on your machine. But once the site goes live on Vercel, it can't save files permanently. A real site needs a **database**. That's the recommended next project after the course, and chapter 10 has a ready-made prompt for it. So ask Claude to keep the saving logic in one separate file, so it's easy to swap out later.
+</Callout>
+
+<Checklist
+  id="ch6-step3"
+  title="End of step 3: check before you continue"
+  items={[
+    "Search: typing “cake” leaves only matching recipes",
+    "The category filter works, also combined with search",
+    "A search with no results shows a friendly message and a clear button",
+    "The servings calculator changes quantities, rounds sensibly and doesn't go below 1",
+    "Ticked steps stay ticked after refreshing the page",
+    "I changed the opening sentence myself, using project-wide search",
+    "I enlarged the ingredients list using a selection in the editor and a request to Claude",
+    "I checked everything at phone width too",
+    "I saved a safe point in git",
+  ]}
+/>
+
+---
+
+## Step 4: A final quality check before going live
+
+The site works and looks good. Before putting it live, go through a final check, like a car inspection before a road test.
+
+### 4.1 Production build
+
+`npm run dev` is forgiving: it runs the site even with small problems. A **production build** is the version that goes on the internet, and it's much stricter. If there's an error, it's better to find it now.
+
+In the bottom terminal, stop the dev server (`Ctrl + C`) and run:
+
+```bash title="In Cursor's bottom terminal"
+npm run build
+```
+
+When everything's fine, the output ends with a table of every page on the site:
+
+```text title="Sample output: successful build"
+ ✓ Compiled successfully in 4.2s
+ ✓ Linting and checking validity of types
+ ✓ Generating static pages (11/11)
+
+Route (app)                          Size  First Load JS
+┌ ○ /                               3.1 kB         128 kB
+├ ○ /add                            2.4 kB         127 kB
+└ ● /recipes/[slug]                 1.8 kB         126 kB
+    ├ /recipes/grandma-cheesecake
+    ├ /recipes/chicken-soup
+    └ [+4 more paths]
+```
+
+And if there's a problem, you'll see something like this:
+
+```text title="Sample output: failed build"
+Failed to compile.
+
+./components/ServingsCalculator.tsx:14:7
+Type error: Type 'string' is not assignable to type 'number'.
+```
+
+<Prompt>I ran npm run build and got these errors: [paste the whole output]. Fix them all, then run npm run build yourself again and again until the build passes without errors. Show me the final output.</Prompt>
+
+Once the build passes, you can run the final version on your computer and check it the way visitors will see it:
+
+```bash title="In Cursor's bottom terminal"
+npm run start
+```
+
+And open http://localhost:3000 again.
+
+### 4.2 Claude as a quality checker
+
+Now we ask Claude to switch hats: from builder to checker. It's worth doing this **in a new conversation** (`/clear`), so it looks at the code with fresh eyes, without being "in love" with code it wrote itself:
+
+<Prompt>Go over the whole project like a QA tester before launch. Check: that there are no errors in the build or the console, that all links work, that the mobile layout is fine, that every page has a title and description, that images and icons have alt text, that the site can be navigated with the keyboard alone, and that there are no passwords or keys in the code. Show a list of what you found, ordered by severity. Don't fix anything yet.</Prompt>
+
+Go over the list it shows, decide what matters, and ask for fixes:
+
+<Prompt>Fix all the high and medium severity issues from the list. Leave the low ones for now. After the fix, run npm run build again and make sure it passes.</Prompt>
+
+### 4.3 Your manual check
+
+Claude checks code, but only you can check how it **feels**. Go through the list yourself:
+
+<Checklist
+  id="ch6-step4"
+  title="Manual check before going live"
+  items={[
+    "npm run build passes without errors",
+    "Cursor's Problems panel is empty",
+    "The browser console (F12) shows no red errors on any page",
+    "I clicked every link and every button on the site, and they all work",
+    "I checked on a real phone, not just a shrunken browser window",
+    "The text is large and readable, and the buttons are easy to press",
+    "I can move between all buttons and links with the Tab key, and see where I am",
+    "The browser tab shows the site's name",
+    "There are no passwords, API keys or personal information in the code",
+    "The .gitignore file includes node_modules and .env files",
+    "Someone in the family tried the site and found what they were looking for without help",
+    "I saved a final safe point in git",
+  ]}
+/>
+
+<Callout type="tip" title="Bonus: a quality score from Chrome">
+In Chrome, open the developer tools (`F12`), go to the **Lighthouse** tab and click **Analyze page load**. You'll get a score for performance, accessibility and best practices, with a list of what to improve. You can copy the recommendations straight to Claude.
+</Callout>
+
+### 4.4 Final review and save
+
+<Prompt>Write a README.md file: what the site does, how to install and run it on a new computer, and how to add a recipe.</Prompt>
+
+Before the final save, open **Source Control** one last time and go over every file that changed since the previous save: the quality-check fixes and the README. Open `README.md` in the editor and read it the way a newcomer would. Clear? Only then:
+
+<Prompt>Commit all the work to git with a message summarizing the first version of the site.</Prompt>
+
+Is the file list in Source Control empty? Everything's saved, and the site is ready to go live.
+
+---
+
+## So what did we actually do here?
+
+Take a moment to look back. You built a complete website, with search, a servings calculator, data saving and quality checks. Claude wrote most of the code, and you changed only a few lines yourself. But you **did** everything that matters:
+
+- **You planned**: decided what the site does and broke it into steps.
+- **You wrote prompts**: specific requests with context and a way to verify.
+- **You checked**: reviewed the changes in Cursor and the browser after every layer, and caught problems early.
+- **You edited yourself**: small changes by hand, and for big ones you pointed Claude with a selection.
+- **You listened**: turned real users' feedback into improvements.
+- **You verified**: a production build, a quality check and a manual check before going live.
+
+That's exactly the job of a product manager and an experienced developer. Claude wrote the code, and you led.
+
+<Callout type="note" title="Your project, your rules">
+The recipe site is just an example. The exact same process works for a business landing page, a portfolio site, a family photo album or any other idea. It all starts with the same four steps: set up, build in layers, improve from feedback, and check before going live.
+</Callout>
+
+## Summary
+
+1. **Setup**: a project open in Cursor with Auto Save, Claude in the side terminal, `create-next-app`, a dev server in the bottom terminal, and CLAUDE.md with the project's rules.
+2. **Building in layers**: a plan in plan mode, then data, frame, home page and recipe page. After each layer: Source Control, browser, git save.
+3. **Improving**: real feedback becomes tasks. Big ones go to Claude (search, servings calculator, step tracking, server-side saving), small ones are done by hand or with a selection in the editor.
+4. **Checking**: `npm run build`, an empty Problems panel, Claude as a QA tester in a new conversation, a manual checklist and a final review in Source Control.
+
+In the next chapter we'll learn to find and fix bugs: how to pass error messages to Claude, find the root cause, and safely go back when a fix didn't work.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "Why do you run npm run dev in a separate terminal?", "options": [{"text": "Because it keeps running until you stop it", "why": "Right. It takes over the terminal, so Claude needs its own."}, {"text": "Because Claude can't run it", "why": "It can. It's just better for the server to run separately."}, {"text": "It doesn't matter", "why": "It does: otherwise you can't talk to Claude while the server runs."}], "answer": 0}, {"q": "What do you do after each layer you build?", "options": [{"text": "Move straight on to the next layer", "why": "A mistake caught late is more expensive to fix."}, {"text": "Check Source Control and the browser, and save to git", "why": "Right. That way every mistake is caught early."}, {"text": "Delete the old files", "why": "No need, and not a good idea."}], "answer": 1}]} />

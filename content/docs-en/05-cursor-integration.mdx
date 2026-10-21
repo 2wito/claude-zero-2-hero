@@ -1,0 +1,305 @@
+# Joining Forces: Cursor + Claude Code
+
+So far you've worked with Claude Code in a regular terminal window. It works, but there's one problem: **you can't see what's happening in the files**. Claude tells you "I created the file", "I changed three lines", and you have to take its word for it or open each file yourself.
+
+In this chapter we add **Cursor**, a code editor that shows your whole project in front of you. Claude keeps working in the terminal, and you see every change the moment it happens.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- Why Cursor and Claude Code complement each other.
+- How to open a terminal inside Cursor and start Claude there.
+- How to see and review every change Claude makes in a diff view.
+- How to edit code yourself without colliding with Claude.
+- A hands-on exercise: adding an interactive feature using the combined workflow.
+</Callout>
+
+## The idea: eyes and hands
+
+| | **Cursor**: the eyes | **Claude Code**: the hands |
+| --- | --- | --- |
+| What it is | A visual code editor | An agent working in the terminal |
+| Great at | Seeing every file, following changes, comparing versions, small quick fixes | Tasks across many files, running commands, installs, fixing errors |
+| What you do in it | Read, review, select, tweak a word here and there | Describe in plain English what should happen |
+
+Without eyes, the hands work in the dark: you have to trust Claude's description. Without hands, the eyes just watch: every big change is on you. Together you get the best of both: **Claude does the heavy lifting, and you see and control every step**.
+
+<Callout type="info" title="Cursor has its own AI. So why also Claude Code?">
+True, Cursor has a chat and code autocomplete. In practice, many people use both: Cursor's autocomplete for small fixes while typing, and Claude Code for big tasks. In this course Claude Code is the main tool, and Cursor mostly serves as a "window" into the project. **The same principles work in VS Code**, since Cursor is based on it.
+</Callout>
+
+## Step 1: Install Cursor and open a project
+
+1. Download Cursor from [cursor.com](https://cursor.com) and install it like any app. There are versions for Windows, Mac and Linux.
+2. The first time, Cursor asks a few setup questions. The defaults are fine.
+3. Open a project folder: in the top menu choose **File → Open Folder...**, and pick, for example, the `my-project` folder from chapter 3.
+
+<Callout type="tip" title="Open a folder, not a file">
+Always open the **whole project folder**, not a single file. That way the full file tree shows on the side, and when you start Claude in Cursor's terminal, it's already in the right folder.
+</Callout>
+
+Here's what the Cursor window looks like. You don't need to remember everything, just the four areas:
+
+| Area | Where | What's in it |
+| --- | --- | --- |
+| **Activity bar** | The narrow strip at the edge of the screen | Icons to switch between the file tree, search and Source Control |
+| **File tree** (Explorer) | Next to the activity bar | All the project's files and folders |
+| **Editor area** | The big part in the middle | Open files, each in a tab |
+| **Bottom panel** | At the bottom | The terminal, where we'll start Claude |
+
+## Step 2: Open a terminal in Cursor and start Claude
+
+### Open the built-in terminal
+
+Cursor has a built-in terminal, exactly like the window you've used so far, just inside the editor. There are three ways to open it:
+
+| Way | How |
+| --- | --- |
+| **Keyboard shortcut** | `` Ctrl + ` `` (the key left of 1, which also shows `~`) |
+| **Menu** | **View → Terminal**, or **Terminal → New Terminal** |
+| **Show/hide the panel** | `Ctrl + J` on Windows and Linux, `Cmd + J` on Mac |
+
+<Callout type="note" title="The shortcut doesn't work?">
+On some keyboard layouts the `` ` `` key types something else, and the shortcut may not respond. Switch to an English layout and try again, or just use the **View → Terminal** menu, which always works.
+</Callout>
+
+### Start Claude
+
+The terminal already opens inside the project folder, so no `cd` is needed. Just type:
+
+```bash title="In Cursor's terminal"
+claude
+```
+
+<Callout type="info" title="Claude Code connects to Cursor on its own">
+When you start `claude` in Cursor's own terminal, it detects the editor and connects automatically. The first time, it may install a small Claude Code extension in the editor to make the connection work. What the connection gives you:
+
+- **Changes Claude proposes open in Cursor's diff view**, not just as text in the terminal.
+- **Claude sees what you selected in the editor**: select a few lines, and Claude knows about them without you copying them.
+- **Claude sees the errors** in Cursor's Problems panel.
+</Callout>
+
+If you started `claude` in a regular terminal outside Cursor, or you're not sure the connection works, run this command inside Claude Code. It shows which editor Claude is connected to, and lets you connect:
+
+```text title="Inside Claude Code"
+/ide
+```
+
+### Arrange the screen: editor on one side, Claude on the other
+
+By default the terminal opens at the bottom, which is cramped. The most comfortable layout is **side by side**: code on one side, Claude on the other.
+
+1. Open Cursor's command palette: `Ctrl + Shift + P` (Mac: `Cmd + Shift + P`).
+2. Type `Terminal in Editor Area` and choose the option that creates a terminal **in the editor area, to the side**.
+3. Start `claude` in the new terminal.
+
+Now the terminal behaves like another tab in the editor area, and you can drag it to whichever side you like.
+
+<Callout type="tip" title="And if there's a dev server too?">
+Projects like the one in chapter 6 also need a window running `npm run dev`. Keep the bottom terminal for that, and the side terminal for Claude. That way everything is in one window: code, Claude and server.
+</Callout>
+
+<Callout type="note" title="There's a graphical option too">
+Instead of running Claude in the terminal, you can use the **Claude Code extension**, which Cursor supports. It opens Claude in a side panel with a graphical interface. To install: open the extensions view (`Ctrl + Shift + X`, Mac: `Cmd + Shift + X`) and search for **Claude Code** by Anthropic. In this course we'll stick with the terminal, where every command is available, but the extension is very handy if you prefer a graphical interface.
+</Callout>
+
+## Step 3: Watch changes in real time
+
+This is where the combined workflow starts to pay off.
+
+### See files change
+
+When Claude creates or changes a file, it appears in the file tree right away, and its content updates in the editor. If the file is open in a tab, you'll see the change happen in front of you.
+
+Next to the line numbers, colored bars mark what changed since the last Git commit:
+
+| Mark | Meaning |
+| --- | --- |
+| **Green** bar | New lines added |
+| **Blue** bar | Existing lines changed |
+| **Red** triangle | Lines were deleted here |
+
+Click a bar to see exactly what was there before.
+
+### Review a change before approving
+
+In **manual** mode, every Claude edit waits for your approval. Thanks to the Cursor connection, the proposed change opens in a **diff view**: the current version on one side and the proposed version on the other, with everything that changes highlighted. Here's what such a change looks like as text:
+
+```diff title="index.html: proposed change"
+   <h1>Happy Birthday, Grandma!</h1>
+-  <p>Wishing you health and happiness</p>
++  <p>Wishing you health, happiness and lots of joy from the grandkids</p>
++  <button id="confetti-btn">🎉 Celebrate!</button>
+```
+
+Lines with `-` are removed, and lines with `+` are added. Read it, then approve or decline in the terminal, just like in chapter 3.
+
+### Reviewing all changes after a task (Source Control)
+
+After Claude finishes a big task, it's worth going over **everything** that changed, in one place:
+
+1. Click the **Source Control** icon in the activity bar (it looks like a branch with circles), or `Ctrl + Shift + G` (Mac: `Cmd + Shift + G`).
+2. A list of every changed file appears. The letter next to each file shows what happened to it: **M** modified, **U** new, **D** deleted.
+3. Click a file and a side-by-side comparison opens: the last saved version on one side, the current version on the other.
+
+<Callout type="warning" title="Source Control only works in a Git project">
+That list is based on Git, so it only appears if the folder has Git set up. Next.js projects (like in chapter 6) come with Git already. In any other project, ask Claude: "Initialize git in this folder and save the current state as a starting point". On Windows, install [Git for Windows](https://git-scm.com/downloads/win) first. Chapter 8 covers Git in depth.
+</Callout>
+
+<Callout type="tip" title="Review like a manager">
+You don't need to understand every line of code to review. Ask yourself: **did only the files I expected change?** If you asked to change a button and suddenly seven files changed, that's the time to ask Claude why. And if something isn't clear, select it in the editor and ask: "What do the lines I selected do?"
+</Callout>
+
+### Point instead of describing: selecting in the editor
+
+This is one of the most powerful parts of the combined workflow. Instead of explaining to Claude **where** something is, just **select** it in the editor with your mouse, then write to it in the terminal. Claude receives the lines you selected along with your message, and the terminal shows a line like `⧉ Selected 6 lines from index.html`.
+
+<PromptCompare
+  bad="Change the part with the greeting so it looks nicer"
+  good="(after selecting the greeting paragraph in the editor) Style the lines I selected: a bigger font, gold for the headline, and a subtle border around the paragraph. Don't change anything else on the page."
+  why="The selection tells Claude exactly where, no guessing. “Don't change anything else” protects the rest of the page."
+/>
+
+The same goes for errors. Claude sees the errors in Cursor's **Problems** panel (`Ctrl + Shift + M`, Mac: `Cmd + Shift + M`):
+
+<PromptCompare
+  bad="There are errors, fix them"
+  good="Cursor shows errors in the Problems panel for script.js. Look at them, explain in one sentence what each means, and fix them."
+  why="Pointing to the Problems panel and a specific file saves a search, and asking for an explanation turns the fix into a lesson."
+/>
+
+## Step 4: Edit yourself without colliding with Claude
+
+One of Cursor's advantages is that you can change small things **yourself**: fix a word, change a color or a number. That's faster than asking Claude. But when two work on the same files, you need a few traffic rules.
+
+### How does a conflict happen?
+
+Imagine two people writing on the same page at once. In Cursor this happens in two situations:
+
+1. **An unsaved change.** You changed something in the editor and didn't save (`Ctrl + S`). The change exists **only in the editor**, not in the file itself, so Claude can't see it. If Claude changes the same file, you end up with two different versions.
+2. **Editing at the same moment.** You're typing in a file exactly while Claude is editing it.
+
+When this happens, Cursor shows a message on save along the lines of **"The content of the file is newer"**. Choose **Compare** to see both versions side by side, not **Overwrite**, which wipes out Claude's changes.
+
+<Callout type="info" title="Claude Code protects itself">
+Before Claude edits a file it reads it, and if the file changed since its last read, it reads it again before editing. So changes you **saved** usually aren't lost. The main problem is changes you **didn't save**.
+</Callout>
+
+### Seven traffic rules
+
+1. **Save before you send.** Before every request to Claude, `Ctrl + S` (Mac: `Cmd + S`). Or, even better, turn on auto save (see below).
+2. **Don't touch a file Claude is editing right now.** Claude is working on `index.html`? Wait for it to finish, or press `Esc` to stop it before you jump in.
+3. **Divide the territory.** While Claude works on the logic in `script.js`, you can change text in `index.html`. Different files = zero conflicts.
+4. **Tell Claude what you changed.** Changed something yourself? Mention it in the next request, so it doesn't "fix" your change back.
+5. **Save a safe point before a big task.** "Commit the current state to git" takes seconds, and lets you go back if something goes wrong.
+6. **One agent at a time.** Don't run Cursor's built-in agent and Claude Code on the same files at the same time. Pick one per task.
+7. **When in doubt, check Source Control.** It shows exactly what changed and where, no matter who changed it.
+
+<PromptCompare
+  bad="Continue where we left off"
+  good="I changed the date and the headline in index.html myself. Re-read the file, keep my changes as they are, and continue adding the countdown timer."
+  why="Without that sentence, Claude might restore what it wrote before. With it, your changes are safe."
+/>
+
+### Turn on auto save
+
+The simplest way to get rid of the unsaved-changes problem: in the top menu, **File → Auto Save**. When there's a check next to it, every change saves itself after a second.
+
+If you prefer the settings file (command palette → `Preferences: Open User Settings (JSON)`):
+
+```json title="settings.json (Cursor settings)"
+{
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000
+}
+```
+
+## Hands-on exercise: a countdown and a wishes wall
+
+Back to grandma's birthday page from chapter 3. We'll add two interactive features: a **countdown** to the birthday, and a **wishes wall** where anyone can leave a message. The work is split: Claude builds, and you watch, steer and tweak details yourself.
+
+<Callout type="note" title="Don't have the page from chapter 3?">
+No problem. Open an empty folder in Cursor, start `claude` and ask: "Create an index.html page with a birthday greeting for grandma, with a colorful, cheerful design".
+</Callout>
+
+### Part A: Setup
+
+1. Open the `my-project` folder in Cursor (**File → Open Folder...**).
+2. Turn on auto save (**File → Auto Save**).
+3. Open a terminal on the side (command palette → `Terminal in Editor Area`) and start `claude`.
+4. Switch to **manual** mode with `Shift + Tab`, so you see every change before it happens.
+5. Open `index.html` in the editor, and also open the file in your browser (double-click it in the folder).
+6. If you have Git installed, ask Claude to save a starting point:
+
+<Prompt>Initialize git in this folder and commit the current state as a starting point, with the message “before countdown and wishes wall”</Prompt>
+
+### Part B: Claude builds the countdown
+
+<Prompt>Add a countdown to grandma's birthday on the page: days, hours, minutes and seconds, updating every second. Put the code in a separate file called script.js, with a single variable at the top holding the birthday date, so it's easy to change. When the day arrives, replace the countdown with the headline “Today's the day! 🎂”.</Prompt>
+
+**What to do while Claude works:**
+
+- Watch the file tree: a new `script.js` appears.
+- When an approval prompt for `index.html` shows up, read the diff. It should add a countdown area and a link to `script.js`.
+- Approve, and refresh the browser. Is the countdown running?
+
+### Part C: Your hands
+
+Now it's your turn. Open `script.js` in the editor. At the top you'll find a line that looks roughly like this:
+
+```js title="script.js"
+const BIRTHDAY = new Date("2026-12-25T00:00:00");
+```
+
+**Change the date yourself** to a real family birthday (year-month-day), save, and refresh the browser. Did the countdown change? Great: you made your first code change yourself, without asking anyone.
+
+<Callout type="tip" title="Why not just ask Claude?">
+You could, of course. But changing one number in a line right in front of you is faster than writing a request. That's exactly the power of the combined workflow: **small, known changes by your hand, big or unfamiliar changes by Claude**.
+</Callout>
+
+### Part D: Claude builds a wishes wall, and you steer with a selection
+
+<Prompt>I changed the date in script.js myself, keep it as is. Now add a “wishes wall” below the countdown: a form with a name field, a message field and an “Add wish” button. Each wish appears as a colorful card with the name, and wishes are saved in the browser so they stay after a refresh. If a field is empty, show a friendly message and don't add the wish.</Prompt>
+
+Once the wall works, let's use a selection:
+
+1. In `index.html`, **select with your mouse** the code for the wishes wall area.
+2. Write to Claude in the terminal:
+
+<Prompt>Style the area I selected: each wish card in a different pastel color, rounded corners, and the newest wish shown first. One card per row on phones, three on desktop.</Prompt>
+
+3. Notice the `⧉ Selected ... lines from index.html` line in the terminal. That's how you know Claude received the selection.
+
+### Part E: Final review
+
+1. Open **Source Control** (`Ctrl + Shift + G`) and go over each changed file. Only `index.html`, `script.js` and maybe a styles file changed? Great.
+2. Refresh the browser and test everything: the countdown, adding a wish, a wish with an empty field, a refresh (did the wishes stay?).
+3. Save a safe point:
+
+<Prompt>Commit all the changes to git with a message saying we added a countdown and a wishes wall</Prompt>
+
+<Checklist
+  id="ch5-exercise"
+  title="Finished the exercise?"
+  items={[
+    "Claude runs in a terminal inside Cursor, next to the editor",
+    "I saw a proposed change in the diff view before approving it",
+    "I changed the date in script.js myself, and the countdown updated",
+    "Claude kept my change when I asked for the next feature",
+    "I used a selection in the editor to point Claude at a specific area",
+    "The wishes wall keeps wishes after a refresh, and rejects empty fields",
+    "I reviewed all the changes in Source Control",
+  ]}
+/>
+
+## Summary
+
+- **Cursor is the eyes, Claude Code is the hands.** Claude does the work, and you see every change.
+- **Terminal in Cursor**: `` Ctrl + ` `` or **View → Terminal**, then `claude`. The editor connection happens automatically, and from an external terminal you connect with `/ide`.
+- **Reviewing changes**: colored bars next to the lines, a diff view before approval, and Source Control after a task.
+- **Selecting in the editor** tells Claude exactly what you mean, and the Problems panel shows it the errors.
+- **No conflicts**: save (or turn on Auto Save), don't edit a file Claude is working on, and tell it about manual changes.
+
+In the next chapter we'll use everything we've learned so far to build a complete project from scratch: a family recipe site with Next.js.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "You changed a file in Cursor and didn't save. Does Claude see the change?", "options": [{"text": "Yes, Claude sees everything", "why": "No. An unsaved change exists only in the editor."}, {"text": "No. You need to save, or turn on Auto Save", "why": "Right. That's the first rule for avoiding conflicts."}, {"text": "Only if you restart Claude", "why": "No, the problem is the save itself."}], "answer": 1}, {"q": "What's the easiest way to show Claude which code you mean?", "options": [{"text": "Copy the code into the chat", "why": "That works, but there's a better way."}, {"text": "Select the code in the editor, then write to it", "why": "Right. Claude receives the selection automatically."}, {"text": "Describe the line number in words", "why": "Works, but a selection is more precise and faster."}], "answer": 1}]} />

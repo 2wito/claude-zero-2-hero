@@ -1,0 +1,406 @@
+# Custom Skills and Automation
+
+In chapter 10 we briefly touched on skills. In this chapter we go deep: how to build "work recipes" Claude can trigger on its own, pass them arguments, feed them live data from the project, and limit what they're allowed to do.
+
+A **skill** is basically a **written work recipe**. Instead of explaining to Claude every time "this is how we review code here", you write it once in a file. From then on, Claude knows to pull out the recipe when it's relevant, and you can trigger it with a short command like `/review-pr`.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- What a skill is, and how it differs from a regular request, CLAUDE.md and MCP.
+- Where skills live, and how a `SKILL.md` file is structured.
+- How to build three useful skills: `/review-pr`, `/generate-tests` and `/deploy`.
+- How to pass arguments, inject live data from the project, and restrict permissions.
+- How to use community skill collections without falling into a trap.
+</Callout>
+
+## Skills vs. everything else
+
+| | Regular request | CLAUDE.md | **Skill** | MCP |
+| --- | --- | --- | --- | --- |
+| **What it is** | A one-off message | Standing rules | A written workflow | A connection to an external tool |
+| **When it loads** | When you write it | **Always**, in every conversation | **Only when needed** | When Claude uses the tool |
+| **What it gives Claude** | A task | Context and rules | **How** to do a specific task | **The ability** to touch another system |
+| **Example** | "Review the code" | "Git messages in the imperative" | "This is how we review a PR, in 7 steps" | "Access to Notion" |
+
+<Callout type="info" title="The secret: progressive loading">
+At the start of every conversation Claude sees only the **name and description** of each skill, a line or two each. It loads the full content **only** when it decides the skill is relevant, or when you trigger it. And extra files in the skill's folder, like templates and examples, load only when the process itself needs them.
+
+The result: you can keep dozens of detailed skills, and they take up almost no space in the context window until they're used. That's the big difference from CLAUDE.md, which loads in full in every conversation.
+</Callout>
+
+<Callout type="note" title="What about custom commands?">
+If you've come across older guides that talk about files in the `.claude/commands/` folder: they still work, but today they're part of skills. The file `.claude/commands/deploy.md` and the file `.claude/skills/deploy/SKILL.md` both create the `/deploy` command. Skills add capabilities commands don't have, like supporting files and automatic triggering, so it's worth starting with them directly.
+</Callout>
+
+## Where skills live
+
+| Location | Path | Available to |
+| --- | --- | --- |
+| **Personal** | `~/.claude/skills/<name>/SKILL.md` | You, in all projects |
+| **Project** | `.claude/skills/<name>/SKILL.md` | Everyone working on the project (saved in Git) |
+| **Plugin** | `<plugin>/skills/<name>/SKILL.md` | Wherever the plugin is enabled, named `/plugin-name:skill-name` |
+
+Each skill is a **folder**. The folder name is the command name. Here's a project with three skills:
+
+```text title="Folder structure"
+my-project/
+└── .claude/
+    └── skills/
+        ├── review-pr/
+        │   ├── SKILL.md          ← required: the instructions
+        │   └── checklist.md      ← loaded only when needed
+        ├── generate-tests/
+        │   ├── SKILL.md
+        │   └── examples/
+        │       └── sample.test.ts
+        └── deploy/
+            ├── SKILL.md
+            └── scripts/
+                └── smoke-test.sh ← a script that runs, not read
+```
+
+<Callout type="tip" title="If two skills share a name">
+A personal skill wins over a project skill. And your skill replaces a built-in skill or command with the same name. So it's worth choosing unique names, for example `review-pr` and not `review`, which already exists as a built-in command.
+</Callout>
+
+## The anatomy of SKILL.md
+
+A `SKILL.md` file has two parts: a **frontmatter** between two `---` lines, with settings, and a **body** with the instructions themselves.
+
+```markdown title=".claude/skills/summarize-changes/SKILL.md"
+---
+name: summarize-changes
+description: Summarizes uncommitted changes and flags anything risky. Use when the user asks what changed, wants a commit message, or asks to review their diff.
+---
+
+## Current changes
+
+!`git diff HEAD`
+
+## Instructions
+
+Summarize the changes above in two or three bullet points, then list any
+risks you notice such as missing error handling, hardcoded values, or tests
+that need updating. If the diff is empty, say there are no uncommitted changes.
+```
+
+(This is an example from the official docs. The `` !`git diff HEAD` `` line is special, and we'll explain it below.)
+
+### The important frontmatter fields
+
+All fields are optional, but `description` matters a lot: Claude uses it to decide when to use the skill.
+
+| Field | What it does |
+| --- | --- |
+| `name` | The command name. Defaults to the folder name |
+| `description` | **What the skill does and when to use it.** This is what Claude reads to decide |
+| `when_to_use` | Additional triggering context, appended to the description |
+| `argument-hint` | A hint shown in autocomplete, for example `[file-path]` |
+| `arguments` | Names for arguments, so you can use them as `$name` |
+| `disable-model-invocation` | `true` = only **you** trigger it. Claude won't trigger it on its own |
+| `user-invocable` | `false` = only **Claude** triggers it. It won't appear in the `/` menu |
+| `allowed-tools` | Tools allowed **without asking** while the skill runs |
+| `disallowed-tools` | Tools **blocked** while the skill is active |
+| `model` / `effort` | A model or effort level for this turn |
+| `context: fork` | Runs the skill in a separate **subagent** (chapter 12) |
+| `agent` | Which kind of subagent, together with `context: fork` |
+| `paths` | The skill loads automatically only when working on matching files |
+| `shell` | `bash` (default) or `powershell`, for running injected commands |
+
+<Callout type="tip" title="How to write a good description">
+The description is the skill's "job posting". Write **what** it does and **when** to use it, and put the main case first, because a long description gets truncated (about 1,500 characters, together with `when_to_use`). Concrete keywords like "review", "PR" or "tests" help Claude recognize a match.
+</Callout>
+
+## When Claude triggers it, and when you do
+
+There are two ways to trigger a skill:
+
+- **Automatically**: Claude reads the descriptions, and if your request matches, it loads the skill on its own.
+- **Manually**: type `/` and the skill's name, **at the start of the message**, optionally with arguments. A name in the middle of a sentence doesn't trigger the skill, it only gives Claude permission to use it.
+
+| Frontmatter setting | You can trigger | Claude can trigger | Good for |
+| --- | --- | --- | --- |
+| (default) | ✔ | ✔ | Most skills |
+| `disable-model-invocation: true` | ✔ | ✘ | Actions with consequences: deploying, sending, deleting |
+| `user-invocable: false` | ✘ | ✔ | Background knowledge only Claude needs, like writing conventions |
+
+<Callout type="warning" title="Skills with consequences: manual only">
+Any skill that does something hard to undo, like deploying, pushing to GitHub, sending an email or deleting, should get `disable-model-invocation: true`. You don't want Claude deciding on its own that "it looks like a good time to deploy".
+</Callout>
+
+## Arguments: passing information to a skill
+
+When you trigger a skill manually, everything you write after the name is passed to it as arguments:
+
+| Variable | What it contains | Example: `/generate-tests lib/servings.ts unit` |
+| --- | --- | --- |
+| `$ARGUMENTS` | All the text after the skill name | `lib/servings.ts unit` |
+| `$0` or `$ARGUMENTS[0]` | The first argument | `lib/servings.ts` |
+| `$1` | The second argument | `unit` |
+| `$name` | A named argument, per the `arguments` field | |
+
+A few notes:
+
+- An argument with spaces? Wrap it in quotes: `/generate-tests "lib/my file.ts"`.
+- If the skill doesn't use any variable, Claude Code appends the arguments to the end of the instructions on its own.
+- To write a literal dollar sign, put a backslash before it: `\$1.00`.
+
+## Injecting live data: `` !`command` ``
+
+This is one of the most powerful capabilities. A line of the form `` !`git status` `` inside `SKILL.md` **runs before Claude sees the skill**, and its output replaces it. That way the skill reaches Claude already containing up-to-date information, without it having to search.
+
+```markdown title="One-line injection"
+## Current branch
+!`git branch --show-current`
+
+## Changes vs. main
+!`git diff main...HEAD --stat`
+```
+
+<Callout type="warning" title="Three things to know about injection">
+- **If one of the commands fails, the whole skill won't trigger.** Test the commands in the terminal before putting them in a skill.
+- **On Windows**, commands run in Bash by default. If you don't have Git Bash, add `shell: powershell` to the frontmatter and write PowerShell commands.
+- **You can turn it off completely.** If you use skills from external sources and want to be extra careful, the setting `"disableSkillShellExecution": true` disables running injected commands.
+</Callout>
+
+## Building three skills
+
+### 1. `/review-pr`: a code review to your standard
+
+Claude Code already has a built-in `/code-review`. So why build your own? Because every project has things that matter **to it**: on the recipe site, for example, accessibility for older users and readable copy.
+
+```markdown title=".claude/skills/review-pr/SKILL.md"
+---
+name: review-pr
+description: Review the current branch against main using this project's checklist (accessibility for older users, readable copy, mobile layout). Use when the user asks for a review, before opening a PR, or before merging.
+allowed-tools: Bash(git diff *) Bash(git log *) Bash(npm run build)
+disallowed-tools: Edit Write
+---
+
+## Branch
+!`git branch --show-current`
+
+## Commits on this branch
+!`git log main..HEAD --oneline`
+
+## Changed files
+!`git diff main...HEAD --stat`
+
+## Instructions
+
+1. Read the full diff with `git diff main...HEAD`.
+2. Run `npm run build` and report whether it passes.
+3. Review against [checklist.md](checklist.md).
+4. Report findings grouped by severity (high / medium / low),
+   each with file and line.
+5. Do NOT fix anything. End with a one-line verdict: ready to merge or not.
+```
+
+```markdown title=".claude/skills/review-pr/checklist.md"
+# Project review checklist
+- All user-facing text is clear, plain language.
+- Text is at least 18px; buttons have text, not only icons.
+- Works on a 375px-wide phone screen.
+- No secrets, API keys, or personal data in the diff.
+- No new dependencies unless they were discussed.
+- No ts-ignore, eslint-disable, or swallowed errors.
+```
+
+Notice three decisions in the file:
+
+- **`allowed-tools`** pre-approves only read and build commands, so the review runs without questions.
+- **`disallowed-tools: Edit Write`** guarantees the reviewer **won't fix** anything during the review. A review should produce findings, not changes.
+- **The checklist in a separate file** loads only when the review runs. That keeps `SKILL.md` short and focused.
+
+To trigger it:
+
+```text title="Inside Claude Code"
+/review-pr
+```
+
+### 2. `/generate-tests`: tests for a file, with an argument
+
+```markdown title=".claude/skills/generate-tests/SKILL.md"
+---
+name: generate-tests
+description: Generate unit tests for a given file, following the project's existing test style. Use when the user asks to add or write tests for a file or function.
+argument-hint: [file-path]
+---
+
+Write tests for: $0
+
+1. Read $0 and list every exported function and its edge cases
+   (empty input, zero, very large numbers, missing fields, non-English text).
+2. Look at examples/sample.test.ts and match its style exactly.
+3. Write the tests next to the file, as <name>.test.ts.
+4. Run only the new test file. If a test fails, decide whether the test
+   or the code is wrong. Never weaken a test just to make it pass.
+5. Summarize: how many tests, what they cover, what failed and why.
+```
+
+To trigger it:
+
+```text title="Inside Claude Code"
+/generate-tests lib/servings.ts
+```
+
+<Callout type="tip" title="Automatic and manual">
+Since we didn't restrict triggering, this skill will **also trigger automatically**. If you write "add tests for the servings calculator", Claude recognizes that the request matches the description, and works according to the instructions you wrote.
+</Callout>
+
+### 3. `/deploy`: deploying, manual trigger only
+
+```markdown title=".claude/skills/deploy/SKILL.md"
+---
+name: deploy
+description: Ship the current main branch to production through Vercel
+disable-model-invocation: true
+allowed-tools: Bash(npm run build) Bash(git status *) Bash(git log *)
+---
+
+Deploy checklist:
+
+1. Confirm we are on main and the working tree is clean (`git status`).
+   If not, STOP and tell me what is uncommitted.
+2. Run `npm run build`. If it fails, STOP and show the errors.
+3. Show me the commits that will go live (`git log origin/main..HEAD --oneline`)
+   and WAIT for my explicit approval.
+4. Only after I approve: `git push origin main`. Vercel deploys automatically.
+5. Tell me where to watch the deployment, and remind me to run the
+   live-site checklist from chapter 9.
+```
+
+Notice:
+
+- **`disable-model-invocation: true`**: only you trigger it. Claude will never decide on its own to deploy.
+- **`git push` isn't in `allowed-tools`**: so the push still asks for approval, even inside the skill. And if you set an `ask` rule for `git push` in chapter 8, it keeps working.
+- **Explicit stopping points** ("STOP", "WAIT"): good skills for sensitive actions include places where they stop and ask.
+
+## Permissions and control
+
+| Tool | What it does | Where |
+| --- | --- | --- |
+| `allowed-tools` | **Pre-approves** tools while the skill runs. Does **not** block other tools | In the skill's frontmatter |
+| `disallowed-tools` | **Blocks** tools while the skill is active | In the skill's frontmatter |
+| `disable-model-invocation` | Manual trigger only | In the skill's frontmatter |
+| `Skill(...)` rules | Block, or require approval for, triggering skills | `.claude/settings.json` |
+| `skillOverrides` | Decide which skills are visible and how | `.claude/settings.json` |
+| `disableSkillShellExecution` | Disables all injected commands | `.claude/settings.json` |
+
+Permission rules for skills are written like all the permission rules from chapter 8:
+
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "ask": ["Skill(deploy *)"],
+    "deny": ["Skill(dangerous-cleanup)"]
+  }
+}
+```
+
+Now, every time `/deploy` is triggered, Claude Code asks for approval, and the `dangerous-cleanup` skill is blocked entirely.
+
+## Let Claude write the skill
+
+You don't have to write skills by hand. Claude knows the format well:
+
+<PromptCompare
+  bad="Make me a skill"
+  good="Create a skill called new-recipe in the .claude/skills folder: it takes a recipe as free text or an image, breaks it into the structure in lib/recipes.ts, shows me the result for approval, and only after approval adds it, runs the build and commits to git. The description should make it trigger when I paste a recipe. Explain each frontmatter field you chose."
+  why="The strong prompt defines the process, the approval stopping point and when the skill should trigger. “Explain each field” turns it into a lesson."
+/>
+
+<Callout type="tip" title="Built-in skills worth knowing">
+Claude Code comes with built-in skills, and you already know some of them: `/code-review` for code review, `/doctor` for checking your setup, and `/verify` to confirm a change works in the running app. Type `/` to see them all.
+</Callout>
+
+## Writing good skills: five principles
+
+1. **One skill, one task.** "PR review" and "writing tests" are two skills, not one.
+2. **Only steps in SKILL.md.** Background, examples and long lists go in supporting files. The recommendation: under 500 lines in `SKILL.md`, with the most important things first.
+3. **A defined output format.** "Report by severity, with file and line" beats "report what you found".
+4. **Stopping points for sensitive actions.** "STOP" and "WAIT for approval" before anything hard to undo.
+5. **Learn from mistakes.** Add a `learnings.md` file to the skill's folder, and ask Claude to update it when something didn't work. Next time the skill will be better.
+
+## Community skills
+
+You don't have to invent everything yourself. There are large collections of ready-made skills:
+
+### alirezarezvani/claude-skills
+
+[A GitHub repository](https://github.com/alirezarezvani/claude-skills), MIT licensed, with about 390 skills across 20 areas: engineering, marketing, product management, finance and more. Examples of what you'll find there:
+
+| Skill | What it does |
+| --- | --- |
+| `skill-security-auditor` | Scans a skill **before** installing and returns pass / warn / fail |
+| `playwright-pro` | Writing browser tests and fixing flaky tests |
+| `dependency-auditor` | Checking packages, licenses and planning upgrades |
+| `incident-commander` | Managing production incidents and writing a post-incident report |
+| `mcp-server-builder` | Building an MCP server from an API spec |
+
+You can install through Claude Code's plugin system, or simply copy a single skill's folder into `~/.claude/skills/`:
+
+```text title="Inside Claude Code"
+/plugin marketplace add alirezarezvani/claude-skills
+/plugin install engineering-skills@claude-code-skills
+```
+
+### aitmpl.com (Claude Code Templates)
+
+[aitmpl.com](https://www.aitmpl.com/skills/) is an interactive catalog of skills, agents, commands, settings and MCP servers, based on the open-source project [claude-code-templates](https://github.com/davila7/claude-code-templates) (MIT license). You can browse the site, or run the command-line installer:
+
+```bash title="In the terminal"
+npx claude-code-templates@latest
+```
+
+<Callout type="warning" title="An outside skill = outside code">
+A skill isn't just text. It can contain injected commands that run automatically, scripts, and instructions Claude will carry out. Before installing a skill from an external source:
+
+- **Read `SKILL.md`** and every file in the folder. If it's not clear what a line does, ask Claude.
+- **Look for injected commands** (`` !` ``) and scripts, and check exactly what they run.
+- **Start in a practice project**, not your important project.
+- **Prefer popular, maintained sources**, and consider running a scanner like `skill-security-auditor` first.
+</Callout>
+
+<Prompt>Read all the files in the .claude/skills/[skill name] folder I downloaded from the internet. Explain to me what the skill does, which commands it runs and when, which files and services it accesses, and whether there's anything suspicious or dangerous in it. Don't trigger it and don't run anything from it</Prompt>
+
+## Exercise: the project's skill kit
+
+On the recipe site (or any project with Git):
+
+1. Create the three skills from the chapter: `review-pr`, `generate-tests` and `deploy`.
+2. Type `/` and check that all three appear in the menu.
+3. Run `/review-pr` on a branch with a small change. Did the reviewer avoid fixing things?
+4. Write "add tests for the servings calculator file" **without** typing `/`. Did Claude trigger `generate-tests` on its own?
+5. Write "looks like everything's ready, maybe we should deploy?". Claude **shouldn't** trigger `deploy` on its own.
+6. Ask Claude to build a fourth skill of your own, for example `new-recipe`.
+7. Add an `ask` rule for `Skill(deploy *)` in `.claude/settings.json`.
+
+<Checklist
+  id="ch11-exercise"
+  title="Finished the exercise?"
+  items={[
+    "I have at least three skills in the .claude/skills folder, each in its own folder",
+    "Every skill appears in the / menu",
+    "The review skill uses injection (!`...`) and a supporting file",
+    "The review skill has disallowed-tools that prevent editing",
+    "generate-tests takes a file as an argument ($0)",
+    "Claude triggered a skill automatically based on its description",
+    "deploy has disable-model-invocation, and Claude didn't trigger it on its own",
+    "I read a community skill before installing it",
+  ]}
+/>
+
+## Summary
+
+- **Skill = a written work recipe**: a folder with `SKILL.md`, in `.claude/skills/` (project) or `~/.claude/skills/` (personal).
+- **Progressive loading**: only the name and description load up front. The content and supporting files load only when needed.
+- **The description** decides when Claude triggers it on its own. `disable-model-invocation: true` for anything with consequences.
+- **Arguments** with `$ARGUMENTS` and `$0`, and **live data** with `` !`command` ``.
+- **Permissions**: `allowed-tools` pre-approves, `disallowed-tools` blocks, and `Skill(...)` rules in settings.
+- **Community skills** save work, but read them before installing.
+
+In the next chapter we'll meet skills' big siblings: **subagents**. We'll see how Claude splits big tasks among several helpers working in parallel, and also understand tokens, the context window and prompt caching in depth.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "What's the difference between a skill and CLAUDE.md?", "options": [{"text": "CLAUDE.md always loads, a skill loads only when needed", "why": "Right. That's why long processes belong in a skill."}, {"text": "There's no difference", "why": "There is: they load at different times and serve different purposes."}, {"text": "Skills only work on Macs", "why": "No, they work everywhere."}], "answer": 0}, {"q": "Which field prevents Claude from triggering /deploy on its own?", "options": [{"text": "allowed-tools", "why": "It pre-approves tools, it doesn't decide who triggers."}, {"text": "disable-model-invocation: true", "why": "Right. Only you will trigger it."}, {"text": "description", "why": "The description actually helps Claude decide when to trigger."}], "answer": 1}]} />

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans_Hebrew, Secular_One } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
+import { HtmlLocaleSync } from "@/components/html-locale-sync";
 import { SiteHeader } from "@/components/site-header";
+import { ThemeProvider } from "@/components/theme-provider";
+import { bootScript } from "@/lib/i18n";
 import "./globals.css";
 
 const plex = IBM_Plex_Sans_Hebrew({
@@ -34,6 +36,8 @@ export const metadata: Metadata = {
   },
 };
 
+// Hebrew is the default. English pages (/en/...) get lang="en" dir="ltr" from bootScript before paint,
+// and HtmlLocaleSync keeps it right on client-side navigation.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,10 +45,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl" suppressHydrationWarning>
-      <body
-        className={`${plex.variable} ${secular.variable} ${plexMono.variable} font-sans antialiased`}
-      >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+      </head>
+      <body className={`${plex.variable} ${secular.variable} ${plexMono.variable} font-sans antialiased`}>
         <ThemeProvider>
+          <HtmlLocaleSync />
           <SiteHeader />
           {children}
         </ThemeProvider>

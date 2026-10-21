@@ -1,0 +1,417 @@
+# Pro Tips and Shortcuts
+
+You've reached the chapter that closes the core track. You already know how to install, ask, build, fix, save to Git and deploy. This chapter is about **the next layer**: the small habits that separate someone who uses Claude Code from someone who works with it like a pro.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- How to save tokens and costs, and stay within your plan's limits.
+- How to turn CLAUDE.md into an advanced tool: per-file rules, file imports and compaction instructions.
+- How to connect Claude to external tools with **MCP**.
+- Shortcuts that save time every day.
+- And finally: a recap of the whole course, a checklist, and where to go from here.
+</Callout>
+
+## Part 1: Saving tokens and costs
+
+### How it works: why a long conversation is "expensive"
+
+A **token** is the unit of measurement for language models: roughly a piece of a word. Everything Claude reads or writes is measured in tokens, and that's what determines the cost (on a Console account) or how fast you reach your usage limit (on a subscription).
+
+The key point: **with every message, Claude Code sends the model the whole conversation from the start**, including every file read and every command output. A short question in a conversation that's been open for three hours "costs" much more than the same question in a new conversation. Claude Code uses a caching mechanism (prompt caching) that makes repeating the same content cheaper, but still: **a short, focused conversation is a cheap conversation**.
+
+### See where the tokens go
+
+| Command | What it shows |
+| --- | --- |
+| `/usage` | Your usage: on a subscription, how much of your usage limit is used. On Console, an estimated cost for the session. It also includes saving tips |
+| `/context` | What's filling the context window right now: the conversation, CLAUDE.md, tools, files |
+| `/insights` | A report on **how** you work: where there's friction, and what you can improve |
+
+<Callout type="tip" title="Recommendations in one keypress">
+On a Pro or Max subscription, `/usage` also shows a breakdown of what's consuming your limit, with recommendations like "shorten CLAUDE.md". When the hint `f to fix` appears at the bottom, pressing `f` asks Claude to apply the recommendations it can, and it shows you each change before making it.
+</Callout>
+
+### Ten habits that save
+
+1. **`/clear` between unrelated tasks.** It's free, and it's the biggest saving. Done with the design and moving on to a bug? New conversation.
+2. **`/rename` before `/clear`.** Give the conversation a name, for example `/rename home-page-design`, and you can find it later with `/resume`.
+3. **`/compact` with an instruction, in the middle of a long task.** Instead of waiting for the automatic summary, compact at a natural stopping point, and say what to keep:
+
+```text title="Inside Claude Code"
+/compact keep the plan, the list of files we changed, and the bug we haven't solved yet
+```
+
+4. **Specific requests.** "Improve the project" makes Claude scan everything. "Add validation to the email field in ContactForm.tsx" reads one file.
+5. **`@file` instead of "find where".** A direct reference saves searching the whole project.
+6. **Plan mode for big tasks.** A wrong plan discovered at the planning stage costs a few messages. A wrong plan discovered after execution costs everything twice.
+7. **An early `Esc`.** See a wrong direction? Stop immediately, instead of waiting for it to finish and then fixing.
+8. **The right model for the task.** With `/model` you can choose a model. A stronger model is good for complex decisions, and a lighter model is enough for simple tasks and costs less. With `/effort` you can also lower the effort level (how much it "thinks") for simple tasks.
+9. **Subagents for "noisy" work.** Running tests, reading long logs or searching many files: "Use a subagent to..." keeps the long output out of the main conversation.
+10. **`/btw` for side questions.** A small question unrelated to the task, like "wait, what's useEffect?", doesn't need to stay in the conversation. The answer to `/btw` doesn't enter the history.
+
+### What about `.claudeignore`?
+
+Online you can find advice to create a `.claudeignore` file so Claude "won't see" certain files, like `.gitignore`.
+
+<Callout type="warning" title=".claudeignore doesn't work">
+According to the official Claude Code documentation, a `.claudeignore` file **has no effect at all**. If you have one, it isn't protecting anything. To prevent Claude from reading files, use **`Read` deny rules** in the settings file, like the Git rules we learned in chapter 8.
+</Callout>
+
+Here's the right way. This file blocks Claude from reading secret files and large folders there's no reason to read:
+
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./data/backups/**)"
+    ]
+  }
+}
+```
+
+<Callout type="note" title="Two goals, two tools">
+- **Security** (so Claude doesn't read secrets): `Read` rules under `deny`, like in the example.
+- **Savings** (so Claude doesn't waste time on irrelevant files): folders like `node_modules`, `.next` and `dist` should be in `.gitignore` anyway. Claude Code respects it when searching, so it doesn't wade through generated output.
+</Callout>
+
+<Checklist
+  id="ch10-costs"
+  title="Saving habits"
+  items={[
+    "I ran /usage and /context, and I understand what's taking up space",
+    "I use /clear between unrelated tasks, and /rename for conversations I might come back to",
+    "I tried /compact with an instruction about what to keep",
+    "If I had a .claudeignore, I moved it to Read rules under deny",
+    ".env files and secrets are blocked from reading in .claude/settings.json",
+  ]}
+/>
+
+## Part 2: CLAUDE.md at a pro level
+
+In chapter 4 we learned the basics: CLAUDE.md loads in every conversation, should be short and specific, and is created with `/init`. Now let's upgrade.
+
+### Hierarchy: which CLAUDE.md loads when
+
+| File | Applies to | Loaded |
+| --- | --- | --- |
+| `~/.claude/CLAUDE.md` | You, in all projects | In every conversation |
+| `CLAUDE.md` at the project root | The project, and everyone working on it | In every conversation in the project |
+| `CLAUDE.local.md` at the project root | Only you, only in this project (add it to `.gitignore`) | In every conversation in the project |
+| `CLAUDE.md` in a subfolder, e.g. `app/admin/` | Only that part of the project | When Claude works on files in that folder |
+| `.claude/rules/*.md` | One topic, or a certain kind of file | Always, or only when matching files are touched |
+
+### Rule 1: personal preferences once, for all projects
+
+Things that are true for all your projects go in `~/.claude/CLAUDE.md`, and you can forget about them:
+
+```markdown title="~/.claude/CLAUDE.md"
+# Personal preferences
+- Answer in plain, simple language. Explain technical terms briefly the first time.
+- Before a change that touches more than three files, show a plan and wait for approval.
+- Git messages: a short first line describing what and why.
+- Never git push --force, and never push directly to main.
+```
+
+### Rule 2: rules by file type (`.claude/rules/`)
+
+In a large project, some rules are relevant only to some files. Instead of bloating CLAUDE.md, put them in separate files in the `.claude/rules/` folder. With the `paths` field, the rule loads **only** when Claude works on matching files, saving space the rest of the time:
+
+```markdown title=".claude/rules/components.md"
+---
+paths:
+  - "components/**/*.tsx"
+---
+
+# Component rules
+- Each component in its own file, with the file name matching the component name (RecipeCard.tsx).
+- Buttons always have text, not just an icon.
+- Minimum text size: 18 pixels.
+- User-facing text: plain language, no jargon.
+```
+
+```markdown title=".claude/rules/recipes-data.md"
+---
+paths:
+  - "lib/recipes.ts"
+  - "data/**"
+---
+
+# Recipe data rules
+- Each ingredient: quantity (a number), unit and name, in separate fields.
+- Don't delete existing recipes. If needed, ask.
+```
+
+### Rule 3: importing files with `@`
+
+Instead of copying documents into CLAUDE.md, reference them. Claude Code loads them together with CLAUDE.md:
+
+```markdown title="CLAUDE.md"
+# The family recipe site
+
+## Background material
+@sources/references.md
+@docs/design-guidelines.md
+```
+
+<Callout type="info" title="Importing doesn't save space">
+Imported files load at the start of every conversation, just like CLAUDE.md itself. Importing helps you **organize**, not **shorten**. A rule relevant only to some files is better placed in `.claude/rules/` with `paths`.
+</Callout>
+
+### Rule 4: compaction instructions
+
+When Claude Code summarizes a conversation, with `/compact` or automatically, some details get lost. You can tell it in advance what's important to keep:
+
+```markdown title="CLAUDE.md"
+# Compaction instructions
+When you summarize the conversation, always keep:
+- The list of all files we changed
+- The commands for checking (npm run build and any other check we ran)
+- Any bug that hasn't been solved yet
+```
+
+### Rule 5: emphasis, sparingly
+
+If Claude keeps missing one important rule, you can emphasize **that one only**:
+
+```markdown title="CLAUDE.md"
+- IMPORTANT: Don't delete files from the data folder without explicit approval.
+```
+
+If you emphasize ten rules, none of them stands out. And if Claude misses many rules, the problem is probably the file's size: it's too long, and the important rules get lost.
+
+### Rule 6: long processes are skills, not rules
+
+CLAUDE.md always loads. A ten-step process you need once a week, like "add a new recipe", takes up space in every conversation, even when you don't need it. That's what **skills** are for: instructions that load only when needed.
+
+```markdown title=".claude/skills/new-recipe/SKILL.md"
+---
+name: new-recipe
+description: Add a new recipe to the site from free text or a photo of a recipe
+---
+
+1. Break the recipe into name, category, prep time, servings, ingredients (quantity, unit, name) and steps.
+2. Show me the parsed recipe and wait for approval.
+3. Add it to lib/recipes.ts, with a slug.
+4. Run npm run build and make sure it passes.
+5. Commit to git with the message "Add recipe: <recipe name>".
+```
+
+Now, every time you paste a recipe and write "add this recipe", Claude recognizes that the skill is relevant and follows it. You can also invoke it directly: `/new-recipe`. In chapter 11 we'll dive deep into skills: arguments, injecting live data, permissions and community skills.
+
+### Rule 7: ongoing maintenance
+
+- **`/memory`**: opens the CLAUDE.md files for editing, and also shows **auto memory**: notes Claude keeps for itself from your corrections and preferences.
+- **`/doctor prompt-audit`**: Claude goes through all the instruction files and looks for outdated rules, contradictions and references to files that no longer exist. It shows findings and changes nothing until you ask.
+- **The line test**: for each line ask, "if I delete it, will Claude make a mistake?". If not, delete it. The official recommendation is under 200 lines.
+
+<Checklist
+  id="ch10-claudemd"
+  title="Upgrading CLAUDE.md"
+  items={[
+    "I created ~/.claude/CLAUDE.md with my personal preferences",
+    "The project's CLAUDE.md is shorter than 200 lines, and every line passes the line test",
+    "I moved rules relevant only to some files into .claude/rules/ with paths",
+    "I added compaction instructions",
+    "One recurring process became a skill",
+    "I ran /doctor prompt-audit",
+  ]}
+/>
+
+## Part 3: MCP, connecting Claude to the world
+
+### What is MCP?
+
+**MCP** (Model Context Protocol) is an open standard that lets you connect Claude Code to external tools and data sources: Notion, Google Drive, databases, task management systems and more. Think of it as a **USB-C port** for AI: one standard connection that lots of different tools can plug into.
+
+Each such tool is called an **MCP server**. Once you connect a server, Claude can use it in the conversation, for example to read a page from Notion or ask the database a question.
+
+### Before connecting: maybe you don't need to
+
+<Callout type="tip" title="Command-line tools come before MCP">
+If a service has a command-line tool, like GitHub's `gh` (chapter 8) or `vercel` (chapter 9), it's usually better to use it. Claude knows how to run them directly, and they use less context. MCP is great for services that don't have such a tool, or when you want a richer connection.
+</Callout>
+
+### Connecting a server: a Notion example
+
+Say grandma wrote all her recipes on a page in Notion. Instead of copying them one by one, we'll connect Claude to Notion.
+
+**1. Add the server**, in a regular terminal:
+
+```bash title="In the terminal"
+claude mcp add --transport http notion https://mcp.notion.com/mcp
+```
+
+**2. Sign in.** Inside Claude Code run `/mcp`, choose `notion`, and follow the instructions in the browser to grant access:
+
+```text title="Inside Claude Code"
+/mcp
+```
+
+**3. Use it:**
+
+<Prompt>Read the “Grandma's Recipes” page in Notion, and add every recipe there that we don't have yet to lib/recipes.ts, following the rules in CLAUDE.md. Before adding, show me a list of what you found</Prompt>
+
+### Two kinds of servers
+
+| Kind | How to add | Example |
+| --- | --- | --- |
+| **Remote** (HTTP): a cloud service | `claude mcp add --transport http <name> <url>` | Notion, Sentry, GitHub |
+| **Local** (stdio): a program running on your machine | `claude mcp add <name> -- <command>` | A connection to a local database |
+
+For a local server, everything after `--` is the command that starts the server. Environment variables, like keys, are passed with `--env`:
+
+```bash title="A local server with a key (example)"
+claude mcp add --env AIRTABLE_API_KEY=YOUR_KEY --transport stdio airtable -- npx -y airtable-mcp-server
+```
+
+### Managing servers
+
+```bash title="In the terminal"
+claude mcp list            # all servers, and whether they're connected
+claude mcp get notion      # details about one server
+claude mcp remove notion   # remove a server
+```
+
+### Scope: who is the server available to?
+
+| Scope | The flag | For whom | Where it's saved |
+| --- | --- | --- | --- |
+| **Local** (default) | `--scope local` | Only you, only in this project | In your personal settings |
+| **Project** | `--scope project` | Everyone working on the project | `.mcp.json` at the project root, saved in Git |
+| **User** | `--scope user` | Only you, in all projects | In your personal settings |
+
+<Callout type="warning" title="MCP safety: connect only what you trust">
+- **Only servers from a known source.** An MCP server gets access to your tools and data. An unknown server is like unknown software.
+- **Prompt injection**: a server that brings in outside content, like web pages, emails or documents, may also bring text that tries to "give instructions" to Claude. Watch for actions you didn't ask for.
+- **Minimal permissions.** Connecting to a database? A read-only user. An API key? Only with the permissions it really needs.
+- **Keys don't go into `.mcp.json`** that's saved in Git. Use the local scope, or environment variables.
+- **Turn off servers you're not using.** Every connected server takes up space in the context. You can see and turn them off in `/mcp`.
+</Callout>
+
+<Checklist
+  id="ch10-mcp"
+  title="MCP"
+  items={[
+    "I understand when a command-line tool is better and when MCP is",
+    "I connected one MCP server, from a known source, and signed in through /mcp",
+    "I used it in a real request",
+    "claude mcp list shows only servers I actually use",
+    "There are no keys in a .mcp.json file saved in Git",
+  ]}
+/>
+
+## Part 4: Pro shortcuts
+
+| Shortcut | What it does |
+| --- | --- |
+| `claude -c` | Continues the last conversation in the folder |
+| `claude -r` or `/resume` | Pick an earlier conversation from a list |
+| `/rename <name>` | Give the conversation a name, to find it later |
+| `Shift + Tab` | Switch permission mode: manual, accept edits, plan, auto |
+| `/plan <task>` | Go straight into plan mode with a task |
+| `@file` | Attach a file to the request |
+| `!command` | Run a terminal command, and the output goes into the conversation |
+| `Esc` / `Esc` twice | Stop / go back to an earlier point |
+| `↑` | Earlier messages you wrote |
+| `Ctrl + V` (on Windows: `Alt + V`) | Paste an image |
+| `/btw <question>` | A side question that doesn't stay in the conversation |
+| `/diff` | All changes in the folder |
+| `/code-review` | A code review of the changes |
+| `/model` and `/effort` | Choose a model and effort level |
+| `/usage` and `/context` | Usage, costs, and what's taking up space |
+| `/` | A list of all commands. Type letters to filter |
+
+<Callout type="tip" title="Claude knows itself">
+Not sure how to do something in Claude Code? Just ask it: "How do I make Claude ask before every push?" or "What's the difference between a skill and CLAUDE.md?". It reads the official, up-to-date documentation and answers. And for interactive lessons with demos, try `/powerup`.
+</Callout>
+
+## Part 5: Course recap
+
+### What we learned, chapter by chapter
+
+<RecapCards
+  takeaways={{
+    1: "Claude Code is an agent that acts, not just recommends. You're the manager, it's the hands.",
+    2: "One install command, sign in with a subscription, and fixing PATH and execution policy issues.",
+    3: "Go into the folder and run claude. Read every approval prompt, and know /clear, /compact and /rewind.",
+    4: "The golden rule: specificity, context, step by step and verification. Standing rules go in CLAUDE.md.",
+    5: "Cursor is the eyes, Claude the hands. Save before you send, and select instead of describing.",
+    6: "A complete project in four steps: set up, build in layers, improve from feedback, check.",
+    7: "Investigate first, then fix the root cause, no cover-ups. Esc, /rewind and git revert to go back.",
+    8: "A branch per feature, a PR with review, and four layers of protection against force push.",
+    9: "GitHub connected to Vercel: every push to main deploys. Environment variables, domain, and rollback.",
+    10: "/clear between tasks, a short CLAUDE.md with rules and skills, and MCP only from known sources.",
+  }}
+/>
+
+### The big checklist
+
+Check off what you've already done yourself. Whatever isn't checked is exactly what to practice:
+
+<Checklist
+  id="ch10-course"
+  title="From Zero to Hero"
+  items={[
+    "I installed Claude Code and signed in (chapter 2)",
+    "I can read an approval prompt and decide whether to approve (chapter 3)",
+    "I wrote a prompt that meets all four principles of the golden rule (chapter 4)",
+    "I have a short, specific CLAUDE.md for my project (chapters 4 and 10)",
+    "I worked with Claude inside Cursor, and reviewed changes in Source Control (chapter 5)",
+    "I built a complete project from an empty folder (chapter 6)",
+    "I found and fixed a real bug, and practiced /rewind (chapter 7)",
+    "I opened a pull request, ran /code-review and merged (chapter 8)",
+    "I set up Git safety belts (chapter 8)",
+    "My site is live, at a real address (chapter 9)",
+    "I use /clear and /compact regularly (chapter 10)",
+    "I sent the site to someone in the family, and they used it",
+  ]}
+/>
+
+## Where to go from here
+
+### The next project: a database for the recipe site
+
+Remember the add-recipe form from chapter 6, which only worked on your computer? The natural upgrade is a **real database**, so the whole family can add recipes directly from the live site. It's a great project for practicing everything you learned: planning, a branch, building in layers, review, and a Vercel preview before merging.
+
+<Prompt>/plan I want the site's recipes to be saved in a real database instead of a file, so the add form also works on the live site on Vercel. Suggest two or three database options that connect easily to Vercel and suit a small project, with pros, cons and costs in plain language. After I choose, prepare a plan in small steps: each step in its own branch, with a way to check it</Prompt>
+
+### More project ideas
+
+- **A landing page** for a family member's business, with a contact form.
+- **A family photo album** with search by year and event.
+- **A small tool** that saves manual work: organizing files, merging spreadsheets, renaming photos.
+- **A personal portfolio**, with the projects you built in the course.
+
+### Further resources
+
+| Resource | Why |
+| --- | --- |
+| [The official Claude Code docs](https://code.claude.com/docs/en/overview) | The most accurate, up-to-date source for every command and capability |
+| [Claude Academy](https://academy.claude.com) | Free self-paced courses, including Claude Code 101 |
+| `/powerup` inside Claude Code | Interactive lessons with demos |
+| [claudehero.com](https://claudehero.com), [zero2claude.dev](https://zero2claude.dev) | Community guides and exercises |
+| [The claude-world complete guide](https://claude-world.com/articles/claude-code-complete-guide-2026/) | A comprehensive overview of advanced techniques |
+
+<Callout type="tip" title="The most important habit">
+Not a command, not a shortcut, and not a tool. The most important habit is **building real things**. Every small project will teach you more than any guide, including this one. Pick something someone you love can use, and get started.
+</Callout>
+
+## Thanks for learning with us
+
+You started without knowing what a terminal is. Now you have a live site, a project on GitHub, and the tools to build almost any idea that comes to mind.
+
+From Zero to Hero. 🎉
+
+<Callout type="info" title="Want more? Bonus chapters and tools">
+- **Chapter 11, Skills and automation**: turn recurring workflows into commands like `/review-pr` and `/deploy`.
+- **Chapter 12, Smart agents**: a team of subagents working in parallel, and an in-depth explanation of tokens, the context window and prompt caching.
+- **Chapter 13, Claude's platforms**: Desktop, browser, mobile and the Chrome extension.
+- **Chapter 14, Template library**: ready-made agents, commands and skills from the community.
+- **Pages 15 to 17**: a glossary, a library of everyday prompts, and interactive tools.
+</Callout>
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "What does .claudeignore do?", "options": [{"text": "Prevents Claude from reading files", "why": "That's what many people think, but no."}, {"text": "Nothing. According to the official docs it has no effect", "why": "Right. Use Read rules under deny instead."}, {"text": "Deletes files from the project", "why": "Definitely not."}], "answer": 1}, {"q": "What's the biggest token saving?", "options": [{"text": "/clear between unrelated tasks", "why": "Right. It's free, and avoids resending unnecessary context."}, {"text": "Writing requests in a different language", "why": "There's a small effect, but it's not the main thing."}, {"text": "Connecting as many MCP servers as possible", "why": "The opposite, each server takes up space."}], "answer": 0}]} />

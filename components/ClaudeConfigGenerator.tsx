@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { ChoiceGroup, ToggleGroup } from "@/components/ChoiceGroup";
 import { CopyButton } from "@/components/copy-button";
+import { useLocale } from "@/components/use-locale";
 
 const stacks = [
   { id: "next", label: "Next.js" },
@@ -12,48 +13,85 @@ const stacks = [
   { id: "html", label: "HTML + Tailwind" },
 ];
 
-const stackLines: Record<string, string[]> = {
-  next: ["- Next.js (App Router), TypeScript, Tailwind CSS.", "- פיתוח: npm run dev. בדיקה לפני סיום: npm run build."],
-  react: ["- React, TypeScript.", "- פיתוח: npm run dev. בדיקה לפני סיום: npm run build."],
-  node: ["- Node.js, TypeScript.", "- בדיקות: npm test. להריץ לפני כל שמירה."],
-  python: ["- Python 3.", "- בדיקות: pytest. להריץ לפני כל שמירה."],
-  html: ["- HTML ו-Tailwind CSS, בלי framework.", "- בדיקה: לפתוח בדפדפן ולוודא שאין שגיאות בקונסול."],
+const excludePaths: Record<string, string[]> = {
+  env: ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)"],
+  keys: ["Read(./**/*.pem)", "Read(./**/*.key)"],
+  data: ["Read(./data/backups/**)", "Read(./exports/**)"],
+  build: ["Read(./.next/**)", "Read(./dist/**)", "Read(./build/**)"],
 };
 
-const rules = [
-  { id: "hebrew", label: "תשובות בעברית" },
-  { id: "plan", label: "תוכנית לפני שינוי גדול" },
-  { id: "deps", label: "בלי ספריות חדשות בלי אישור" },
-  { id: "git", label: "כללי Git בטוחים" },
-  { id: "tests", label: "בדיקות לכל שינוי" },
-];
-
-const ruleLines: Record<string, string> = {
-  hebrew: "- תענה לי בעברית ובשפה פשוטה. מונחים טכניים באנגלית, עם הסבר קצר.",
-  plan: "- לפני שינוי שנוגע ביותר משלושה קבצים, תציג תוכנית ותחכה לאישור.",
-  deps: "- אל תוסיף ספריות חדשות בלי לשאול אותי קודם.",
-  git: "- אף פעם לא git push --force ולא push ישירות ל-main. הודעות commit באנגלית.",
-  tests: "- כל שינוי בלוגיקה מגיע עם בדיקה. אם בדיקה נכשלת, לא מחלישים אותה.",
+const text = {
+  he: {
+    defaultName: "האתר המשפחתי",
+    fallbackName: "הפרויקט שלי",
+    nameLabel: "שם הפרויקט",
+    stackLabel: "טכנולוגיה",
+    uiLabel: "ממשק",
+    rulesLabel: "כללי עבודה",
+    excludeLabel: "קבצים ש-Claude לא יקרא",
+    sections: { stack: "## טכנולוגיות ופקודות", ui: "## ממשק", rules: "## כללי עבודה", compact: "## הוראות לסיכום" },
+    compactLine: "- בסיכום שיחה, תמיד תשמור את רשימת הקבצים ששינינו ואת הבאגים שעוד פתוחים.",
+    stackLines: {
+      next: ["- Next.js (App Router), TypeScript, Tailwind CSS.", "- פיתוח: npm run dev. בדיקה לפני סיום: npm run build."],
+      react: ["- React, TypeScript.", "- פיתוח: npm run dev. בדיקה לפני סיום: npm run build."],
+      node: ["- Node.js, TypeScript.", "- בדיקות: npm test. להריץ לפני כל שמירה."],
+      python: ["- Python 3.", "- בדיקות: pytest. להריץ לפני כל שמירה."],
+      html: ["- HTML ו-Tailwind CSS, בלי framework.", "- בדיקה: לפתוח בדפדפן ולוודא שאין שגיאות בקונסול."],
+    },
+    rules: {
+      language: ["תשובות בעברית", "- תענה לי בעברית ובשפה פשוטה. מונחים טכניים באנגלית, עם הסבר קצר."],
+      plan: ["תוכנית לפני שינוי גדול", "- לפני שינוי שנוגע ביותר משלושה קבצים, תציג תוכנית ותחכה לאישור."],
+      deps: ["בלי ספריות חדשות בלי אישור", "- אל תוסיף ספריות חדשות בלי לשאול אותי קודם."],
+      git: ["כללי Git בטוחים", "- אף פעם לא git push --force ולא push ישירות ל-main. הודעות commit באנגלית."],
+      tests: ["בדיקות לכל שינוי", "- כל שינוי בלוגיקה מגיע עם בדיקה. אם בדיקה נכשלת, לא מחלישים אותה."],
+    },
+    ui: {
+      rtl: ["עברית ו-RTL", "- כל הממשק בעברית ומימין לשמאל (RTL). משתמשים ב-ms/me/ps/pe ולא ב-ml/mr/pl/pr."],
+      a11y: ["נגישות למבוגרים", "- טקסט בגודל 18px לפחות, כפתורים עם טקסט ולא רק אייקון, ניגודיות AA."],
+      mobile: ["מותאם לטלפון", "- כל דף צריך לעבוד על מסך ברוחב 375px."],
+    },
+    excludes: { env: "קובצי .env וסודות", keys: "מפתחות ותעודות", data: "גיבויים ונתונים אישיים", build: "תיקיות בנייה" },
+    outInstructions: "הוראות",
+    outBlocks: "חסימות",
+    why: "למה לא .claudeignore? לפי התיעוד הרשמי, לקובץ כזה אין השפעה. חוקי Read ב-deny הם הדרך שבאמת חוסמת קריאה (פרק 10).",
+  },
+  en: {
+    defaultName: "Family Recipe Site",
+    fallbackName: "My project",
+    nameLabel: "Project name",
+    stackLabel: "Tech stack",
+    uiLabel: "Interface",
+    rulesLabel: "Working rules",
+    excludeLabel: "Files Claude won't read",
+    sections: { stack: "## Stack & commands", ui: "## Interface", rules: "## Working rules", compact: "## Compaction instructions" },
+    compactLine: "- When compacting, always keep the list of files we changed and any open bugs.",
+    stackLines: {
+      next: ["- Next.js (App Router), TypeScript, Tailwind CSS.", "- Dev: npm run dev. Before finishing: npm run build."],
+      react: ["- React, TypeScript.", "- Dev: npm run dev. Before finishing: npm run build."],
+      node: ["- Node.js, TypeScript.", "- Tests: npm test. Run before every commit."],
+      python: ["- Python 3.", "- Tests: pytest. Run before every commit."],
+      html: ["- HTML and Tailwind CSS, no framework.", "- Check: open in a browser and make sure the console has no errors."],
+    },
+    rules: {
+      language: ["Plain-language answers", "- Answer in plain language. Briefly explain technical terms the first time."],
+      plan: ["Plan before big changes", "- Before a change touching more than three files, show a plan and wait for approval."],
+      deps: ["No new libraries without asking", "- Don't add new libraries without asking me first."],
+      git: ["Safe Git rules", "- Never git push --force and never push directly to main. Commit messages in English."],
+      tests: ["Tests for every change", "- Every logic change comes with a test. If a test fails, don't weaken it."],
+    },
+    ui: {
+      rtl: ["RTL support", "- The UI supports right-to-left languages. Use ms/me/ps/pe instead of ml/mr/pl/pr."],
+      a11y: ["Accessible for older users", "- Text at least 18px, buttons with text labels not just icons, AA contrast."],
+      mobile: ["Mobile-friendly", "- Every page must work on a 375px-wide screen."],
+    },
+    excludes: { env: ".env files & secrets", keys: "Keys & certificates", data: "Backups & personal data", build: "Build folders" },
+    outInstructions: "Instructions",
+    outBlocks: "Blocks",
+    why: "Why not .claudeignore? According to the official docs, that file has no effect. Read rules under deny are what actually block reading (chapter 10).",
+  },
 };
 
-const uiOptions = [
-  { id: "rtl", label: "עברית ו-RTL" },
-  { id: "a11y", label: "נגישות למבוגרים" },
-  { id: "mobile", label: "מותאם לטלפון" },
-];
-
-const uiLines: Record<string, string> = {
-  rtl: "- כל הממשק בעברית ומימין לשמאל (RTL). משתמשים ב-ms/me/ps/pe ולא ב-ml/mr/pl/pr.",
-  a11y: "- טקסט בגודל 18px לפחות, כפתורים עם טקסט ולא רק אייקון, ניגודיות AA.",
-  mobile: "- כל דף צריך לעבוד על מסך ברוחב 375px.",
-};
-
-const excludes = [
-  { id: "env", label: "קובצי .env וסודות", paths: ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)"] },
-  { id: "keys", label: "מפתחות ותעודות", paths: ["Read(./**/*.pem)", "Read(./**/*.key)"] },
-  { id: "data", label: "גיבויים ונתונים אישיים", paths: ["Read(./data/backups/**)", "Read(./exports/**)"] },
-  { id: "build", label: "תיקיות בנייה", paths: ["Read(./.next/**)", "Read(./dist/**)", "Read(./build/**)"] },
-];
+type Text = (typeof text)["he"];
 
 function Output({ title, path, content }: { title: string; path: string; content: string }) {
   return (
@@ -75,11 +113,14 @@ function Output({ title, path, content }: { title: string; path: string; content
   );
 }
 
+const pairOptions = (map: Record<string, string[]>) => Object.entries(map).map(([id, [label]]) => ({ id, label }));
+
 /** Builds a starter CLAUDE.md and a .claude/settings.json that blocks reading sensitive files. */
 export function ClaudeConfigGenerator() {
-  const [name, setName] = useState("האתר המשפחתי");
+  const t = text[useLocale()] as Text;
+  const [name, setName] = useState(t.defaultName);
   const [stack, setStack] = useState("next");
-  const [ruleIds, setRuleIds] = useState(["hebrew", "plan", "git"]);
+  const [ruleIds, setRuleIds] = useState(["language", "plan", "git"]);
   const [ui, setUi] = useState(["rtl", "mobile"]);
   const [ex, setEx] = useState(["env", "keys"]);
   const nameId = useId();
@@ -87,19 +128,23 @@ export function ClaudeConfigGenerator() {
   const toggle = (set: React.Dispatch<React.SetStateAction<string[]>>) => (id: string) =>
     set((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
+  const rules = t.rules as Record<string, string[]>;
+  const uiMap = t.ui as Record<string, string[]>;
   const claudeMd = [
-    `# ${name || "הפרויקט שלי"}`,
+    `# ${name || t.fallbackName}`,
     "",
-    "## טכנולוגיות ופקודות",
-    ...stackLines[stack],
-    ...(ui.length ? ["", "## ממשק", ...ui.map((u) => uiLines[u])] : []),
-    ...(ruleIds.length ? ["", "## כללי עבודה", ...ruleIds.map((r) => ruleLines[r])] : []),
+    t.sections.stack,
+    ...t.stackLines[stack as keyof Text["stackLines"]],
+    ...(ui.length ? ["", t.sections.ui, ...ui.map((u) => uiMap[u][1])] : []),
+    ...(ruleIds.length ? ["", t.sections.rules, ...ruleIds.map((r) => rules[r][1])] : []),
     "",
-    "## הוראות לסיכום",
-    "- בסיכום שיחה, תמיד תשמור את רשימת הקבצים ששינינו ואת הבאגים שעוד פתוחים.",
+    t.sections.compact,
+    t.compactLine,
   ].join("\n");
 
-  const deny = excludes.filter((e) => ex.includes(e.id)).flatMap((e) => e.paths);
+  const deny = Object.keys(excludePaths)
+    .filter((id) => ex.includes(id))
+    .flatMap((id) => excludePaths[id]);
   const settings = JSON.stringify(
     {
       permissions: {
@@ -116,7 +161,7 @@ export function ClaudeConfigGenerator() {
       <div className="grid gap-5">
         <div>
           <label htmlFor={nameId} className="text-sm font-bold">
-            שם הפרויקט
+            {t.nameLabel}
           </label>
           <input
             id={nameId}
@@ -125,19 +170,21 @@ export function ClaudeConfigGenerator() {
             className="mt-2 w-full rounded-lg border border-line bg-bg px-3 py-2"
           />
         </div>
-        <ChoiceGroup label="טכנולוגיה" options={stacks} value={stack} onChange={setStack} />
-        <ToggleGroup label="ממשק" options={uiOptions} values={ui} onToggle={toggle(setUi)} />
-        <ToggleGroup label="כללי עבודה" options={rules} values={ruleIds} onToggle={toggle(setRuleIds)} />
-        <ToggleGroup label="קבצים ש-Claude לא יקרא" options={excludes} values={ex} onToggle={toggle(setEx)} />
+        <ChoiceGroup label={t.stackLabel} options={stacks} value={stack} onChange={setStack} />
+        <ToggleGroup label={t.uiLabel} options={pairOptions(uiMap)} values={ui} onToggle={toggle(setUi)} />
+        <ToggleGroup label={t.rulesLabel} options={pairOptions(rules)} values={ruleIds} onToggle={toggle(setRuleIds)} />
+        <ToggleGroup
+          label={t.excludeLabel}
+          options={Object.entries(t.excludes).map(([id, label]) => ({ id, label }))}
+          values={ex}
+          onToggle={toggle(setEx)}
+        />
       </div>
       <div className="mt-6 grid gap-4" aria-live="polite">
-        <Output title="הוראות" path="CLAUDE.md" content={claudeMd} />
-        <Output title="חסימות" path=".claude/settings.json" content={settings} />
+        <Output title={t.outInstructions} path="CLAUDE.md" content={claudeMd} />
+        <Output title={t.outBlocks} path=".claude/settings.json" content={settings} />
       </div>
-      <p className="mt-3 text-sm leading-6 text-muted">
-        למה לא <span dir="ltr">.claudeignore</span>? לפי התיעוד הרשמי, לקובץ כזה אין השפעה. חוקי <code dir="ltr">Read</code> ב-
-        <code dir="ltr">deny</code> הם הדרך שבאמת חוסמת קריאה (פרק 10).
-      </p>
+      <p className="mt-3 text-sm leading-6 text-muted">{t.why}</p>
     </div>
   );
 }

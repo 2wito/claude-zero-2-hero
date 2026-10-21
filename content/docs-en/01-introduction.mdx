@@ -1,0 +1,128 @@
+# What Is Claude Code, and Why Does It Change the Game?
+
+Say you have an idea for a small website: a family recipe page, a page for a business, or a tool that sorts your vacation photos. Until recently there were two options: learn to code, or pay someone who knows how.
+
+Claude Code is a third option. **It's an AI assistant that works directly on your computer**: you explain in plain words what you want, and it writes the files, runs them, checks that everything works and fixes things when they break. You stay in the manager's seat: you decide, approve and steer.
+
+<Callout type="note" title="What you'll know by the end of this chapter">
+- What Claude Code does, and how it differs from a regular chat like ChatGPT or Claude on the web.
+- What working with it actually looks like.
+- Why it's worth pairing with the Cursor code editor.
+</Callout>
+
+## Claude Code in one sentence
+
+Claude Code is a **coding agent** that lives in the **terminal**, the window where you type commands to your computer. "Agent" means it doesn't just answer questions, it **takes actions**: it opens files, changes them, runs programs and checks the result.
+
+<Callout type="tip" title="Don't let the word terminal scare you">
+The terminal is just a text window. In this course you'll need about five commands in it, and every one is explained step by step in chapters 2 and 3. Most of the time you'll simply write to Claude in plain English.
+</Callout>
+
+Claude Code is also available as an editor extension, a desktop app and in the browser. This course focuses on the terminal version, because it's the foundation for everything else and it pairs best with Cursor.
+
+## Regular chat vs. an agent in the terminal
+
+The most important difference to understand: a chat **recommends**, an agent **does**.
+
+Say the "Send" button on your site doesn't work. Here's how that plays out each way:
+
+### With a regular chat
+
+1. Copy the relevant code (if you even know which code is relevant) and paste it into the chat.
+2. Get a suggested fix, copy it back into the right file.
+3. Run it, see a new error message, copy that into the chat.
+4. Repeat until it works, or until you give up.
+
+### With Claude Code
+
+<Prompt>The send button on the contact form doesn't do anything. Find out why and fix it.</Prompt>
+
+From there, Claude works on its own:
+
+1. **Reads the files** in the project folder and finds where the form lives.
+2. **Runs terminal commands**, for example starting the site to see the error for itself.
+3. **Edits the right file**, asking for your approval before the change.
+4. **Checks again** that the fix really worked.
+5. If you ask, **saves the work in Git**: creates a new branch for the fix and writes a clear description of what changed.
+
+| | Regular chat | Claude Code |
+| --- | --- | --- |
+| Sees your files | Only what you pasted | Reads the whole project as needed |
+| Changes files | You copy and paste | Edits them itself, with your approval |
+| Runs commands and checks results | No | Yes: installs, runs, checks errors |
+| Works with Git | Gives you commands to copy | Creates branches, saves changes, writes descriptions |
+| Who does the grunt work | You | It does, and you supervise |
+
+<Callout type="info" title="How it thinks">
+Claude Code works in a three-step loop: **gather information** (read files, search), **act** (edit, run) and **verify** (run again, read errors). It repeats the loop until the task is done, and you can stop it or change direction at any moment.
+</Callout>
+
+## What can you do with it?
+
+Here are a few real requests. Notice that none of them require knowing how to code:
+
+<Prompt>Build me a simple site with a page for each recipe in recipes.txt</Prompt>
+
+<Prompt>Explain in plain language what this project does and how it's built</Prompt>
+
+<Prompt>I have a folder with 300 photos. Rename them by the date they were taken</Prompt>
+
+<Prompt>The site looks broken on my phone. Fix the layout for small screens</Prompt>
+
+In other words, Claude Code is especially good at:
+
+- **Building things from a description**: from a whole website to a small tool that saves you manual work.
+- **Finding and fixing problems**: it reads the error message, finds the source and fixes it.
+- **Explaining existing code**: great when you inherit a project from someone else and can't tell what's going on.
+- **Boring jobs**: organizing files, updating text in many places, writing documentation.
+
+## You're always in control
+
+The most common fear among beginners: "What if it does something I don't want?" Here's how Claude Code keeps you safe:
+
+- **Permissions**: you can set it to ask before every file change and every command. In chapter 3 you'll learn exactly how to read approval prompts and when to say "yes".
+- **Instant stop**: pressing `Esc` stops it mid-action.
+- **Going back**: Claude Code keeps checkpoints, so you can restore files it changed to their previous state.
+- **It only works in the folder you chose**: you start it inside a specific project folder, and it works there.
+
+<Callout type="warning" title="Yes, you still need judgment">
+Claude is very smart but not perfect. Sometimes it makes mistakes or misunderstands. That's why the most important habit you'll learn in this course is **reading what it's about to do before you approve**. It takes seconds and saves a lot of headaches.
+</Callout>
+
+## Why Cursor and Claude Code are a winning pair
+
+[Cursor](https://cursor.com) is a **code editor**: software that shows your project's files in a friendly way, with a folder tree, colors that make code easier to read, and AI of its own. It's based on VS Code, the most popular code editor in the world.
+
+So why do you need both? Because each one is good at something different:
+
+| | Cursor (the editor) | Claude Code (the agent) |
+| --- | --- | --- |
+| Role | The eyes: see and understand | The hands: do the work |
+| Great at | Seeing every file, following changes, small fixes | Big tasks across many files, running commands, fixing problems |
+| How you use it | Click, scroll, edit by hand | Describe what you want in plain English |
+
+Here's what the combined workflow looks like:
+
+1. Open the project folder in Cursor.
+2. Open the terminal **inside** Cursor and start Claude Code there. You can also use the Claude Code extension, which Cursor supports because it's based on VS Code.
+3. Give Claude a task, and **watch the files change in real time** in the editor next to it.
+4. Something looks off? Open the file, take a look, and ask for a fix or fix it yourself.
+
+<Callout type="tip" title="Why this works so well">
+Without an editor, working with an agent in the terminal feels like managing an employee over the phone: they tell you what they did, but you can't see it. With Cursor alongside, you're in the same room and see every change. Chapter 5 is all about this combined workflow.
+</Callout>
+
+## What do you need to get started?
+
+- **A computer** with Windows 10 or later, macOS 13 or later, or Linux (for example Ubuntu 20.04 or later), with at least 4GB of memory.
+- **An internet connection**.
+- **A paid account**: a Claude Pro, Max, Team or Enterprise subscription, or a Claude Console account billed by usage. **The free Claude plan doesn't include Claude Code.** The next chapter explains the difference between the options.
+- **Curiosity**. No coding knowledge needed.
+
+<Callout type="info" title="What's next">
+In the next chapter we'll install Claude Code, with separate instructions for Windows, Mac and Linux, and sign in to your account. The install itself takes a few minutes.
+</Callout>
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "What's the main difference between Claude Code and a regular chat?", "options": [{"text": "Claude Code answers faster", "why": "Speed isn't the point. The difference is in what it does."}, {"text": "Claude Code acts: it reads files, edits them and runs commands", "why": "Exactly. A chat recommends, an agent does, and you approve."}, {"text": "Claude Code only works in English", "why": "Not true. You can write to it in many languages."}], "answer": 1}, {"q": "Why are Cursor and Claude Code a good pair?", "options": [{"text": "Cursor is the eyes and Claude Code is the hands", "why": "Right. You see every change in the editor while Claude works."}, {"text": "Cursor replaces the need for Claude Code", "why": "No. Each is good at something different, and they complement each other."}, {"text": "Claude Code only works inside Cursor", "why": "No. It works in any terminal, and Cursor just adds convenience."}], "answer": 0}]} />

@@ -1,50 +1,130 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useLocale } from "@/components/use-locale";
 
 type Line = { kind: "in" | "out" | "ok" | "dim" | "warn"; text: string };
 
-const WELCOME: Line[] = [
-  { kind: "dim", text: "סימולציה של טרמינל. שום דבר לא רץ באמת, ושום קובץ לא משתנה." },
-  { kind: "dim", text: "התחילו עם: claude, ואז נסו /help" },
-];
+const text = {
+  he: {
+    welcome: ["סימולציה של טרמינל. שום דבר לא רץ באמת, ושום קובץ לא משתנה.", "התחילו עם: claude, ואז נסו /help"],
+    shellHelp: [
+      "פקודות טרמינל בסימולציה:",
+      "  claude                 הפעלת Claude Code",
+      '  claude "משימה"         הפעלה עם משימה מוכנה',
+      "  claude -c              המשך השיחה האחרונה",
+      "  ls / pwd / cd          פקודות טרמינל בסיסיות",
+      "  clear                  ניקוי המסך",
+    ],
+    claudeHelp: [
+      "פקודות בתוך Claude Code (חלקי):",
+      "  /help      הרשימה הזאת",
+      "  /clear     שיחה חדשה. הקבצים לא נמחקים",
+      "  /compact   סיכום השיחה כדי לפנות מקום",
+      "  /context   מה תופס מקום בחלון ההקשר",
+      "  /usage     שימוש ומגבלות",
+      "  /exit      יציאה לטרמינל",
+    ],
+    claudeHelpHint: "או פשוט כתבו בקשה בעברית.",
+    planning: (task: string) => `● מתכנן: "${task}"`,
+    approve: "? Claude רוצה ליצור את components/Card.tsx. לאשר? (בסימולציה: אושר)",
+    created: "✓ נוצר components/Card.tsx (+24 שורות)",
+    updated: "✓ עודכן app/page.tsx (+3 שורות)",
+    finished: "סיימתי. הוספתי רכיב כרטיס והצגתי אותו בדף הבית. כדאי לבדוק בדפדפן.",
+    banner: "✻ Claude Code (סימולציה)",
+    welcomeBanner: "✻ Welcome to Claude Code (סימולציה)",
+    cwd: "cwd: ~/my-project · מצב: manual",
+    continued: "ממשיך את השיחה האחרונה.",
+    startHint: "כתבו בקשה, או /help.",
+    cd: "(בסימולציה נשארים בתיקייה my-project)",
+    slashOutside: "פקודות שמתחילות ב-/ עובדות רק בתוך Claude Code. הקלידו קודם claude",
+    unknownShell: (cmd: string) => `הפקודה לא מוכרת בסימולציה: ${cmd}. נסו help`,
+    cleared: "(השיחה נוקתה. הקבצים במקומם.)",
+    compacting: "● מסכם את השיחה...",
+    compacted: (from: number, to: number) => `✓ סוכם. חלון ההקשר ירד מ-${from}% ל-${to}%`,
+    context: "חלון ההקשר:",
+    contextHint: "  הוראות מערכת ו-CLAUDE.md, ההודעות שלכם, וקבצים שנקראו",
+    usage: "בסימולציה אין שימוש אמיתי. בחשבון שלכם, /usage מציג מגבלות ועלויות.",
+    exit: "יצאתם מ-Claude Code. חזרה לטרמינל הרגיל.",
+    unknownSlash: (cmd: string) => `הפקודה ${cmd} לא קיימת בסימולציה. נסו /help`,
+    logLabel: "פלט הטרמינל",
+    inputClaude: "בקשה ל-Claude",
+    inputShell: "פקודת טרמינל",
+    placeholderClaude: "כתבו בקשה או /help",
+    placeholderShell: "הקלידו claude",
+    examples: "פקודות לדוגמה",
+    sampleTask: "תוסיף כפתור מצב כהה",
+  },
+  en: {
+    welcome: ["A simulated terminal. Nothing really runs, and no files change.", "Start with: claude, then try /help"],
+    shellHelp: [
+      "Terminal commands in the simulator:",
+      "  claude                 Start Claude Code",
+      '  claude "task"          Start with a task',
+      "  claude -c              Continue the last conversation",
+      "  ls / pwd / cd          Basic terminal commands",
+      "  clear                  Clear the screen",
+    ],
+    claudeHelp: [
+      "Commands inside Claude Code (partial):",
+      "  /help      This list",
+      "  /clear     New conversation. Files are not deleted",
+      "  /compact   Summarize the conversation to free space",
+      "  /context   What's using the context window",
+      "  /usage     Usage and limits",
+      "  /exit      Back to the terminal",
+    ],
+    claudeHelpHint: "Or just type a request in plain English.",
+    planning: (task: string) => `● Planning: "${task}"`,
+    approve: "? Claude wants to create components/Card.tsx. Approve? (simulated: approved)",
+    created: "✓ Created components/Card.tsx (+24 lines)",
+    updated: "✓ Updated app/page.tsx (+3 lines)",
+    finished: "Done. I added a card component and showed it on the home page. Worth checking in the browser.",
+    banner: "✻ Claude Code (simulated)",
+    welcomeBanner: "✻ Welcome to Claude Code (simulated)",
+    cwd: "cwd: ~/my-project · mode: manual",
+    continued: "Continuing the last conversation.",
+    startHint: "Type a request, or /help.",
+    cd: "(In the simulator you stay in my-project)",
+    slashOutside: "Commands starting with / only work inside Claude Code. Type claude first",
+    unknownShell: (cmd: string) => `Unknown command in the simulator: ${cmd}. Try help`,
+    cleared: "(Conversation cleared. Your files are untouched.)",
+    compacting: "● Summarizing the conversation...",
+    compacted: (from: number, to: number) => `✓ Compacted. Context window went from ${from}% to ${to}%`,
+    context: "Context window:",
+    contextHint: "  System instructions and CLAUDE.md, your messages, and files read",
+    usage: "There's no real usage in the simulator. In your account, /usage shows limits and costs.",
+    exit: "You left Claude Code. Back to the regular terminal.",
+    unknownSlash: (cmd: string) => `${cmd} doesn't exist in the simulator. Try /help`,
+    logLabel: "Terminal output",
+    inputClaude: "Request to Claude",
+    inputShell: "Terminal command",
+    placeholderClaude: "Type a request or /help",
+    placeholderShell: "Type claude",
+    examples: "Example commands",
+    sampleTask: "add a dark mode toggle",
+  },
+};
 
-const SHELL_HELP: Line[] = [
-  { kind: "out", text: "פקודות טרמינל בסימולציה:" },
-  { kind: "out", text: "  claude                 הפעלת Claude Code" },
-  { kind: "out", text: '  claude "משימה"         הפעלה עם משימה מוכנה' },
-  { kind: "out", text: "  claude -c              המשך השיחה האחרונה" },
-  { kind: "out", text: "  ls / pwd / cd          פקודות טרמינל בסיסיות" },
-  { kind: "out", text: "  clear                  ניקוי המסך" },
-];
+type Text = (typeof text)["he"];
 
-const CLAUDE_HELP: Line[] = [
-  { kind: "out", text: "פקודות בתוך Claude Code (חלקי):" },
-  { kind: "out", text: "  /help      הרשימה הזאת" },
-  { kind: "out", text: "  /clear     שיחה חדשה. הקבצים לא נמחקים" },
-  { kind: "out", text: "  /compact   סיכום השיחה כדי לפנות מקום" },
-  { kind: "out", text: "  /context   מה תופס מקום בחלון ההקשר" },
-  { kind: "out", text: "  /usage     שימוש ומגבלות" },
-  { kind: "out", text: "  /exit      יציאה לטרמינל" },
-  { kind: "dim", text: "או פשוט כתבו בקשה בעברית." },
-];
+const lines = (kind: Line["kind"], items: string[]): Line[] => items.map((t) => ({ kind, text: t }));
 
-function runTask(task: string): Line[] {
+function runTask(t: Text, task: string): Line[] {
   return [
-    { kind: "dim", text: `● מתכנן: "${task}"` },
+    { kind: "dim", text: t.planning(task) },
     { kind: "dim", text: "● Read app/page.tsx" },
-    { kind: "warn", text: "? Claude רוצה ליצור את components/Card.tsx. לאשר? (בסימולציה: אושר)" },
-    { kind: "ok", text: "✓ נוצר components/Card.tsx (+24 שורות)" },
-    { kind: "ok", text: "✓ עודכן app/page.tsx (+3 שורות)" },
-    { kind: "out", text: "סיימתי. הוספתי רכיב כרטיס והצגתי אותו בדף הבית. כדאי לבדוק בדפדפן." },
+    { kind: "warn", text: t.approve },
+    { kind: "ok", text: t.created },
+    { kind: "ok", text: t.updated },
+    { kind: "out", text: t.finished },
   ];
 }
 
-const suggestions = ["claude", "/help", 'claude "build a card"', "תוסיף כפתור מצב כהה", "/context", "/compact", "/clear", "/exit"];
-
 /** Simulated terminal for practicing Claude Code commands safely in the browser. */
 export function TerminalSimulator() {
-  const [lines, setLines] = useState<Line[]>(WELCOME);
+  const t = text[useLocale()] as Text;
+  const [output, setOutput] = useState<Line[]>(() => lines("dim", t.welcome));
   const [input, setInput] = useState("");
   const [inClaude, setInClaude] = useState(false);
   const [contextPct, setContextPct] = useState(8);
@@ -52,10 +132,11 @@ export function TerminalSimulator() {
   const [histIndex, setHistIndex] = useState(-1);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputId = useId();
+  const suggestions = ["claude", "/help", 'claude "build a card"', t.sampleTask, "/context", "/compact", "/clear", "/exit"];
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [lines]);
+  }, [output]);
 
   function run(raw: string) {
     const cmd = raw.trim();
@@ -67,57 +148,56 @@ export function TerminalSimulator() {
     if (!inClaude) {
       const task = cmd.match(/^claude\s+"(.+)"$/);
       if (cmd === "clear") {
-        setLines([]);
+        setOutput([]);
         return;
-      } else if (cmd === "help") out = SHELL_HELP;
+      } else if (cmd === "help") out = lines("out", t.shellHelp);
       else if (task) {
         next = true;
-        out = [{ kind: "ok", text: "✻ Claude Code (סימולציה)" }, ...runTask(task[1])];
+        out = [{ kind: "ok", text: t.banner }, ...runTask(t, task[1])];
         setContextPct(14);
       } else if (cmd === "claude" || cmd === "claude -c") {
         next = true;
         out = [
-          { kind: "ok", text: "✻ Welcome to Claude Code (סימולציה)" },
-          { kind: "dim", text: "cwd: ~/my-project · מצב: manual" },
-          { kind: "dim", text: cmd === "claude -c" ? "ממשיך את השיחה האחרונה." : "כתבו בקשה, או /help." },
+          { kind: "ok", text: t.welcomeBanner },
+          { kind: "dim", text: t.cwd },
+          { kind: "dim", text: cmd === "claude -c" ? t.continued : t.startHint },
         ];
       } else if (cmd === "ls") out = [{ kind: "out", text: "app/  components/  package.json  CLAUDE.md" }];
       else if (cmd === "pwd") out = [{ kind: "out", text: "/home/you/my-project" }];
-      else if (cmd.startsWith("cd")) out = [{ kind: "dim", text: "(בסימולציה נשארים בתיקייה my-project)" }];
-      else if (cmd.startsWith("/"))
-        out = [{ kind: "warn", text: "פקודות שמתחילות ב-/ עובדות רק בתוך Claude Code. הקלידו קודם claude" }];
-      else out = [{ kind: "warn", text: `הפקודה לא מוכרת בסימולציה: ${cmd}. נסו help` }];
+      else if (cmd.startsWith("cd")) out = [{ kind: "dim", text: t.cd }];
+      else if (cmd.startsWith("/")) out = [{ kind: "warn", text: t.slashOutside }];
+      else out = [{ kind: "warn", text: t.unknownShell(cmd) }];
     } else {
-      if (cmd === "/help") out = CLAUDE_HELP;
+      if (cmd === "/help") out = [...lines("out", t.claudeHelp), { kind: "dim", text: t.claudeHelpHint }];
       else if (cmd === "/clear") {
         setContextPct(8);
-        setLines([{ kind: "dim", text: "(השיחה נוקתה. הקבצים במקומם.)" }]);
+        setOutput([{ kind: "dim", text: t.cleared }]);
         return;
       } else if (cmd === "/compact") {
         out = [
-          { kind: "dim", text: "● מסכם את השיחה..." },
-          { kind: "ok", text: `✓ סוכם. חלון ההקשר ירד מ-${contextPct}% ל-${Math.min(contextPct, 10)}%` },
+          { kind: "dim", text: t.compacting },
+          { kind: "ok", text: t.compacted(contextPct, Math.min(contextPct, 10)) },
         ];
         setContextPct((p) => Math.min(p, 10));
       } else if (cmd === "/context") {
         const filled = Math.round(contextPct / 5);
         out = [
-          { kind: "out", text: `חלון ההקשר: ${"█".repeat(filled)}${"░".repeat(20 - filled)} ${contextPct}%` },
-          { kind: "dim", text: "  הוראות מערכת ו-CLAUDE.md, ההודעות שלכם, וקבצים שנקראו" },
+          { kind: "out", text: `${t.context} ${"█".repeat(filled)}${"░".repeat(20 - filled)} ${contextPct}%` },
+          { kind: "dim", text: t.contextHint },
         ];
-      } else if (cmd === "/usage") out = [{ kind: "out", text: "בסימולציה אין שימוש אמיתי. בחשבון שלכם, /usage מציג מגבלות ועלויות." }];
+      } else if (cmd === "/usage") out = [{ kind: "out", text: t.usage }];
       else if (cmd === "/exit") {
         next = false;
-        out = [{ kind: "dim", text: "יצאתם מ-Claude Code. חזרה לטרמינל הרגיל." }];
-      } else if (cmd.startsWith("/")) out = [{ kind: "warn", text: `הפקודה ${cmd} לא קיימת בסימולציה. נסו /help` }];
+        out = [{ kind: "dim", text: t.exit }];
+      } else if (cmd.startsWith("/")) out = [{ kind: "warn", text: t.unknownSlash(cmd) }];
       else {
-        out = runTask(cmd);
+        out = runTask(t, cmd);
         setContextPct((p) => Math.min(95, p + 9));
       }
     }
 
     setInClaude(next);
-    setLines((prev) => [...prev, prompt, ...out]);
+    setOutput((prev) => [...prev, prompt, ...out]);
     setHistory((h) => [...h, cmd]);
     setHistIndex(-1);
   }
@@ -155,11 +235,11 @@ export function TerminalSimulator() {
           ref={scrollRef}
           role="log"
           aria-live="polite"
-          aria-label="פלט הטרמינל"
+          aria-label={t.logLabel}
           dir="ltr"
           className="h-72 overflow-y-auto px-4 py-3 font-mono text-[13px] leading-6"
         >
-          {lines.map((l, i) => (
+          {output.map((l, i) => (
             <p key={i} dir="auto" className={`whitespace-pre-wrap ${color[l.kind]}`} style={{ unicodeBidi: "plaintext" }}>
               {l.text}
             </p>
@@ -168,7 +248,7 @@ export function TerminalSimulator() {
         <div className="flex items-center gap-2 border-t border-white/10 px-4 py-2" dir="ltr">
           <label htmlFor={inputId} className="font-mono text-sun">
             {inClaude ? ">" : "$"}
-            <span className="sr-only">{inClaude ? "בקשה ל-Claude" : "פקודת טרמינל"}</span>
+            <span className="sr-only">{inClaude ? t.inputClaude : t.inputShell}</span>
           </label>
           <input
             id={inputId}
@@ -178,12 +258,12 @@ export function TerminalSimulator() {
             dir="auto"
             autoComplete="off"
             spellCheck={false}
-            placeholder={inClaude ? "כתבו בקשה או /help" : "הקלידו claude"}
+            placeholder={inClaude ? t.placeholderClaude : t.placeholderShell}
             className="flex-1 bg-transparent font-mono text-sm text-term-ink placeholder:text-term-dim focus:outline-none"
           />
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2" aria-label="פקודות לדוגמה">
+      <div className="mt-3 flex flex-wrap gap-2" aria-label={t.examples}>
         {suggestions.map((s) => (
           <button
             key={s}

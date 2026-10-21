@@ -1,0 +1,58 @@
+# Interactive Tools
+
+Four tools that turn what we learned into something you can play with:
+
+- **A terminal simulator**, to practice commands with zero risk.
+- **A config file generator**, for CLAUDE.md and read blocks.
+- **A prompt builder**, which assembles a good prompt according to the golden rule from chapter 4.
+- **A token calculator**, which shows how much space your project takes up and why the habits from chapter 10 save.
+
+## Terminal simulator
+
+Not confident yet? Practice here. This is a simulation in the browser: nothing actually runs and no file changes. Type `claude` to "enter", then try `/help`, `/context`, `/compact`, or a request in plain English. You can also click the commands below the window. The up arrow brings back earlier commands.
+
+<TerminalSimulator />
+
+## CLAUDE.md and read-block generator
+
+Check what fits your project, and get two ready-made files: `CLAUDE.md` with the instructions, and `.claude/settings.json` that blocks Claude from reading sensitive files.
+
+<ClaudeConfigGenerator />
+
+<Callout type="warning" title="Why not .claudeignore?">
+Many guides recommend a `.claudeignore` file, but according to the official docs **it has no effect at all**. So the generator creates what actually works: `Read` rules under `deny`. After saving the files, run `/context` to see that CLAUDE.md is loaded, and `/permissions` to see the rules.
+</Callout>
+
+## Prompt and skill builder
+
+Choose a task, a technology, a level of detail and extras, and get a prompt ready to paste. Want it to be a standing process? Choose the **SKILL.md file** format, and save the file in the folder shown in the header (chapter 11).
+
+<PromptBuilder />
+
+<Callout type="info" title="What the builder does for you">
+Every prompt it builds includes the four principles: **specificity** (the kind of task and room for your details), **context** (the technology), **step by step** (the level of detail decides whether to plan before writing) and **verification** (a check at the end). In a code review skill it also adds `disallowed-tools`, so the reviewer can't edit.
+</Callout>
+
+## Token and cost calculator
+
+### What is a million tokens, in practice?
+
+At a rough estimate of about 10 tokens per line of code, **a million tokens is roughly 100,000 lines of code**, or several whole books of English text. A typical context window holds a few hundred thousand tokens, and for some models a million. Sounds like a lot? Remember that with every message **the whole conversation is resent** (chapter 12): a file Claude read once "costs" again with every message until the end of the conversation, or until `/compact` or `/clear`.
+
+Play with the numbers, and see what has the biggest effect:
+
+<TokenCalculator />
+
+### What about prompt caching?
+
+The calculator counts how many tokens are **sent**, but they don't all cost the same. With every message, the start of the conversation is identical to that of the previous message, and the server briefly remembers it. It reads that part **from the cache**, at a much lower price, and fully processes only what's new (chapter 12). So in practice the cost is lower than the calculator's number, as long as you preserve the cache: don't switch models mid-task, and compact at natural breaks.
+
+### What the calculator shows
+
+- **"How much of the project Claude reads"** is the most influential number. Specific requests with `@file` (chapter 4) bring it down dramatically.
+- **`/compact` every 20 messages** keeps the conversation from ballooning. In a long session, it's the difference between a conversation that costs several times more and a lean one.
+- **Excluding files** with `Read` rules under `deny` and with `.gitignore`, and not with `.claudeignore`, which doesn't work (chapter 10), saves reading irrelevant files.
+
+<Callout type="warning" title="This is an estimate, not an invoice">
+The calculator's numbers are based on rough assumptions, and don't account for prompt caching, which in practice makes the part repeated in every message much cheaper. On a Pro or Max subscription there's no per-token charge: usage counts toward your plan's limit. To see your real usage, run `/usage` and `/context`.
+</Callout>

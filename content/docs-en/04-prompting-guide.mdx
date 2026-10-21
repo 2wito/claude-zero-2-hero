@@ -1,0 +1,415 @@
+# How to Ask Well (Prompt Engineering for the Terminal)
+
+Imagine a brilliant new colleague just joined you. They can do almost anything, but it's their first day: they don't know the project, don't know what you like and don't know what you've already tried. Tell them "fix up the site" and they'll guess. Tell them exactly what, where, and how you'll know it worked, and they'll deliver great results the first time.
+
+Claude is exactly that colleague. A **prompt** is simply the request you write to it, and **prompt engineering** is the craft of writing requests that work. Don't worry: there's no magic and no code words. Just a few simple habits that make a huge difference.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- The **golden rule**: four principles every good prompt follows.
+- How to give Claude **context**: files, source folders, error messages and images.
+- How to **break down** a big project into small, testable pieces.
+- Real examples of **weak vs. strong prompts**.
+- How to use **CLAUDE.md** so you don't repeat the same instructions every time.
+</Callout>
+
+## Why does wording matter so much?
+
+Two reasons:
+
+1. **Claude can't read minds.** It's very good at understanding intent, but when information is missing it fills the gap with a guess. Sometimes the guess is great, and sometimes it builds something beautiful that's exactly not what you wanted.
+2. **Every correction costs.** Remember the "whiteboard" from the previous chapter, the context window? Every round of "no, I meant..." fills it up. The fuller the board, the more Claude may "forget" early instructions and make mistakes.
+
+<Callout type="tip" title="The rule that sums it all up">
+A minute of thinking before you write saves ten minutes of fixes afterward.
+</Callout>
+
+## The golden rule: four principles
+
+Every good prompt answers four questions. Small requests don't need all of them, but the bigger the task, the more they matter.
+
+| Principle | The question to answer | In short |
+| --- | --- | --- |
+| **1. Specificity** | What **exactly** do I want, and where? | "Improve it" → "Make the headline bigger and color it blue" |
+| **2. Context** | What does Claude need to **know** to succeed? | Files, examples, errors, constraints |
+| **3. Step by step** | In what **order** should it work? | First investigate, then plan, and only then build |
+| **4. Verification** | How will we **know** it works? | "Run it and make sure there are no errors", "Check that it looks good on a phone" |
+
+### Principle 1: Specificity
+
+A vague prompt gets a vague result. Instead of describing a **feeling** ("make it nicer"), describe a **result** you can see.
+
+<PromptCompare
+  bad="Improve the site's design"
+  good="On the home page: make the main headline bigger, change the background to a light beige, and add more space between the recipes in the list. Don't change the other pages."
+  why="The strong prompt says which page, exactly what to change, and what not to touch. “Don't change...” is a small sentence that prevents a lot of surprises."
+/>
+
+Three questions that help you be specific:
+
+- **Where?** Which page, which file, which part of the screen.
+- **What exactly?** How it should look or behave when it's done.
+- **What not?** What must not change, which tools not to use, what to leave as is.
+
+### Principle 2: Context
+
+Claude sees the files in the project, but it can't see what's in your head: the goal, who the site is for, what you've already tried. The more you tell it about **why**, the better it decides **how**.
+
+<PromptCompare
+  bad="Add a sign-up form"
+  good="The site is for grandma and grandpa, so everything should be big and clear. Add a sign-up form for the family newsletter with just two fields: name and email. Look at the existing form on the contact page and style the new one the same way."
+  why="The audience (grandparents) affects button and text size. Pointing to an existing form saves a whole explanation about design."
+/>
+
+Later in this chapter there's a whole section on **how** to give context: files, folders, errors and images.
+
+### Principle 3: Step by step
+
+Ask for everything at once and Claude tries to do everything at once. For big tasks it's better to tell it **in what order** to work, and especially to ask it to **understand before changing**.
+
+<PromptCompare
+  bad="Add recipe search to the site"
+  good="I want to add recipe search. First read the files and briefly explain how recipes are stored today. Then propose a step-by-step plan. Don't write code until I approve the plan."
+  why="The strong prompt separates understanding, planning and doing. If Claude misunderstood something, you find out at the plan stage, not after it has changed ten files."
+/>
+
+### Principle 4: Verification
+
+This is the principle most people miss, and maybe the most important. Claude stops when the work **looks** done. Give it a way to **check** that it really is done, and it'll check on its own, catch mistakes and fix them before you ever see them.
+
+<PromptCompare
+  bad="Fix the bug in the form"
+  good="When you click send on the contact form without an email, the page freezes. Fix it so a clear message asks for an email. After the fix, run the site, make sure there are no errors, and explain how I can check it myself."
+  why="The strong prompt describes the problem, what “fixed” looks like, and asks Claude to prove it works. That's the difference between “looks fixed” and “I checked that it works”."
+/>
+
+Ways to give Claude something to check:
+
+- **Run it**: "Run the site and make sure there are no errors".
+- **Examples**: "If you type 'cake' in the search, three recipes should appear".
+- **Automated tests**: if the project has tests, "run the tests after the change".
+- **Compare to an image**: paste a screenshot of the design you want and ask it to compare.
+- **Proof**: "Show me the output of the command you ran". Checking proof is easier than trusting a promise.
+
+### A ready template
+
+You don't need to memorize all this. Here's a template you can copy, fill in and send:
+
+<Prompt>Goal: [what I want to achieve and why]. Where: [file / page / section]. Good to know: [audience, constraints, what not to change]. Order: first [investigate / plan], then [build]. How we'll know it worked: [what to check].</Prompt>
+
+<Callout type="note" title="Not every prompt needs all of this">
+"Fix the typo in the headline" is a perfect prompt as is. The template is for tasks that take more than a few minutes, or tasks where Claude already got it wrong once.
+</Callout>
+
+## How to give Claude context
+
+### Attach files with @
+
+Instead of describing where something is, **point at it**. Type `@` followed by the start of the file name, and Claude Code offers autocomplete. Claude reads the file before answering.
+
+<Prompt>Look at @index.html and @style.css and explain why the menu doesn't show on phones</Prompt>
+
+<Callout type="tip" title="Why this beats describing">
+"The styles file" could be any of five files. `@style.css` is exactly one. Less guessing, fewer files Claude has to read to find the right one, and more free space in the context window.
+</Callout>
+
+### A sources folder (sources/)
+
+A trick that works great on bigger projects: create a folder called `sources` in the project and put all the background material in it: links to sites you like, texts, examples, client instructions or idea lists. Then point Claude to it:
+
+<Prompt>Before we start, read all the files in the sources folder and summarize what you learned from each in one sentence</Prompt>
+
+<Callout type="info" title="That's how this site was built">
+The site you're reading was built exactly this way. The project folder has a `sources/references.md` file with links to the official docs and recommended guides, and `CLAUDE.md` (more on it at the end of this chapter) tells Claude to use them. Every time we asked for a new chapter, Claude already knew where to get its information.
+</Callout>
+
+### A folder outside the project
+
+Claude works inside the folder where you started it. If the background material lives elsewhere on your computer, for example in your documents, you can give it access with the `/add-dir` command:
+
+```text title="Inside Claude Code"
+/add-dir ~/Documents/recipes-from-grandma
+```
+
+The access lasts for the current conversation only.
+
+### Pasting error messages
+
+"It doesn't work" is the hardest request for Claude. **The full error message** is the easiest. The error says exactly what broke, and sometimes on which line.
+
+<PromptCompare
+  bad="The site won't load, fix it"
+  good="When I run npm run dev I get this error: [paste the whole error]. Find the cause and fix it, then run it again and make sure the site loads without errors. Fix the root cause, don't just hide the error."
+  why="The full error saves Claude a search. The last sentence prevents a “fix” that only silences the error and leaves the problem."
+/>
+
+<Callout type="warning" title="Copy the whole error, not just the first line">
+Error messages can be long and scary, and it's tempting to shorten them. Don't: the important information is sometimes in the middle lines. Just watch for one thing: if the error contains **passwords or API keys**, delete them before pasting.
+</Callout>
+
+There are two more ways to hand command output to Claude:
+
+**Command mode with `!`**: inside Claude Code, a line starting with `!` runs straight in the terminal, and its output, errors included, joins the conversation. Claude sees it and can respond:
+
+```text title="Inside Claude Code"
+! npm run dev
+```
+
+**Piping a log file directly**: if the errors are saved in a file, you can hand it to Claude straight from the regular terminal:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+Get-Content error.log | claude -p "Explain in plain language what this error means"
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+type error.log | claude -p "Explain in plain language what this error means"
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux"
+cat error.log | claude -p "Explain in plain language what this error means"
+```
+
+</Tab>
+</Tabs>
+
+The `-p` option tells Claude to answer once and exit, without opening a conversation.
+
+### Images and screenshots
+
+A picture is worth a thousand words, to Claude too. You can paste a screenshot of a design you liked, a bug you saw, or a sketch you drew on paper:
+
+- **Copy** the image (for example a screenshot), and paste it inside Claude Code with **`Ctrl + V`**. On Windows, use **`Alt + V`**.
+- Or just **drag** an image file into the terminal window.
+
+<Prompt>[paste a screenshot] This is how I want the home page to look. Build it, then compare with the image and tell me what's still different</Prompt>
+
+### Links
+
+You can give Claude a link to a web page, for example a tool's documentation, and it'll read it (usually after asking for your approval):
+
+<Prompt>Read the instructions at [paste a link] and tell me how to add this to our site</Prompt>
+
+## Breaking a big task into small pieces
+
+The most common beginner mistake is asking for the whole project in one message. It's tempting, and it sometimes even works, but usually you get a huge structure that's hard to check, and when something's wrong it's hard to tell what.
+
+Think of building a house: you don't build all the walls, plumbing and wiring at once and only check at the end. You lay the foundation, check, and move on to the next floor.
+
+<PromptCompare
+  bad="Build me a family recipe site with a page per recipe, search, categories, a way to add recipes, photos, printing, a mobile version, and make it bilingual."
+  good="We're building a family recipe site in stages. Stage 1 only: a home page that shows a list of three sample recipes (name and photo). No search and no categories yet. When you're done, tell me how to open it in the browser."
+  why="The weak prompt has nine features. The strong one has one, which you can check in a minute. Once it works, move on to the next stage."
+/>
+
+Here's the whole project, piece by piece:
+
+1. **Home page** with a recipe list. ✔ Check in the browser.
+2. **A page per recipe** with ingredients and instructions. ✔ Click each recipe and check.
+3. **Categories** (cakes, soups, stews). ✔ Check each recipe is in the right category.
+4. **Search**. ✔ Search "cake" and check the results.
+5. **Mobile layout**. ✔ Open it on a phone.
+
+<Callout type="tip" title="After each piece: check and save">
+Finished a stage and it works? Time to save a safe point. In chapter 8 you'll learn to do it with Git, so you can always go back to the last version that worked.
+</Callout>
+
+### Plan mode for big tasks
+
+When you're not sure how to break a task down, let Claude do it. In **plan mode** Claude only reads and plans, and changes no files until you approve the plan.
+
+How to get in:
+
+- Press **`Shift + Tab`** until the status line shows `plan mode on`, or
+- Type `/plan` followed by the task.
+
+<Prompt>/plan I want family members to be able to add recipes themselves. Check how the site is built today and propose a plan in small steps, where each step can be tested on its own</Prompt>
+
+Claude shows a plan. Read it, ask for changes if needed, and when it looks good, approve it. Only then does it start building.
+
+<Callout type="note" title="When don't you need a plan?">
+If you can describe the change in one sentence, like "make the button green", skip planning and just ask. Planning is worth the time when the change touches many files, or when you're not sure how to approach it.
+</Callout>
+
+### Let Claude interview you
+
+Sometimes you know **what** you want but haven't thought through the details. Then you can flip roles: Claude asks, you answer.
+
+<Prompt>I want to build a site for my mom's small business (custom cakes). Interview me in detail: what the site needs, who it's for, how ordering works, and what matters to me. Ask about things I might not have thought of. At the end, write everything we agreed on to SPEC.md</Prompt>
+
+Once the SPEC file is ready, start a new conversation with `/clear` and ask Claude to build from the file, step by step. The new conversation starts with a clean board and a tidy document holding every decision.
+
+## Real-life examples: before and after
+
+A few more pairs. Notice how every strong prompt uses at least two of the four principles.
+
+### Understanding a project you were handed
+
+<PromptCompare
+  bad="What is this?"
+  good="A friend gave me this project and I'm not a programmer. Explain in plain language, with no technical terms: what the site does, what parts it's built from, and how to run it on my computer."
+  why="The audience (not a programmer) and the language (no technical terms) set the kind of explanation you'll get."
+/>
+
+### Changing text in many places
+
+<PromptCompare
+  bad="Change the phone number"
+  good="The business phone number changed from 555-123-4567 to 555-765-4321. Replace it everywhere it appears on the site, including the footer and the contact page. At the end, show me a list of every file you changed."
+  why="The old and new number, “everywhere”, and a file list at the end to make sure no place was missed."
+/>
+
+### Organizing files on your computer
+
+<PromptCompare
+  bad="Organize the photos"
+  good="The photos folder has hundreds of vacation photos. Create a folder for each day by the date taken, and move each photo into the right folder. Don't delete any file. Before you start, show me what you plan to do with the first five photos."
+  why="“Don't delete” protects the photos. Trying five photos first catches a mistake before it repeats hundreds of times."
+/>
+
+### Fixing a display problem
+
+<PromptCompare
+  bad="It looks bad on my phone"
+  good="[paste a phone screenshot] On the phone, the photos on the recipe page overflow the screen and you have to scroll sideways. Fix it so the photos fit the screen width. Don't change the desktop layout."
+  why="The screenshot shows exactly the problem, and the last sentence protects what already works."
+/>
+
+### Learning while you work
+
+<PromptCompare
+  bad="Do it"
+  good="Add a button that switches between dark and light mode. When you're done, explain in three short paragraphs what you did and why, as if I'm a beginner. I want to learn from this."
+  why="Claude is also a patient teacher. Ask for an explanation, and you get a private lesson about your own code."
+/>
+
+## CLAUDE.md: rules you don't need to repeat
+
+Noticed you keep writing the same sentences? "Use plain language", "the site is for older people", "don't use external libraries"... That's exactly what **CLAUDE.md** is for.
+
+CLAUDE.md is a plain text file in your project folder. **Claude reads it at the start of every conversation**, automatically. Everything in it is like an introduction you never have to write again.
+
+### How to create CLAUDE.md
+
+The easiest way: inside Claude Code, in the project folder, run:
+
+```text title="Inside Claude Code"
+/init
+```
+
+Claude scans the project and creates a starter file with what it understood: how to run the project, how it's built and what conventions it uses. Then you add your own rules. You can edit the file in any text editor, or inside Claude Code with `/memory`.
+
+### What goes in it? An example
+
+Here's a sample CLAUDE.md for the family recipe site:
+
+```markdown title="CLAUDE.md"
+# The Cohen Family Recipe Site
+
+## About the project
+- A family recipe site. Most users are grandparents and aunts.
+
+## Working rules
+- Always answer in plain language, without technical jargon.
+- Before a change touching more than three files, show a plan and wait for approval.
+- Don't delete recipes, not even to "clean up". If needed, ask.
+
+## Design
+- Large text: at least 18 pixels.
+- Big, clear buttons, with text and not just an icon.
+
+## Checks
+- After every change, run npm run dev and make sure there are no errors.
+
+## Background material
+@sources/references.md
+```
+
+<Callout type="info" title="The last line is a trick">
+`@sources/references.md` inside CLAUDE.md tells Claude Code to load that file at the start of every conversation too. That way the sources folder we talked about above is always available, without mentioning it each time.
+</Callout>
+
+### Good rules and weak rules
+
+A good rule is one you can **check** whether it was followed:
+
+| Weak rule | Strong rule |
+| --- | --- |
+| Write clean code | Use 2-space indentation |
+| Check your changes | After every change, run `npm run dev` and make sure there are no errors |
+| Make it look nice | Text at least 18 pixels, and buttons with text |
+| Be careful | Don't delete files in the recipes folder without asking |
+
+### When to add a rule?
+
+- When Claude makes **the same mistake a second time**.
+- When you find yourself **typing the same note** you typed last conversation.
+- When someone new joining the project would need to know it.
+
+### Where does the file go?
+
+| Location | Applies to | When to use |
+| --- | --- | --- |
+| `CLAUDE.md` in the project folder | This project, and everyone working on it | Project rules: goal, design, checks |
+| `~/.claude/CLAUDE.md` in your home folder | You, in every project | Personal preferences, e.g. "always explain in plain language" |
+| `CLAUDE.local.md` in the project folder | Only you, only this project | Personal notes you don't want to share |
+
+<Callout type="warning" title="Three things worth knowing">
+- **Shorter is better.** CLAUDE.md loads in every conversation and takes up space in the context window. The official recommendation is under 200 lines. A file that's too long makes Claude miss exactly the important rules. For each line, ask: "If I delete it, will Claude get it wrong?" If not, delete it.
+- **Never passwords or keys.** The file is plain text, and it's often shared or pushed to GitHub.
+- **It's guidance, not law.** Claude treats CLAUDE.md as important instructions, but not as a mechanism that blocks actions. For things that must never happen there are other tools, like the permission rules in chapter 8.
+</Callout>
+
+And in case you wondered, this site has a CLAUDE.md too. It says the site supports Hebrew right-to-left and English, which technologies to use and where to get information. Thanks to it, every time we asked for a new chapter, the request itself could stay short.
+
+## When it's not working: correct fast, restart smart
+
+Even with great prompts, Claude sometimes heads the wrong way. A few habits:
+
+- **Stop early.** See it going the wrong way? Press `Esc` right away and explain what to do instead. No need to wait for it to finish.
+- **"Undo what you did"** is a perfectly fine request, and `Esc` twice also goes back to an earlier point.
+- **The rule of two:** if you've corrected Claude **twice on the same thing** and it still doesn't get it, the conversation is already full of failed attempts. Run `/clear` and send a new, better prompt that includes what you learned. A clean conversation with a good prompt almost always beats a long conversation full of corrections.
+
+## Pre-send checklist
+
+Before sending a prompt for a big task, run through the list:
+
+1. **What exactly** do I want? Can it be seen or checked?
+2. **Where**? Did I point at the files with `@`?
+3. **What does Claude need to know**? Audience, constraints, what I already tried?
+4. **What not** to change?
+5. Is this **one** task, or should I break it down?
+6. **How will we know** it works?
+7. Is there something here I write **every time**? If so, it belongs in CLAUDE.md.
+
+## Exercise
+
+Rewrite these three prompts as strong ones, using the golden rule. Then try them on the practice project from the previous chapter:
+
+1. "Add photos"
+2. "There's an error"
+3. "Make the site look professional"
+
+<Callout type="tip" title="Hint">
+For each one ask: which photo, and where? Which error, and what does it say? What does "professional" mean to you, and how will you know you got there? Bonus: create a CLAUDE.md for the practice project with `/init`, and add one rule of your own.
+</Callout>
+
+## Summary
+
+- **The golden rule**: specificity, context, step by step, and verification.
+- **Context** comes from `@file`, a `sources` folder, `/add-dir`, full error messages, screenshots and links.
+- **Big tasks** get broken into small, testable pieces, and plan mode helps when you're unsure.
+- **CLAUDE.md** holds the standing rules, so you don't have to repeat them. Short, specific, and no secrets.
+
+In the next chapter we'll connect Claude Code to the Cursor code editor, and watch every change it makes in real time.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "What are the four principles of the golden rule?", "options": [{"text": "Speed, brevity, English and politeness", "why": "No. A short prompt isn't necessarily a good one."}, {"text": "Specificity, context, step by step, and verification", "why": "Right. The bigger the task, the more they all matter."}, {"text": "Plan, code, test and publish", "why": "Those are work stages, not principles for writing a prompt."}], "answer": 1}, {"q": "You write 'use plain language' in every conversation. What's the fix?", "options": [{"text": "Add it to CLAUDE.md", "why": "Right. What repeats in every conversation belongs in CLAUDE.md."}, {"text": "Write it in capital letters", "why": "Won't help. Write it once, in the right place."}, {"text": "Create a .claudeignore", "why": "Unrelated, and it doesn't work anyway."}], "answer": 0}]} />

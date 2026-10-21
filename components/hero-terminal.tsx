@@ -2,23 +2,43 @@
 
 import { RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/use-locale";
 
 type Line = { kind: "cmd" | "ask" | "step" | "done"; text: string };
 
-const script: Line[] = [
-  { kind: "cmd", text: "claude" },
-  { kind: "ask", text: "תבנה לי אתר פשוט למתכונים של סבתא, עם עמוד לכל מתכון" },
-  { kind: "step", text: "קורא את recipes.md ומבין את המבנה" },
-  { kind: "step", text: "יוצר app/page.tsx עם רשימת המתכונים" },
-  { kind: "step", text: "יוצר app/recipes/[slug]/page.tsx" },
-  { kind: "step", text: "מוסיף 12 מתכונים ותמונות" },
-  { kind: "done", text: "מוכן. הריצו npm run dev ופתחו localhost:3000" },
-];
+const scripts: Record<"he" | "en", Line[]> = {
+  he: [
+    { kind: "cmd", text: "claude" },
+    { kind: "ask", text: "תבנה לי אתר פשוט למתכונים של סבתא, עם עמוד לכל מתכון" },
+    { kind: "step", text: "קורא את recipes.md ומבין את המבנה" },
+    { kind: "step", text: "יוצר app/page.tsx עם רשימת המתכונים" },
+    { kind: "step", text: "יוצר app/recipes/[slug]/page.tsx" },
+    { kind: "step", text: "מוסיף 12 מתכונים ותמונות" },
+    { kind: "done", text: "מוכן. הריצו npm run dev ופתחו localhost:3000" },
+  ],
+  en: [
+    { kind: "cmd", text: "claude" },
+    { kind: "ask", text: "Build me a simple site for grandma's recipes, with a page for each recipe" },
+    { kind: "step", text: "Reading recipes.md to understand the structure" },
+    { kind: "step", text: "Creating app/page.tsx with the recipe list" },
+    { kind: "step", text: "Creating app/recipes/[slug]/page.tsx" },
+    { kind: "step", text: "Adding 12 recipes and photos" },
+    { kind: "done", text: "Done. Run npm run dev and open localhost:3000" },
+  ],
+};
+
+const ariaLabels = {
+  he: { demo: "הדגמה: מבקשים מ-Claude Code בעברית לבנות אתר מתכונים, והוא יוצר את הקבצים", replay: "הפעלה מחדש של ההדגמה" },
+  en: { demo: "Demo: asking Claude Code in plain English to build a recipe site, and it creates the files", replay: "Replay the demo" },
+};
 
 const TYPE_MS = 38;
 const STEP_MS = 650;
 
 export function HeroTerminal() {
+  const locale = useLocale();
+  const script = scripts[locale];
+  const aria = ariaLabels[locale];
   // Number of fully shown lines, plus how many chars of the line being typed.
   const [shown, setShown] = useState(0);
   const [chars, setChars] = useState(0);
@@ -54,7 +74,7 @@ export function HeroTerminal() {
 
     timer = setTimeout(tick, 700);
     return () => clearTimeout(timer);
-  }, [run]);
+  }, [run, script]);
 
   const finished = shown >= script.length;
 
@@ -69,7 +89,7 @@ export function HeroTerminal() {
           type="button"
           onClick={() => setRun((r) => r + 1)}
           disabled={!finished}
-          aria-label="הפעלה מחדש של ההדגמה"
+          aria-label={aria.replay}
           className="ms-auto rounded p-1 text-term-dim hover:text-term-ink disabled:opacity-0"
         >
           <RotateCcw className="size-3.5" />
@@ -77,7 +97,7 @@ export function HeroTerminal() {
       </div>
       <div
         dir="ltr"
-        aria-label="הדגמה: מבקשים מ-Claude Code בעברית לבנות אתר מתכונים, והוא יוצר את הקבצים"
+        aria-label={aria.demo}
         className="min-h-[300px] space-y-2 px-5 py-5 text-left font-mono text-[13px] leading-relaxed sm:min-h-[320px] sm:text-sm"
       >
         {script.map((line, i) => {
@@ -108,7 +128,7 @@ function TerminalLine({ line, text, cursor }: { line: Line; text: string; cursor
     return (
       <div className="flex gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2">
         <span className="text-sun">&gt;</span>
-        <p dir="rtl" className="flex-1 text-right font-sans">
+        <p dir="auto" className="flex-1 text-start font-sans" style={{ unicodeBidi: "plaintext" }}>
           {text}
           {caret}
         </p>

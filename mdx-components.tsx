@@ -68,7 +68,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       "data-language" in props || "data-theme" in props ? (
         <code {...props} />
       ) : (
-        <code dir="ltr" className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[0.88em]" {...props} />
+        <code dir="ltr" className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[0.88em] [overflow-wrap:anywhere]" {...props} />
       ),
     Callout,
     Checklist,

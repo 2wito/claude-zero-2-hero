@@ -2,13 +2,9 @@
 
 import { useState } from "react";
 
-const filters = [
-  { id: "all", label: "הכול" },
-  { id: "agent", label: "סוכנים" },
-  { id: "command", label: "פקודות" },
-  { id: "skill", label: "Skills" },
-  { id: "tool", label: "כלי עזר" },
-];
+import { useUi } from "@/components/use-locale";
+
+const filterIds = ["all", "agent", "command", "skill", "tool"] as const;
 
 /**
  * Filterable list of LibraryItem cards. Filtering is done with a data attribute and CSS
@@ -16,11 +12,12 @@ const filters = [
  */
 export function Library({ children }: { children: React.ReactNode }) {
   const [filter, setFilter] = useState("all");
+  const t = useUi().library;
 
   return (
     <div className="mt-8">
-      <div role="toolbar" aria-label="סינון לפי סוג" className="flex flex-wrap gap-2">
-        {filters.map((f) => (
+      <div role="toolbar" aria-label={t.filterLabel} className="flex flex-wrap gap-2">
+        {filterIds.map((id) => ({ id, label: t.filters[id] })).map((f) => (
           <button
             key={f.id}
             type="button"

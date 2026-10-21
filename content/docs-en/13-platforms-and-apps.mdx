@@ -1,0 +1,326 @@
+# The Claude Ecosystem: Terminal, Desktop App, Chrome Extension and Mobile
+
+Throughout the course we worked mostly in the terminal, and in chapter 5 inside Cursor too. But Claude Code doesn't live only there. The same "engine" is also available in a desktop app, in the browser, on your phone, and even from within Chrome, and the most interesting part is that you can **move work between them**: start a task on your phone on the bus, and continue it in the terminal when you get home.
+
+<Callout type="note" title="What you'll learn in this chapter">
+- All of Claude Code's interfaces, and how they differ.
+- The most important distinction: **where the code runs**, on your machine or in the cloud.
+- The Desktop app in depth: visual change review and parallel sessions, without a terminal.
+- The Chrome extension: Claude testing your site in a real browser.
+- Mobile: sending tasks from your phone and remotely controlling a session running on your computer.
+- How to move sessions between interfaces, including `claude --teleport`.
+</Callout>
+
+## One engine, many windows
+
+The first thing to understand: all the interfaces are connected **to the same Claude Code**. The project's CLAUDE.md files, settings and MCP servers work in all of them. The difference is the window you look through, and where the work happens.
+
+| Interface | What it is | Where the code runs | Best for |
+| --- | --- | --- | --- |
+| **Terminal** (CLI) | `claude` in a terminal window | On your computer | Full control, every command, automation |
+| **Code editor** (VS Code, Cursor, JetBrains) | An extension or a terminal inside the editor | On your computer | Seeing the code and Claude together (chapter 5) |
+| **Desktop app** | The **Code** tab in the Claude desktop app | On your computer **or** in the cloud | Visual change review and parallel sessions, without a terminal |
+| **Web** ([claude.ai/code](https://claude.ai/code)) | Claude Code in the browser | **In the cloud** | Long tasks that run even when your computer is off |
+| **Mobile** (iOS and Android) | The **Code** tab in the Claude app | In the cloud, or remote control of your computer | Sending tasks and following along from anywhere |
+| **Chrome extension** | Claude in Chrome, connected to Claude Code | Your browser | Testing the site in a real browser, reading console errors |
+
+<Callout type="info" title="The important question: where does the code run?">
+- **Local**: Claude works on the files on your computer, with the tools installed on it. The computer must be on.
+- **Cloud**: Claude works on an Anthropic virtual machine, which downloads your code from GitHub. The task keeps running even if you close your computer. Usage counts toward your plan's limits, at no extra charge.
+
+Almost every decision in this chapter follows from this question.
+</Callout>
+
+<Callout type="warning" title="What you need">
+Most interfaces, and especially the cloud, mobile, Remote Control and `--teleport`, require a **Claude subscription** (Pro, Max, Team or Enterprise) and signing in with a claude.ai account. They don't work with a Console API key. Some capabilities, like Dispatch and computer control, are available only on Pro and Max plans.
+</Callout>
+
+## The Desktop app: Claude Code without a terminal
+
+The Claude desktop app has three tabs: **Chat**, **Cowork** and **Code**. The **Code** tab is a full Claude Code, with a graphical interface. You don't need to install the terminal version separately.
+
+### Installing
+
+Download from [claude.com/download](https://claude.com/download) (macOS, Windows, and Linux in beta), sign in, and click the **Code** tab.
+
+### Starting a session
+
+Below the input box is a row of choices. Set them **before** the first message:
+
+| Choice | What you choose |
+| --- | --- |
+| **Environment** | **Local** (on your computer), **Cloud** or **SSH** (a remote server). On Windows there's also WSL |
+| **Project folder** | The folder to work in. For a cloud session you choose a repository from GitHub |
+| **Permission mode** | Manual, Accept edits, Plan or Auto, exactly like `Shift + Tab` in the terminal |
+| **Model** | Which Claude model |
+
+### Visual change review
+
+This is the app's big advantage, and what makes it ideal for anyone who isn't comfortable in the terminal:
+
+1. After Claude makes changes, click the line counter (for example `+12 -1`) on the **Changes** card, or **Changes** in the header.
+2. Go through the changes file by file.
+3. **Click a line** to add a comment to it, for example "this button should be bigger", and press Enter.
+4. When you're done, send all the comments together with `Cmd + Enter` (on Windows: `Ctrl + Enter`). Claude applies them and shows the result as a new change.
+
+<Callout type="tip" title="Code review in one click">
+Type `/code-review` in the input box. The result appears as a **Code review** card with two buttons: **Walk through in diff**, which shows each finding in place in the code, and **Apply fixes**, which fixes them.
+</Callout>
+
+### Parallel sessions
+
+- **+ New** (or `Cmd/Ctrl + N`) opens a new session, and `Ctrl + Tab` switches between sessions.
+- Hold `Cmd` (on Windows: `Ctrl`) and click a session in the list, to see **two sessions side by side**.
+- Turn on **Worktree** when choosing the folder, and each session works on a separate copy of the project (a Git worktree), without the sessions colliding. So you can, for example, build a feature in one session and fix a bug in another, at the same time.
+
+<Callout type="warning" title="Before archiving a Worktree session">
+Changes not committed to Git inside a worktree can be lost when you archive the session (**Archive**). Always commit first.
+</Callout>
+
+### The built-in browser
+
+Claude can start the dev server and open the site in a **Browser** pane inside the app (`Cmd/Ctrl + Shift + B`): take screenshots, click buttons and fill in forms, to confirm the change works. You define the run command in a `.claude/launch.json` file:
+
+```json title=".claude/launch.json"
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "grandma-recipes",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    }
+  ]
+}
+```
+
+### From the terminal to the app, and back
+
+Started in the terminal and want to review the changes in the visual interface? Inside Claude Code in the terminal:
+
+```text title="Inside Claude Code"
+/desktop
+```
+
+The session continues in the app, with the whole conversation. Available on macOS and Windows (x64), and requires a claude.ai subscription. And in the other direction, from within the app: in the session menu (the arrow next to the title) choose **Open in**, and from there you can move the session to the cloud (**Cloud**), a code editor or the file explorer.
+
+## The Chrome extension: Claude testing your site in a real browser
+
+Until now, when we wanted to check the site works, we opened the browser **ourselves**, tried things, and copied errors to Claude. With the **Claude in Chrome** extension, Claude can do it on its own: open the site, click, fill in forms, read console errors, and then go back to the code and fix it.
+
+### Installing and connecting
+
+1. Install [Claude in Chrome](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) from the Chrome Web Store, and sign in with the same claude.ai account you use for Claude Code. It works in Chrome, Edge and similar browsers, but not in WSL.
+2. Start Claude Code with the `--chrome` flag:
+
+```bash title="In the terminal"
+claude --chrome
+```
+
+3. The first time, an explanation about the connection and site permissions appears. Press Enter.
+4. To check the connection status, reconnect or manage permissions, run at any time:
+
+```text title="Inside Claude Code"
+/chrome
+```
+
+The connection is working when **Status: Enabled** and **Extension: Installed** appear.
+
+<Callout type="tip" title="Chrome by default? Only if you need it">
+In `/chrome` you can choose **Enabled by default**, and then you don't need the `--chrome` flag. But the browser tools will load in every conversation and take up space in the context window (chapter 12). If you don't test sites every day, it's better to start with `--chrome` only when needed.
+</Callout>
+
+### Debugging a live site
+
+<PromptCompare
+  bad="Check that the site works"
+  good="Open localhost:3000 in the browser. On the home page search for “cake”, click the first recipe, and on the recipe page click plus on the servings calculator three times. After each action, check whether errors appeared in the console. If there's an error, find the code that caused it, fix it, and repeat the check."
+  why="The strong prompt defines an exact user path, says what to look for (console errors), and closes the loop: find, fix, check again."
+/>
+
+More things Claude can do in the browser:
+
+<Prompt>Open localhost:3000/add, try submitting the form with empty fields and with invalid data, and check whether the error messages appear correctly and are clear</Prompt>
+
+<Prompt>Open the home page at phone width, take a screenshot, and compare it to the design in design.png. Make a list of the differences</Prompt>
+
+<Prompt>Record a GIF of the full flow: searching for a recipe, opening it, and changing the number of servings. Save it in the docs folder</Prompt>
+
+<Callout type="warning" title="Claude in your browser, with your accounts">
+Claude opens new tabs in **your** browser, so it's signed in to every site you're signed in to: email, bank, social networks. A few rules:
+
+- When it reaches a sign-in page or a CAPTCHA, Claude **stops and asks you to do it yourself**. That's how it should be.
+- Manage the allowed sites in the extension's settings, and grant access only to what's needed.
+- Web pages can contain text that tries to "give instructions" to Claude. Watch for actions you didn't ask for.
+- A GIF recording includes everything on the screen, including account details. Check before sharing.
+</Callout>
+
+## Web and cloud: tasks that run even when your computer is off
+
+At [claude.ai/code](https://claude.ai/code) you run Claude Code **in the cloud**: a virtual machine downloads your repository from GitHub, works on it, and can open a pull request. The session keeps running even when you close your laptop, and you can check in on it from any device.
+
+**Getting started:** go to claude.ai/code, connect GitHub, choose a repository and describe a task.
+
+**When it's great:**
+
+- A long task that doesn't need you close by: "update all the dependencies and fix what breaks".
+- Several tasks **in parallel**, each in its own cloud session.
+- Working on a repository you don't have on your computer.
+
+You can also send a task to the cloud **directly from the terminal**:
+
+```bash title="In the terminal"
+claude --cloud "Add an About page to the site with the family's story, and open a PR"
+```
+
+<Callout type="note" title="The cloud downloads from GitHub, not from your computer">
+A cloud session downloads the current branch **from GitHub**. If you have commits you haven't pushed yet, they won't be there. Before `--cloud`, always `git push`.
+</Callout>
+
+Several tasks at once, each in a separate session:
+
+```bash title="In the terminal"
+claude --cloud "Add tests for the servings calculator"
+claude --cloud "Update README.md to match the project structure"
+claude --cloud "Improve accessibility on the recipe page"
+```
+
+<Callout type="tip" title="A PR that fixes itself">
+If the Claude app is installed on the repository on GitHub, you can ask Claude to **watch a pull request**: when an automated check fails, or someone writes a comment, Claude investigates and pushes a fix. From the terminal, on the PR's branch: `/autofix-pr`.
+</Callout>
+
+## Teleport: from the cloud to the terminal
+
+Started a task in the cloud, from the browser or your phone, and now you're at your computer and want to continue locally? **Teleport** pulls the session into the terminal: the branch, the code and the whole conversation.
+
+```bash title="In the terminal, inside the repository folder"
+# choose a session from a list
+claude --teleport
+
+# or directly by ID
+claude --teleport session_01AbC...
+```
+
+And if you're already inside Claude Code, you can use `/teleport` (or `/tp` for short).
+
+| Requirement | What it means |
+| --- | --- |
+| **A clean Git state** | No uncommitted changes. If there are, Claude Code offers to stash them |
+| **The same repository** | Run it from a copy of **the same** repository, not a fork |
+| **The branch on GitHub** | The cloud session's branch was pushed, and Teleport downloads it on its own |
+| **The same account** | Signed in to the same claude.ai account |
+
+<Callout type="info" title="Teleport creates a copy, not a link">
+After teleporting, the terminal has its own copy of the session. New work in the terminal **won't** appear in the cloud session. And it works in only one direction: from the cloud to the terminal. You can't "push" an existing session from the terminal to the cloud, but you can start a new task with `--cloud`.
+</Callout>
+
+## Mobile: Claude Code in your pocket
+
+There's no separate app for Claude Code: it's all in the **Code** tab of the Claude app for [iOS](https://apps.apple.com/us/app/claude-by-anthropic/id6473753684) and [Android](https://play.google.com/store/apps/details?id=com.anthropic.claude). The phone doesn't run code: it's a "remote control" for work running in the cloud or on your computer.
+
+<Callout type="tip" title="A download shortcut">
+Type `/mobile` inside Claude Code, and a QR code appears that leads to the right app store for your phone.
+</Callout>
+
+There are three ways to work from your phone:
+
+| Way | What you connect to | When to use it |
+| --- | --- | --- |
+| **Cloud session** | A virtual machine in the cloud | The repository is on GitHub, and the task should run even with the phone in your pocket |
+| **Remote Control** | A Claude Code session running **on your computer** | The work needs your local files, tools or MCP servers |
+| **Dispatch** | The Desktop app on your computer | Send a task as a message, and it opens as a session in the app (Pro and Max only) |
+
+### Sending a task from your phone
+
+In the **Code** tab: choose a repository and branch, write the task and send it. In the evening, at your computer, continue with `claude --teleport`.
+
+<Prompt>Add a clean print view to the recipe site, without menus and without buttons. Check that it works, and open a pull request with a description</Prompt>
+
+### Remote Control: control your computer from the couch
+
+Remote Control connects your phone to a session running **on your computer**. The code and files stay on the computer, and you just send messages and approve actions remotely.
+
+```bash title="Ways to start it"
+# a new session with remote control
+claude --remote-control
+
+# server mode: waits for connections from the phone or browser
+claude remote-control
+```
+
+```text title="Inside an existing session"
+/remote-control
+```
+
+(Or `/rc` for short.) An address appears in the terminal, and in server mode you can press **space** to show a QR code. Scan it with your phone, or open the **Code** tab in the app and choose the session from the list.
+
+<Callout type="tip" title="Notifications to your phone">
+While Remote Control is active, Claude can send notifications to your phone, for example when a long task finishes or when it needs a decision from you. You can also ask explicitly: "Send me a notification when the tests finish".
+</Callout>
+
+<Callout type="note" title="Mobile limitations">
+- The computer needs to stay **on**, with Claude Code open, for Remote Control to work. If it goes to sleep, the connection resumes when it wakes up.
+- Some commands, like `/plugin` and `/resume`, work only in the terminal.
+- From the phone you can't choose Bypass permissions mode, which is actually a good thing.
+</Callout>
+
+## What to choose? A decision guide
+
+| I want to... | Best fit |
+| --- | --- |
+| Work with full control, automation and every command | **Terminal** |
+| See the code and Claude on the same screen | **Cursor or VS Code** (chapter 5) |
+| Review changes in a friendly interface, without a terminal | **Desktop app** |
+| Run several tasks in parallel without collisions | **Desktop with Worktree**, or several **cloud sessions** |
+| Start a long task and close my computer | **Cloud**: claude.ai/code or `claude --cloud` |
+| Send a task from my phone | **Mobile**, the Code tab |
+| Continue from the couch a session running on my computer | **Remote Control** |
+| Continue on my computer a task I started in the cloud | `claude --teleport` |
+| Have Claude test the site in a real browser | **Chrome extension** (`claude --chrome`), or the built-in browser in Desktop |
+
+### One workday, four interfaces
+
+1. **08:00, on the bus (mobile):** send to the cloud "add a print page for recipes, and open a PR".
+2. **10:00, at the computer (terminal):** `claude --teleport`, continue where Claude stopped, and add details.
+3. **10:30 (Chrome):** `claude --chrome`, and ask Claude to go over the page in the browser and check for errors.
+4. **11:00 (Desktop):** `/desktop`, and go over all the changes in the visual interface with line comments.
+5. **20:00, on the couch (Remote Control):** Claude runs long tests on the computer, and you approve actions from your phone.
+
+## Exercise: a tour of every interface
+
+1. Download the Desktop app, open a **Local** session on the recipe site, and ask for a small change. Review it with a comment on one line.
+2. Install the Chrome extension, run `claude --chrome`, and ask Claude to check `localhost:3000` and report console errors.
+3. Push the project to GitHub, and send a task to the cloud with `claude --cloud`.
+4. Install the Claude app on your phone (`/mobile` shows a QR code), and check that you can see the cloud session in the **Code** tab.
+5. When the cloud task finishes, pull it to your computer with `claude --teleport`.
+6. Run `/remote-control` in a local session, and connect to it from your phone.
+
+<Checklist
+  id="ch13-exercise"
+  title="Interface tour"
+  items={[
+    "I can explain the difference between a local session and a cloud session",
+    "I reviewed a change in the Desktop app and added a line comment",
+    "Claude tested my site in Chrome and read the console",
+    "I sent a task to the cloud with claude --cloud",
+    "I saw the cloud session in the app on my phone",
+    "I pulled a session from the cloud to the terminal with claude --teleport",
+    "I controlled a local session from my phone with Remote Control",
+  ]}
+/>
+
+## Summary
+
+- **One engine, many windows**: terminal, code editor, Desktop, Web, mobile and Chrome, all using the same CLAUDE.md, settings and MCP.
+- **The central question: local or cloud.** Local works on your files, and the cloud keeps running even when your computer is off.
+- **Desktop**: change review with line comments, parallel sessions with Worktree, a built-in browser, and `/desktop` to switch to it from the terminal.
+- **Chrome**: `claude --chrome` and `/chrome`. Claude tests the site in a real browser, but with your accounts, so be careful.
+- **Cloud and Teleport**: `claude --cloud` sends a task to the cloud, and `claude --teleport` pulls it back.
+- **Mobile**: sending tasks, Remote Control (`/rc`) and Dispatch, all from the **Code** tab.
+
+In the next chapter we'll explore a library of ready-made agents, commands and skills from the community, with install commands, ready-to-use prompts and sample results.
+
+## Check yourself
+
+<MiniQuiz questions={[{"q": "You want to start a task and close your computer. What fits?", "options": [{"text": "A cloud session: claude.ai/code or claude --cloud", "why": "Right. It keeps running even when the computer is off."}, {"text": "Remote Control", "why": "No. It controls a session on your computer, which needs to stay on."}, {"text": "The regular terminal", "why": "It stops when the computer shuts down."}], "answer": 0}, {"q": "What does claude --teleport do?", "options": [{"text": "Sends the session from the terminal to the cloud", "why": "No. It's the other direction."}, {"text": "Pulls a cloud session into the terminal, including the branch and the conversation", "why": "Right. It requires a clean Git state and the same repository."}, {"text": "Opens the app on your phone", "why": "That's what /mobile is for."}], "answer": 1}]} />
