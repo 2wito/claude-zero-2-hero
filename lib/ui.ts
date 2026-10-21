@@ -2,7 +2,7 @@
 
 const he = {
   brand: { name: "Claude Code", suffix: "בעברית" },
-  nav: { syllabus: "סילבוס", audience: "למי זה מתאים", guide: "למדריך" },
+  nav: { syllabus: "סילבוס", audience: "למי זה מתאים", about: "קצת עליי", guide: "למדריך" },
   theme: { toLight: "מעבר למצב בהיר", toDark: "מעבר למצב כהה" },
   language: { label: "English", aria: "Switch to English" },
   fontSize: {
@@ -62,7 +62,7 @@ type Dict = typeof he;
 
 const en: Dict = {
   brand: { name: "Claude Code", suffix: "Zero to Hero" },
-  nav: { syllabus: "Syllabus", audience: "Who it's for", guide: "Start the guide" },
+  nav: { syllabus: "Syllabus", audience: "Who it's for", about: "About", guide: "Start the guide" },
   theme: { toLight: "Switch to light mode", toDark: "Switch to dark mode" },
   language: { label: "עברית", aria: "מעבר לעברית" },
   fontSize: {

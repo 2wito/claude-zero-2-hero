@@ -6,7 +6,7 @@ import { ui } from "@/lib/ui";
 
 export const SITE_URL = "https://www.claude-code-hebrew.com";
 
-const AUTHOR = { "@type": "Person", name: "Itay Twito", url: "https://www.linkedin.com/in/itay-twito-2083812b9/" };
+const AUTHOR = { "@type": "Person", name: "Itay Twito", url: "https://www.linkedin.com/in/itay-twito/" };
 
 export const site = {
   he: {
