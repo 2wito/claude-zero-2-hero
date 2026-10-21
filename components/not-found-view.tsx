@@ -1,21 +1,11 @@
-"use client";
-
-import { useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useLocale } from "@/components/use-locale";
-import { docHref, homeHref } from "@/lib/i18n";
+import { docHref, homeHref, type Locale } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 
-export default function NotFound() {
-  const locale = useLocale();
+export function NotFoundView({ locale }: { locale: Locale }) {
   const t = ui[locale].notFound;
   const Forward = locale === "en" ? ArrowRight : ArrowLeft;
-
-  // The 404 is rendered under the root (Hebrew) metadata, so fix the tab title on English paths.
-  useEffect(() => {
-    if (locale === "en") document.title = "Page not found | Claude Code: From Zero to Hero";
-  }, [locale]);
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">

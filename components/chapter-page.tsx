@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -7,13 +6,6 @@ import { chapterContent } from "@/lib/content";
 import { docHref, type Locale } from "@/lib/i18n";
 import { chapters, chapterText } from "@/lib/syllabus";
 import { ui } from "@/lib/ui";
-
-export function chapterMetadata(slug: string, locale: Locale): Metadata {
-  const chapter = chapters.find((c) => c.slug === slug);
-  if (!chapter) return {};
-  const text = chapterText(chapter, locale);
-  return { title: `${ui[locale].chapter.label} ${chapter.number}: ${text.title}`, description: text.summary };
-}
 
 /** A chapter in either language: its MDX content (or a placeholder), the done button, and prev/next links. */
 export async function ChapterPage({ slug, locale }: { slug: string; locale: Locale }) {

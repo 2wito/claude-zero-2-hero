@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { ChapterPage, chapterMetadata } from "@/components/chapter-page";
+import { ChapterPage } from "@/components/chapter-page";
+import { JsonLd } from "@/components/json-ld";
+import { chapterJsonLd, chapterMetadata } from "@/lib/seo";
 import { chapters } from "@/lib/syllabus";
 
 export const dynamicParams = false;
@@ -15,5 +17,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Page({ params }: Props) {
-  return <ChapterPage slug={(await params).slug} locale="he" />;
+  const { slug } = await params;
+  return (
+    <>
+      <JsonLd data={chapterJsonLd(slug, "he")} />
+      <ChapterPage slug={slug} locale="he" />
+    </>
+  );
 }

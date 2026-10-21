@@ -19,8 +19,5 @@ export const dir = (locale: Locale) => (locale === "en" ? "ltr" : "rtl");
 export const FONT_SCALE_KEY = "font-scale";
 export const fontScales = ["100%", "118.75%", "137.5%"] as const;
 
-/**
- * Runs in <head> before the page paints: sets lang/dir for English pages and restores the
- * saved font size, so neither the layout direction nor the text size jumps after load.
- */
-export const bootScript = `try{var p=location.pathname,d=document.documentElement;if(p==='/en'||p.indexOf('/en/')===0){d.lang='en';d.dir='ltr'}var s=localStorage.getItem('${FONT_SCALE_KEY}');if(s)d.style.fontSize=s}catch(e){}`;
+/** Runs in <head> before the page paints and restores the saved font size, so the text doesn't jump after load. */
+export const bootScript = `try{var s=localStorage.getItem('${FONT_SCALE_KEY}');if(s)document.documentElement.style.fontSize=s}catch(e){}`;

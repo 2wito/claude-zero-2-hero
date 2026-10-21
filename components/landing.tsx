@@ -57,11 +57,11 @@ const copy = {
     hero: {
       title: (
         <>
-          ללמוד <span className="whitespace-nowrap">Claude Code</span>{" "}
-          <span className="whitespace-nowrap">מ-Zero ל-Hero</span>
+          מדריך <span className="whitespace-nowrap">Claude Code</span> בעברית{" "}
+          <span className="block whitespace-nowrap">מ-Zero ל-Hero</span>
         </>
       ),
-      body: "מדריך בעברית פשוטה, מהפעם הראשונה שפותחים טרמינל ועד שבונים אתרים וכלים בעזרת בינה מלאכותית. לא צריך לדעת לתכנת. צריך רק סקרנות.",
+      body: "מדריך חינמי בעברית פשוטה ללמוד קלוד קוד (Claude Code), מהפעם הראשונה שפותחים טרמינל ועד שבונים אתרים וכלים בעזרת בינה מלאכותית. לא צריך לדעת לתכנת. צריך רק סקרנות.",
       start: "להתחיל ללמוד",
       all: "לראות את כל הפרקים",
       meta: (n: number) => `${n} פרקים, הוראות לכל מערכת הפעלה, ועבודה משולבת עם Cursor.`,
