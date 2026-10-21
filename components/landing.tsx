@@ -26,6 +26,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { AboutSection } from "@/components/AboutSection";
 import { HeroTerminal } from "@/components/hero-terminal";
 import { OsTabs } from "@/components/os-tabs";
 import { docHref, type Locale } from "@/lib/i18n";
@@ -191,6 +192,7 @@ export function Landing({ locale }: { locale: Locale }) {
       <Features c={c} />
       <Syllabus c={c} locale={locale} first={first} Forward={Forward} />
       <Audience c={c} />
+      <AboutSection locale={locale} />
       <ClosingCta c={c} first={first} Forward={Forward} />
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-muted sm:flex-row sm:justify-between sm:px-6">
