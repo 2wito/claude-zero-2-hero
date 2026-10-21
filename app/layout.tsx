@@ -23,9 +23,15 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.claude-code-hebrew.com"),
   title: "Claude Code בעברית: מ-Zero ל-Hero",
   description:
     "מדריך בעברית פשוטה ללמוד Claude Code: מהפעם הראשונה שפותחים טרמינל ועד בניית אתרים וכלים עם בינה מלאכותית.",
+  openGraph: {
+    siteName: "Claude Code בעברית",
+    locale: "he_IL",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
