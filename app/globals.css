@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #eaf0ee;
+  --surface: #ffffff;
+  --surface-2: #dce6e2;
+  --ink: #10302a;
+  --muted: #4a615a;
+  --line: #c9d7d2;
+  --accent: #0b7a6e;
+  --accent-ink: #ffffff;
+  --sun: #e9a21c;
+  --term: #0f2420;
+  --term-ink: #d7e7e2;
+  --term-dim: #7f9c94;
+}
+
+.dark {
+  --bg: #0b1916;
+  --surface: #12241f;
+  --surface-2: #18302a;
+  --ink: #e3eeea;
+  --muted: #9cb4ac;
+  --line: #24403a;
+  --accent: #3cc4b3;
+  --accent-ink: #06201c;
+  --sun: #f5c15a;
+  --term: #06110f;
+  --term-ink: #d7e7e2;
+  --term-dim: #6f8b84;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-sun: var(--sun);
+  --color-term: var(--term);
+  --color-term-ink: var(--term-ink);
+  --color-term-dim: var(--term-dim);
+  --font-sans: var(--font-plex), system-ui, sans-serif;
+  --font-display: var(--font-secular), var(--font-plex), sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.cursor-blink {
+  animation: blink 1.1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .cursor-blink {
+    animation: none;
+  }
+}
+
+/* Fenced code blocks (rehype-pretty-code output inside CodeBlock) */
+.code-body pre {
+  margin: 0;
+  padding: 0.9rem 1.1rem;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.85rem;
+  line-height: 1.75;
+}
+
+.code-body pre code {
+  display: grid;
+}
+
+/* Let lines containing Hebrew (e.g. in CLAUDE.md examples) order their words correctly */
+.code-body [data-line] {
+  unicode-bidi: plaintext;
+  text-align: start;
+}

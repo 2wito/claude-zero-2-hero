@@ -1,0 +1,362 @@
+# התקנה והגדרה, צעד אחר צעד
+
+בפרק הזה נתקין את Claude Code ונחבר אותו לחשבון שלכם. זה לוקח בדרך כלל 5 עד 10 דקות, וברוב המקרים מספיקה פקודה אחת.
+
+<Callout type="note" title="לפני שמתחילים">
+- מחשב עם **Windows 10** (גרסה 1809 ומעלה), **macOS 13** ומעלה, או **Linux** (למשל Ubuntu 20.04 ומעלה או Debian 10 ומעלה).
+- לפחות **4GB זיכרון** וחיבור לאינטרנט.
+- **חשבון Claude בתשלום** (Pro, Max, Team או Enterprise) או **חשבון Claude Console**. המנוי החינמי לא כולל את Claude Code. על ההבדלים בשלב 4.
+- לא צריך הרשאות מנהל (Administrator), ולא צריך להתקין שום דבר אחר מראש.
+</Callout>
+
+<Callout type="tip" title="בחרו את מערכת ההפעלה שלכם פעם אחת">
+בכל הפרק יש לשוניות ל-Windows ול-macOS/Linux. כשתבחרו לשונית אחת, כל הלשוניות בעמוד יעברו אליה, והאתר יזכור את הבחירה גם בפעם הבאה.
+</Callout>
+
+## שלב 1: פותחים טרמינל
+
+הטרמינל הוא חלון שבו כותבים פקודות למחשב במקום ללחוץ על כפתורים. בכל מערכת הפעלה פותחים אותו קצת אחרת:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+1. לוחצים על כפתור **התחל** (או על מקש Windows במקלדת).
+2. מקלידים `PowerShell`.
+3. לוחצים על **Windows PowerShell** בתוצאות.
+
+בתחילת השורה יופיע משהו כמו `PS C:\Users\YourName>`. האותיות **PS** אומרות שאתם ב-PowerShell.
+
+</Tab>
+<Tab>
+
+1. לוחצים על כפתור **התחל** (או על מקש Windows במקלדת).
+2. מקלידים `cmd`.
+3. לוחצים על **Command Prompt** (שורת הפקודה).
+
+בתחילת השורה יופיע משהו כמו `C:\Users\YourName>`, **בלי** האותיות PS.
+
+</Tab>
+<Tab>
+
+**ב-Mac:** לוחצים `Cmd + רווח`, מקלידים `Terminal` ולוחצים Enter.
+
+**ב-Linux (למשל Ubuntu):** לוחצים `Ctrl + Alt + T`, או מחפשים **Terminal** בתפריט האפליקציות.
+
+</Tab>
+</Tabs>
+
+<Callout type="info" title="PowerShell או CMD?">
+ב-Windows יש שני סוגי טרמינל, ולכל אחד פקודת התקנה משלו. אם אין לכם העדפה, **השתמשו ב-PowerShell**. הכי חשוב: להעתיק את הפקודה מהלשונית שמתאימה לחלון שפתחתם.
+</Callout>
+
+## שלב 2: מתקינים את Claude Code
+
+מעתיקים את הפקודה המתאימה (יש כפתור **העתקה** בפינת התיבה), מדביקים בטרמינל ולוחצים **Enter**:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+irm https://claude.ai/install.ps1 | iex
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD"
+curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux / WSL"
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="note" title="מה הפקודה הזאת עושה?">
+היא מורידה את תוכנת ההתקנה הרשמית מהאתר של Anthropic, החברה שמפתחת את Claude, ומריצה אותה. ההתקנה **לא מציגה פס התקדמות**, אז אם נראה שלא קורה כלום לכמה שניות, זה תקין. חכו עד שהטרמינל יחזיר לכם את השורה.
+</Callout>
+
+<Callout type="tip" title="רק ב-Windows: כדאי להתקין גם Git">
+מומלץ להתקין את [Git for Windows](https://git-scm.com/downloads/win). Claude Code יעבוד גם בלעדיו, אבל עם Git הוא יכול להריץ יותר סוגים של פקודות, ובפרק 8 נשתמש ב-Git כדי לשמור את העבודה. ההתקנה רגילה: מורידים, מריצים ולוחצים Next עד הסוף.
+</Callout>
+
+### דרכי התקנה נוספות (לא חובה)
+
+אם אתם כבר משתמשים במנהל חבילות, אפשר להתקין גם דרכו. שימו לב: בהתקנה כזאת **Claude Code לא מתעדכן לבד**, ותצטרכו לעדכן ידנית מדי פעם.
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="WinGet"
+winget install Anthropic.ClaudeCode
+```
+
+</Tab>
+<Tab>
+
+```bat title="WinGet"
+winget install Anthropic.ClaudeCode
+```
+
+</Tab>
+<Tab>
+
+```bash title="Homebrew (Mac)"
+brew install --cask claude-code
+```
+
+</Tab>
+</Tabs>
+
+## שלב 3: בודקים שההתקנה הצליחה
+
+**סגרו את חלון הטרמינל ופתחו חלון חדש.** זה חשוב: החלון הישן לא "יודע" שהותקנה תוכנה חדשה. בחלון החדש הקלידו:
+
+```bash title="בכל מערכת הפעלה"
+claude --version
+```
+
+אם הכול תקין, יופיע מספר גרסה, למשל:
+
+```text title="פלט לדוגמה"
+2.1.211 (Claude Code)
+```
+
+המספר אצלכם יהיה כנראה אחר, וזה בסדר. הוא רק מראה שההתקנה עבדה.
+
+<Callout type="warning" title="קיבלתם 'command not found' או 'is not recognized'?">
+ההתקנה כנראה הצליחה, אבל המחשב לא יודע איפה למצוא אותה. זו הבעיה הכי נפוצה, והפתרון נמצא בסעיף [פתרון בעיות](#פתרון-בעיות) בסוף הפרק.
+</Callout>
+
+לבדיקה מקיפה יותר יש פקודת אבחון מובנית. היא בודקת את ההתקנה וההגדרות ומציעה תיקונים אם משהו לא תקין:
+
+```bash title="בכל מערכת הפעלה"
+claude doctor
+```
+
+## שלב 4: מתחברים לחשבון
+
+יש שתי דרכים עיקריות לשלם על Claude Code. ההבדל ביניהן הוא בעיקר **איך** משלמים:
+
+| | מנוי Claude (Pro / Max) | חשבון Claude Console (מפתח API) |
+| --- | --- | --- |
+| איך משלמים | מחיר חודשי קבוע | לפי שימוש, מקרדיט שטוענים מראש |
+| מתאים ל | רוב האנשים, ובמיוחד מתחילים | מפתחים, עסקים ומי שרוצה שליטה מדויקת בעלויות |
+| יתרון | אין הפתעות בחשבון, ומקבלים גם את Claude באתר ובאפליקציה | משלמים רק על מה שמשתמשים |
+| חיסרון | יש מגבלת שימוש לכל תקופה | בשימוש אינטנסיבי זה עלול לצאת יקר |
+
+<Callout type="tip" title="ההמלצה שלנו למתחילים">
+**מנוי Claude Pro** הוא הדרך הכי פשוטה להתחיל: מחיר קבוע, בלי לנהל מפתחות ובלי הפתעות. אם תגלו שאתם מגיעים למגבלת השימוש, אפשר לשדרג ל-Max בהמשך. המחירים העדכניים מופיעים ב-[claude.com/pricing](https://claude.com/pricing).
+</Callout>
+
+### אפשרות א': התחברות עם מנוי Claude (מומלץ)
+
+1. בטרמינל, הקלידו `claude` ולחצו Enter:
+
+   ```bash
+   claude
+   ```
+
+2. בפעם הראשונה Claude Code ישאל כמה שאלות הגדרה, למשל איזה צבע רקע אתם מעדיפים. בחרו עם החיצים ולחצו Enter.
+3. כשתתבקשו לבחור שיטת התחברות, בחרו באפשרות של **חשבון Claude** (מנוי).
+4. **ייפתח חלון בדפדפן.** התחברו לחשבון Claude שלכם ואשרו את הגישה.
+5. חזרו לטרמינל. כשמופיע `Login successful`, לחצו Enter, וזהו: אתם מחוברים.
+
+<Callout type="info" title="הדפדפן לא נפתח?">
+לחצו על המקש `c` בטרמינל כדי להעתיק את קישור ההתחברות, והדביקו אותו בדפדפן. אם אחרי ההתחברות הדפדפן מציג **קוד** במקום לחזור לטרמינל, העתיקו את הקוד והדביקו אותו בטרמינל איפה שכתוב `Paste code here if prompted`.
+</Callout>
+
+### אפשרות ב': התחברות עם Claude Console (תשלום לפי שימוש)
+
+1. היכנסו ל-[platform.claude.com](https://platform.claude.com), פתחו חשבון וטענו קרדיט.
+2. בטרמינל, הקלידו `claude`.
+3. בחרו באפשרות של **Anthropic Console** והתחברו בדפדפן. אפשר להתחבר עם החשבון עצמו, בלי ליצור מפתח API בכלל.
+
+#### למתקדמים: עבודה עם מפתח API קיים
+
+אם כבר יש לכם מפתח API מה-Console, אפשר לשמור אותו במשתנה סביבה בשם `ANTHROPIC_API_KEY`. בפעם הבאה שתפעילו את `claude`, הוא ישאל אם להשתמש במפתח, ואחרי שתאשרו הוא ידלג על ההתחברות בדפדפן.
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell (לחלון הנוכחי בלבד)"
+$env:ANTHROPIC_API_KEY = "sk-ant-..."
+```
+
+</Tab>
+<Tab>
+
+```bat title="Windows CMD (לחלון הנוכחי בלבד)"
+set ANTHROPIC_API_KEY=sk-ant-...
+```
+
+</Tab>
+<Tab>
+
+```bash title="macOS / Linux (לחלון הנוכחי בלבד)"
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+</Tab>
+</Tabs>
+
+החליפו את `sk-ant-...` במפתח האמיתי שלכם.
+
+<Callout type="warning" title="שמרו על המפתח כמו על סיסמה">
+- **אל תשתפו את המפתח** עם אף אחד, ואל תדביקו אותו בצ'אטים, במיילים או בצילומי מסך.
+- **אל תשמרו אותו בתוך קבצי פרויקט** שעולים ל-GitHub. מי שמשיג את המפתח יכול להשתמש בו על חשבונכם.
+- **אם יש לכם גם מנוי וגם מפתח**, ברגע שאישרתם את המפתח Claude Code ישתמש **בו** ולא במנוי, כלומר תחויבו לפי שימוש. כדי לבדוק באיזה חשבון אתם מחוברים, הקלידו `/status` בתוך Claude Code.
+</Callout>
+
+### החלפת חשבון והתנתקות
+
+פרטי ההתחברות נשמרים במחשב, כך שלא צריך להתחבר מחדש בכל פעם. כדי להחליף חשבון, הקלידו בתוך Claude Code:
+
+```text title="בתוך Claude Code"
+/logout
+/login
+```
+
+## עדכונים
+
+ההתקנה הרשמית (הפקודה משלב 2) **מתעדכנת לבד ברקע**, ולא צריך לעשות כלום. אם בכל זאת רוצים לעדכן מיד:
+
+```bash title="בכל מערכת הפעלה"
+claude update
+```
+
+אם התקנתם עם WinGet או Homebrew, העדכון ידני:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="WinGet"
+winget upgrade Anthropic.ClaudeCode
+```
+
+</Tab>
+<Tab>
+
+```bat title="WinGet"
+winget upgrade Anthropic.ClaudeCode
+```
+
+</Tab>
+<Tab>
+
+```bash title="Homebrew"
+brew upgrade claude-code
+```
+
+</Tab>
+</Tabs>
+
+## פתרון בעיות
+
+משהו לא עבד? אל דאגה, כמעט כל הבעיות בהתקנה הן אחת מהרשימה הזאת.
+
+### "claude: command not found" או "'claude' is not recognized"
+
+**מה קרה:** ההתקנה הצליחה, אבל התיקייה שבה הותקן Claude Code לא נמצאת ב-**PATH**. ה-PATH הוא רשימת התיקיות שבהן המחשב מחפש תוכנות כשאתם מקלידים שם של פקודה. אם התיקייה לא ברשימה, המחשב פשוט לא מוצא את `claude`.
+
+**קודם כל:** ודאו שסגרתם את הטרמינל ופתחתם חלון **חדש**. אם הטרמינל פתוח בתוך עורך קוד כמו Cursor או VS Code, סגרו את **העורך כולו** ופתחו אותו מחדש.
+
+אם זה לא עזר, הוסיפו את התיקייה ל-PATH:
+
+<Tabs groupId="os" items={["Windows PowerShell", "Windows CMD", "macOS / Linux"]}>
+<Tab>
+
+```powershell title="Windows PowerShell"
+$currentPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
+[Environment]::SetEnvironmentVariable('PATH', "$currentPath;$env:USERPROFILE\.local\bin", 'User')
+```
+
+אחר כך סגרו את הטרמינל, פתחו חדש ונסו שוב `claude --version`.
+
+</Tab>
+<Tab>
+
+את התיקון הכי קל לעשות דרך PowerShell. פתחו **PowerShell** (ראו שלב 1) והריצו:
+
+```powershell title="Windows PowerShell"
+$currentPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
+[Environment]::SetEnvironmentVariable('PATH', "$currentPath;$env:USERPROFILE\.local\bin", 'User')
+```
+
+אחר כך סגרו את כל חלונות הטרמינל, פתחו CMD חדש ונסו שוב `claude --version`.
+
+</Tab>
+<Tab>
+
+ב-Mac (מעטפת **zsh**, ברירת המחדל):
+
+```bash title="macOS (zsh)"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+ב-Linux (מעטפת **bash**, ברירת המחדל ברוב ההפצות):
+
+```bash title="Linux (bash)"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+השורה הראשונה שומרת את ההגדרה לכל חלון עתידי, והשנייה מפעילה אותה בחלון הנוכחי. אם לא בטוחים באיזו מעטפת אתם, הקלידו `echo $SHELL`.
+
+</Tab>
+</Tabs>
+
+### "'irm' is not recognized" או "The token '&&' is not a valid statement separator"
+
+**מה קרה:** הפקודה שהעתקתם מיועדת לסוג טרמינל אחר.
+
+- **`irm` is not recognized**: אתם ב-**CMD**, אבל הרצתם את פקודת PowerShell. עברו ללשונית **Windows CMD** בשלב 2, או פתחו PowerShell.
+- **`&&` is not a valid statement separator**: אתם ב-**PowerShell**, אבל הרצתם את פקודת CMD. עברו ללשונית **Windows PowerShell**.
+- **`A parameter cannot be found that matches parameter name 'fsSL'`** או **`'bash' is not recognized`**: הרצתם ב-Windows את הפקודה של Mac/Linux. השתמשו בפקודה של PowerShell.
+
+### "running scripts is disabled on this system" (מדיניות הרצה ב-PowerShell)
+
+**מה קרה:** ל-PowerShell יש מנגנון אבטחה שנקרא **Execution Policy** (מדיניות הרצה), שחוסם הרצה של קובצי סקריפט. השגיאה הזאת **לא** מופיעה בהתקנה הרשמית משלב 2. היא מופיעה בעיקר אם התקנתם את Claude Code דרך `npm`, מנהל החבילות של Node.js.
+
+יש שלוש דרכים לפתור, מהמומלצת ביותר:
+
+1. **התקינו מחדש בדרך הרשמית** עם פקודת PowerShell משלב 2. היא לא מושפעת מהמדיניות.
+2. **הריצו `claude.cmd` במקום `claude`**. זו אותה תוכנה, והמדיניות לא חלה עליה.
+3. **אפשרו הרצה של סקריפטים מקומיים** למשתמש שלכם בלבד:
+
+```powershell title="Windows PowerShell"
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+<Callout type="note" title="האם זה בטוח?">
+`RemoteSigned` היא הגדרה נפוצה ומקובלת: היא מאפשרת להריץ סקריפטים שנוצרו על המחשב שלכם, ודורשת חתימה דיגיטלית מסקריפטים שהורדו מהאינטרנט. התוספת `-Scope CurrentUser` אומרת שהשינוי חל רק על המשתמש שלכם, ולא על כל המחשב.
+</Callout>
+
+### ההתקנה נכשלת עם שגיאה אחרת
+
+- **`syntax error near unexpected token '<'`** או **`403`**: במקום תוכנת ההתקנה הגיע דף אינטרנט, בדרך כלל בגלל בעיית רשת, VPN או חסימה ברשת של מקום העבודה. נסו מרשת אחרת, או השתמשו ב-WinGet או ב-Homebrew.
+- **`App unavailable in region`**: Claude Code לא זמין במדינה שממנה אתם מתחברים. [רשימת המדינות הנתמכות](https://www.anthropic.com/supported-countries).
+
+### בעיות בהתחברות
+
+- **הדפדפן לא נפתח**: לחצו `c` בטרמינל כדי להעתיק את הקישור, והדביקו אותו בדפדפן.
+- **התחברתם לחשבון הלא נכון**: הקלידו `/logout` ואז `/login` בתוך Claude Code.
+- **הודעה שאין לכם גישה**: ודאו שיש לכם מנוי בתשלום. המנוי החינמי של Claude לא כולל את Claude Code.
+
+<Callout type="tip" title="עדיין תקועים?">
+הריצו `claude doctor` בטרמינל. הפקודה בודקת את ההתקנה ומדפיסה מה לא תקין ואיך לתקן. אם Claude Code כבר עובד ורק משהו מוזר, הקלידו `/doctor` בתוכו. ותמיד אפשר לשאול אותו ישירות, בעברית: הוא מכיר את התיעוד של עצמו.
+</Callout>
+
+## סיכום
+
+- התקנו את Claude Code בפקודה אחת, ובדקנו עם `claude --version`.
+- התחברנו לחשבון: מנוי Claude (מומלץ למתחילים) או חשבון Console.
+- למדנו לפתור את הבעיות הנפוצות: PATH, סוג הטרמינל ומדיניות ההרצה.
+
+בפרק הבא נפעיל את Claude Code בפעם הראשונה ונבקש ממנו לבנות משהו אמיתי.
