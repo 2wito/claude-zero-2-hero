@@ -9,7 +9,7 @@
 
 מדריך אינטראקטיבי בעברית ללמוד את **Claude Code**, סוכן התכנות של Anthropic שעובד בטרמינל, מהצעד הראשון ועד בניית אתרים והעלאתם לאוויר. המדריך נכתב בשפה פשוטה, לחברים ולמשפחה, ולא דורש ידע מוקדם בתכנות.
 
-**🌐 לאתר החי:** [claude-zero-2-hero.vercel.app](https://claude-zero-2-hero.vercel.app) *(בקרוב)*
+**🌐 לאתר החי:** [claude-code-hebrew.com](https://www.claude-code-hebrew.com)
 
 ## מה יש במדריך
 
