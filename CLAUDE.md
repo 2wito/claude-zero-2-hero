@@ -34,6 +34,24 @@ Build a modern, highly accessible, RTL-supported documentation website in Hebrew
 
 5. **Integration Focus**: Dedicate clear sections to using Cursor IDE side-by-side with Claude Code CLI.
 
+## Token & Context Optimization
+
+### 1. Response & Code Efficiency
+
+- Give direct, extremely concise answers. No preamble, no filler.
+- Edit files with targeted, precise diffs. Never rewrite a whole file to change part of it.
+
+### 2. Context Window Management
+
+- After a significant step or a multi-file change, suggest running `/compact` (it is a user command; Claude cannot run it itself).
+- Don't re-read or scan large files or directories unless explicitly asked. Prefer targeted search over full reads.
+- When the user moves to an entirely new, unrelated task, recommend `/clear` to reset the context.
+
+### 3. File Filtering
+
+- Never read build artifacts, logs, or dependencies: `node_modules/`, `.next/`, `out/`, `*.log`, `.env*`.
+- Note: `.claudeignore` has no effect in Claude Code (per the official docs). Enforce exclusions with `Read(...)` deny rules in `.claude/settings.json`; `.gitignore` already keeps these out of search.
+
 ## Core Reference Material
 
 Use information and structural inspiration from these sources:
