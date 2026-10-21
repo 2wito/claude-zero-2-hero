@@ -2,18 +2,20 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
-  Hammer,
+  Bot,
+  Bug,
   Columns2,
   Download,
   FileCode2,
   GitBranch,
-  GraduationCap,
-  Heart,
-  MessageSquare,
   Globe,
-  Rocket,
+  GraduationCap,
+  Hammer,
+  Heart,
   Lightbulb,
-  Bug,
+  MessageSquare,
+  Rocket,
+  Sparkles,
   SquareTerminal,
   Users,
   type LucideIcon,
@@ -33,6 +35,8 @@ const chapterIcons: Record<Chapter["icon"], LucideIcon> = {
   GitBranch,
   Globe,
   Rocket,
+  Sparkles,
+  Bot,
 };
 
 const FIRST_CHAPTER = `/docs/${chapters[0].slug}`;
@@ -74,7 +78,7 @@ function Hero() {
             לראות את כל הפרקים
           </a>
         </div>
-        <p className="mt-8 text-sm text-muted">10 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
+        <p className="mt-8 text-sm text-muted">12 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
       </div>
       <HeroTerminal />
     </section>
@@ -149,7 +153,7 @@ function Syllabus() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 id="syllabus-title" className="font-display text-3xl leading-tight sm:text-4xl">
-              10 פרקים, צעד אחר צעד
+              12 פרקים, צעד אחר צעד
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-8 text-muted">
               כל פרק בונה על הקודם. אפשר לעצור בכל שלב ולחזור כשנוח.
@@ -161,7 +165,7 @@ function Syllabus() {
           </Link>
         </div>
 
-        <ol className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-5">
+        <ol className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
           {chapters.map((chapter) => {
             const Icon = chapterIcons[chapter.icon];
             return (

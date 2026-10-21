@@ -1,0 +1,406 @@
+# יכולות מותאמות אישית (Skills) ואוטומציה
+
+בפרק 10 נגענו בקצרה ב-Skills. בפרק הזה ניכנס לעומק: איך בונים "מתכוני עבודה" ש-Claude יודע להפעיל לבד, מעבירים להם פרמטרים, מזינים אותם במידע עדכני מהפרויקט, ומגבילים מה מותר להם לעשות.
+
+**Skill** (מיומנות) הוא בעצם **מתכון עבודה כתוב**. במקום להסביר ל-Claude בכל פעם מחדש "ככה אנחנו סוקרים קוד אצלנו", כותבים את זה פעם אחת בקובץ. מאותו רגע, Claude יודע לשלוף את המתכון כשהוא רלוונטי, ואתם יכולים להפעיל אותו בפקודה קצרה כמו `/review-pr`.
+
+<Callout type="note" title="מה תלמדו בפרק">
+- מה זה Skill, ובמה הוא שונה מבקשה רגילה, מ-CLAUDE.md ומ-MCP.
+- איפה שמים Skills, ואיך בנוי קובץ `SKILL.md`.
+- לבנות שלוש מיומנויות שימושיות: `/review-pr`, `/generate-tests` ו-`/deploy`.
+- להעביר פרמטרים, להזריק מידע חי מהפרויקט, ולהגביל הרשאות.
+- להשתמש במאגרי Skills של הקהילה, בלי ליפול בפח.
+</Callout>
+
+## Skill מול כל השאר
+
+| | בקשה רגילה | CLAUDE.md | **Skill** | MCP |
+| --- | --- | --- | --- | --- |
+| **מה זה** | הודעה חד-פעמית | כללים קבועים | תהליך עבודה כתוב | חיבור לכלי חיצוני |
+| **מתי נטען** | כשכותבים אותה | **תמיד**, בכל שיחה | **רק כשצריך** | כש-Claude משתמש בכלי |
+| **מה הוא נותן ל-Claude** | משימה | הקשר וכללים | **איך** לבצע משימה מסוימת | **יכולת** לגעת במערכת אחרת |
+| **דוגמה** | "תסקור את הקוד" | "הודעות git באנגלית" | "ככה סוקרים PR אצלנו, ב-7 צעדים" | "גישה ל-Notion" |
+
+<Callout type="info" title="הסוד: טעינה הדרגתית">
+בתחילת כל שיחה Claude רואה רק את **השם והתיאור** של כל Skill, שורה או שתיים לכל אחד. את התוכן המלא הוא טוען **רק** כשהוא מחליט שה-Skill רלוונטי, או כשאתם מפעילים אותו. וקבצים נוספים בתיקיית ה-Skill, כמו תבניות ודוגמאות, נטענים רק כשהתהליך עצמו צריך אותם.
+
+התוצאה: אפשר להחזיק עשרות Skills מפורטים, והם כמעט לא תופסים מקום בחלון ההקשר עד שמשתמשים בהם. זה ההבדל הגדול מ-CLAUDE.md, שנטען במלואו בכל שיחה.
+</Callout>
+
+<Callout type="note" title="ומה עם פקודות מותאמות (commands)?">
+אם נתקלתם במדריכים ישנים שמדברים על קבצים בתיקייה `.claude/commands/`: הם עדיין עובדים, אבל היום הם חלק מ-Skills. הקובץ `.claude/commands/deploy.md` והקובץ `.claude/skills/deploy/SKILL.md` יוצרים שניהם את הפקודה `/deploy`. Skills מוסיפים יכולות שאין לפקודות, כמו קבצים נלווים והפעלה אוטומטית, ולכן כדאי להתחיל ישר מהם.
+</Callout>
+
+## איפה Skills גרים
+
+| מיקום | נתיב | למי זמין |
+| --- | --- | --- |
+| **אישי** | `~/.claude/skills/<name>/SKILL.md` | לכם, בכל הפרויקטים |
+| **פרויקט** | `.claude/skills/<name>/SKILL.md` | לכל מי שעובד על הפרויקט (נשמר ב-Git) |
+| **תוסף** (Plugin) | `<plugin>/skills/<name>/SKILL.md` | בכל מקום שבו התוסף מופעל, בשם `/plugin-name:skill-name` |
+
+כל Skill הוא **תיקייה**. שם התיקייה הוא שם הפקודה. ככה נראה פרויקט עם שלושה Skills:
+
+```text title="מבנה תיקיות"
+my-project/
+└── .claude/
+    └── skills/
+        ├── review-pr/
+        │   ├── SKILL.md          ← חובה: ההוראות
+        │   └── checklist.md      ← נטען רק כשצריך
+        ├── generate-tests/
+        │   ├── SKILL.md
+        │   └── examples/
+        │       └── sample.test.ts
+        └── deploy/
+            ├── SKILL.md
+            └── scripts/
+                └── smoke-test.sh ← סקריפט שרץ, ולא נקרא
+```
+
+<Callout type="tip" title="אם יש שני Skills באותו שם">
+Skill אישי גובר על Skill של פרויקט. ו-Skill שלכם מחליף Skill מובנה או פקודה מובנית באותו שם. לכן כדאי לבחור שמות ייחודיים, למשל `review-pr` ולא `review`, שכבר קיים כפקודה מובנית.
+</Callout>
+
+## האנטומיה של SKILL.md
+
+קובץ `SKILL.md` בנוי משני חלקים: **כותרת עליונה** (Frontmatter) בין שני קווים `---`, עם הגדרות, ו**גוף** עם ההוראות עצמן.
+
+```markdown title=".claude/skills/summarize-changes/SKILL.md"
+---
+name: summarize-changes
+description: Summarizes uncommitted changes and flags anything risky. Use when the user asks what changed, wants a commit message, or asks to review their diff.
+---
+
+## Current changes
+
+!`git diff HEAD`
+
+## Instructions
+
+Summarize the changes above in two or three bullet points, then list any
+risks you notice such as missing error handling, hardcoded values, or tests
+that need updating. If the diff is empty, say there are no uncommitted changes.
+```
+
+(זו דוגמה מהתיעוד הרשמי. השורה `` !`git diff HEAD` `` מיוחדת, ונסביר אותה בהמשך.)
+
+### השדות החשובים בכותרת
+
+כל השדות אופציונליים, אבל `description` חשוב מאוד: לפיו Claude מחליט מתי להשתמש ב-Skill.
+
+| שדה | מה הוא עושה |
+| --- | --- |
+| `name` | שם הפקודה. ברירת המחדל היא שם התיקייה |
+| `description` | **מה ה-Skill עושה ומתי להשתמש בו.** זה מה ש-Claude קורא כדי להחליט |
+| `when_to_use` | הקשר נוסף להפעלה, שמצטרף לתיאור |
+| `argument-hint` | רמז שמופיע בהשלמה האוטומטית, למשל `[file-path]` |
+| `arguments` | שמות לפרמטרים, כדי להשתמש בהם כ-`$name` |
+| `disable-model-invocation` | `true` = רק **אתם** מפעילים. Claude לא יפעיל לבד |
+| `user-invocable` | `false` = רק **Claude** מפעיל. לא יופיע בתפריט `/` |
+| `allowed-tools` | כלים שמותרים **בלי לשאול** בזמן שה-Skill רץ |
+| `disallowed-tools` | כלים ש**חסומים** בזמן שה-Skill פעיל |
+| `model` / `effort` | מודל או רמת מאמץ לתור הזה |
+| `context: fork` | מריץ את ה-Skill ב**סוכן משנה** נפרד (פרק 12) |
+| `agent` | איזה סוג סוכן משנה, יחד עם `context: fork` |
+| `paths` | ה-Skill ייטען אוטומטית רק כשעובדים על קבצים מתאימים |
+| `shell` | `bash` (ברירת מחדל) או `powershell`, להרצת פקודות מוזרקות |
+
+<Callout type="tip" title="איך כותבים תיאור טוב">
+התיאור הוא "מודעת הדרושים" של ה-Skill. כתבו **מה** הוא עושה ו**מתי** להשתמש בו, ושימו את המקרה העיקרי בהתחלה, כי תיאור ארוך נחתך (בערך 1,500 תווים, יחד עם `when_to_use`). אפשר לכתוב בעברית, אבל מילות מפתח באנגלית, כמו "review", "PR" או "tests", עוזרות ל-Claude לזהות התאמה.
+</Callout>
+
+## מתי Claude מפעיל, ומתי אתם
+
+יש שתי דרכים להפעיל Skill:
+
+- **אוטומטית**: Claude קורא את התיאורים, ואם הבקשה שלכם מתאימה, הוא טוען את ה-Skill לבד.
+- **ידנית**: מקלידים `/` ואת שם ה-Skill, **בתחילת ההודעה**, אפשר גם עם פרמטרים. שם שמופיע באמצע משפט לא מפעיל את ה-Skill, אלא רק נותן ל-Claude רשות להשתמש בו.
+
+| הגדרה בכותרת | אתם יכולים להפעיל | Claude יכול להפעיל | מתאים ל |
+| --- | --- | --- | --- |
+| (ברירת מחדל) | ✔ | ✔ | רוב ה-Skills |
+| `disable-model-invocation: true` | ✔ | ✘ | פעולות עם השלכות: העלאה לאוויר, שליחה, מחיקה |
+| `user-invocable: false` | ✘ | ✔ | ידע רקע שרק Claude צריך, כמו מוסכמות כתיבה |
+
+<Callout type="warning" title="Skills עם השלכות: רק ידני">
+כל Skill שעושה משהו שקשה לבטל, כמו העלאה לאוויר, דחיפה ל-GitHub, שליחת מייל או מחיקה, צריך לקבל `disable-model-invocation: true`. לא תרצו ש-Claude יחליט לבד "נראה שכדאי להעלות לאוויר".
+</Callout>
+
+## פרמטרים: להעביר מידע ל-Skill
+
+כשמפעילים Skill ידנית, כל מה שכותבים אחרי השם עובר אליו כפרמטרים:
+
+| משתנה | מה הוא מכיל | דוגמה: `/generate-tests lib/servings.ts unit` |
+| --- | --- | --- |
+| `$ARGUMENTS` | כל הטקסט שאחרי שם ה-Skill | `lib/servings.ts unit` |
+| `$0` או `$ARGUMENTS[0]` | הפרמטר הראשון | `lib/servings.ts` |
+| `$1` | הפרמטר השני | `unit` |
+| `$name` | פרמטר עם שם, לפי השדה `arguments` | |
+
+כמה הערות:
+
+- פרמטר עם רווחים? עוטפים אותו במירכאות: `/generate-tests "lib/my file.ts"`.
+- אם ה-Skill לא משתמש באף משתנה, Claude Code מוסיף את הפרמטרים בסוף ההוראות לבד.
+- כדי לכתוב סימן דולר אמיתי, מוסיפים לפניו לוכסן הפוך: `\$1.00`.
+
+## הזרקת מידע חי: `` !`פקודה` ``
+
+זו אחת היכולות החזקות ביותר. שורה בצורה `` !`git status` `` בתוך `SKILL.md` **רצה לפני ש-Claude רואה את ה-Skill**, והפלט שלה מחליף אותה. כך ה-Skill מגיע ל-Claude כבר עם המידע העדכני, בלי שיצטרך לחפש.
+
+```markdown title="הזרקה בשורה אחת"
+## הענף הנוכחי
+!`git branch --show-current`
+
+## השינויים לעומת main
+!`git diff main...HEAD --stat`
+```
+
+<Callout type="warning" title="שלושה דברים לדעת על הזרקה">
+- **אם אחת הפקודות נכשלת, כל ה-Skill לא יופעל.** בדקו את הפקודות בטרמינל לפני שאתם שמים אותן ב-Skill.
+- **ב-Windows**, הפקודות רצות כברירת מחדל ב-Bash. אם אין לכם Git Bash, הוסיפו לכותרת `shell: powershell` וכתבו פקודות PowerShell.
+- **אפשר לכבות את זה לגמרי.** אם אתם משתמשים ב-Skills ממקורות חיצוניים ורוצים להיות זהירים במיוחד, ההגדרה `"disableSkillShellExecution": true` מבטלת הרצת פקודות מוזרקות.
+</Callout>
+
+## בונים שלוש מיומנויות
+
+### 1. `/review-pr`: סקירת קוד לפי הסטנדרט שלכם
+
+ל-Claude Code יש כבר `/code-review` מובנה. אז למה לבנות משלכם? כי לכל פרויקט יש דברים שחשובים **לו**: באתר המתכונים, למשל, נגישות למבוגרים ותמיכה בעברית.
+
+```markdown title=".claude/skills/review-pr/SKILL.md"
+---
+name: review-pr
+description: Review the current branch against main using this project's checklist (RTL, accessibility for older users, Hebrew copy). Use when the user asks for a review, before opening a PR, or before merging.
+allowed-tools: Bash(git diff *) Bash(git log *) Bash(npm run build)
+disallowed-tools: Edit Write
+---
+
+## Branch
+!`git branch --show-current`
+
+## Commits on this branch
+!`git log main..HEAD --oneline`
+
+## Changed files
+!`git diff main...HEAD --stat`
+
+## Instructions
+
+1. Read the full diff with `git diff main...HEAD`.
+2. Run `npm run build` and report whether it passes.
+3. Review against [checklist.md](checklist.md).
+4. Report findings in Hebrew, grouped by severity (גבוהה / בינונית / נמוכה),
+   each with file and line.
+5. Do NOT fix anything. End with a one-line verdict: ready to merge or not.
+```
+
+```markdown title=".claude/skills/review-pr/checklist.md"
+# Project review checklist
+- All user-facing text is in Hebrew and renders correctly RTL.
+- Text is at least 18px; buttons have text, not only icons.
+- Works on a 375px-wide phone screen.
+- No secrets, API keys, or personal data in the diff.
+- No new dependencies unless they were discussed.
+- No ts-ignore, eslint-disable, or swallowed errors.
+```
+
+שימו לב לשלוש החלטות בקובץ:
+
+- **`allowed-tools`** מאשר מראש רק פקודות קריאה ובנייה, כך שהסקירה רצה בלי שאלות.
+- **`disallowed-tools: Edit Write`** מבטיח שהסוקר **לא יתקן** כלום בזמן הסקירה. מסקירה מצפים לממצאים, לא לשינויים.
+- **רשימת הבדיקה בקובץ נפרד** נטענת רק כשהסקירה רצה. ככה ה-`SKILL.md` נשאר קצר וממוקד.
+
+הפעלה:
+
+```text title="בתוך Claude Code"
+/review-pr
+```
+
+### 2. `/generate-tests`: בדיקות לקובץ, עם פרמטר
+
+```markdown title=".claude/skills/generate-tests/SKILL.md"
+---
+name: generate-tests
+description: Generate unit tests for a given file, following the project's existing test style. Use when the user asks to add or write tests for a file or function.
+argument-hint: [file-path]
+---
+
+Write tests for: $0
+
+1. Read $0 and list every exported function and its edge cases
+   (empty input, zero, very large numbers, missing fields, Hebrew text).
+2. Look at examples/sample.test.ts and match its style exactly.
+3. Write the tests next to the file, as <name>.test.ts.
+4. Run only the new test file. If a test fails, decide whether the test
+   or the code is wrong. Never weaken a test just to make it pass.
+5. Summarize in Hebrew: how many tests, what they cover, what failed and why.
+```
+
+הפעלה:
+
+```text title="בתוך Claude Code"
+/generate-tests lib/servings.ts
+```
+
+<Callout type="tip" title="אוטומטי וגם ידני">
+כיוון שלא הגבלנו את ההפעלה, ה-Skill הזה יופעל **גם אוטומטית**. אם תכתבו "תוסיף בדיקות למחשבון המנות", Claude יזהה שהבקשה מתאימה לתיאור, ויעבוד לפי ההוראות שכתבתם.
+</Callout>
+
+### 3. `/deploy`: העלאה לאוויר, רק בהפעלה ידנית
+
+```markdown title=".claude/skills/deploy/SKILL.md"
+---
+name: deploy
+description: Ship the current main branch to production through Vercel
+disable-model-invocation: true
+allowed-tools: Bash(npm run build) Bash(git status *) Bash(git log *)
+---
+
+Deploy checklist:
+
+1. Confirm we are on main and the working tree is clean (`git status`).
+   If not, STOP and tell me what is uncommitted.
+2. Run `npm run build`. If it fails, STOP and show the errors.
+3. Show me the commits that will go live (`git log origin/main..HEAD --oneline`)
+   and WAIT for my explicit approval.
+4. Only after I approve: `git push origin main`. Vercel deploys automatically.
+5. Tell me where to watch the deployment, and remind me to run the
+   live-site checklist from chapter 9.
+```
+
+שימו לב:
+
+- **`disable-model-invocation: true`**: רק אתם מפעילים. Claude לעולם לא יחליט לבד להעלות לאוויר.
+- **`git push` לא נמצא ב-`allowed-tools`**: כך הדחיפה עדיין תבקש אישור, גם בתוך ה-Skill. ואם הגדרתם חוק `ask` ל-`git push` בפרק 8, הוא ממשיך לעבוד.
+- **נקודות עצירה מפורשות** ("STOP", "WAIT"): Skills טובים לפעולות רגישות כוללים מקומות שבהם עוצרים ושואלים.
+
+<Callout type="note" title="למה ההוראות באנגלית?">
+אפשר לכתוב Skills בעברית, ו-Claude יבין מצוין. כתבנו כאן באנגלית כי זה מקובל ב-Skills שמשתפים עם אחרים, וכי חלק מהמונחים (diff, build, PR) ממילא באנגלית. מה שחשוב באמת: בכל Skill ביקשנו שה**דיווח** יהיה בעברית.
+</Callout>
+
+## הרשאות ובקרה
+
+| כלי | מה הוא עושה | איפה |
+| --- | --- | --- |
+| `allowed-tools` | **מאשר מראש** כלים בזמן שה-Skill רץ. **לא** חוסם כלים אחרים | בכותרת ה-Skill |
+| `disallowed-tools` | **חוסם** כלים בזמן שה-Skill פעיל | בכותרת ה-Skill |
+| `disable-model-invocation` | רק הפעלה ידנית | בכותרת ה-Skill |
+| חוקי `Skill(...)` | חוסמים, או דורשים אישור, להפעלת Skills | `.claude/settings.json` |
+| `skillOverrides` | קובעים אילו Skills גלויים ואיך | `.claude/settings.json` |
+| `disableSkillShellExecution` | מבטל את כל הפקודות המוזרקות | `.claude/settings.json` |
+
+חוקי הרשאות ל-Skills נכתבים כמו כל חוקי ההרשאות מפרק 8:
+
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "ask": ["Skill(deploy *)"],
+    "deny": ["Skill(dangerous-cleanup)"]
+  }
+}
+```
+
+עכשיו, בכל הפעלה של `/deploy`, Claude Code יבקש אישור, וה-Skill `dangerous-cleanup` חסום לגמרי.
+
+## לתת ל-Claude לכתוב את ה-Skill
+
+לא חייבים לכתוב Skills ביד. Claude מכיר את הפורמט היטב:
+
+<PromptCompare
+  bad="תכין לי skill"
+  good="תיצור skill בשם new-recipe בתיקייה .claude/skills: הוא מקבל מתכון כטקסט חופשי או כתמונה, מפרק אותו למבנה שב-lib/recipes.ts, מציג לי את התוצאה לאישור, ורק אחרי האישור מוסיף אותו, מריץ build ושומר ב-git. התיאור צריך לגרום לו להפעיל את ה-skill כשאני מדביק מתכון. תסביר לי כל שדה שבחרת בכותרת."
+  why="הבקשה החזקה מגדירה את התהליך, את נקודת העצירה לאישור ומתי ה-Skill צריך להיות מופעל. ״תסביר כל שדה״ הופך את זה לשיעור."
+/>
+
+<Callout type="tip" title="Skills מובנים שכדאי להכיר">
+Claude Code מגיע עם Skills מובנים, וחלקם כבר מוכרים לכם: `/code-review` לסקירת קוד, `/doctor` לבדיקת ההגדרות, ו-`/verify` כדי לוודא ששינוי עובד באפליקציה שרצה. הקלידו `/` כדי לראות את כולם.
+</Callout>
+
+## לכתוב Skills טובים: חמישה עקרונות
+
+1. **Skill אחד, משימה אחת.** "סקירת PR" ו"כתיבת בדיקות" הם שני Skills, לא אחד.
+2. **רק צעדים ב-SKILL.md.** רקע, דוגמאות ורשימות ארוכות הולכים לקבצים נלווים. ההמלצה: פחות מ-500 שורות ב-`SKILL.md`, והחשוב ביותר בהתחלה.
+3. **פורמט פלט מוגדר.** "דווח בעברית, לפי חומרה, עם קובץ ושורה" עדיף על "תדווח מה מצאת".
+4. **נקודות עצירה בפעולות רגישות.** "STOP" ו-"WAIT for approval" לפני כל דבר שקשה לבטל.
+5. **ללמוד מטעויות.** הוסיפו לתיקיית ה-Skill קובץ `learnings.md`, ובקשו מ-Claude לעדכן אותו כשמשהו לא עבד. בפעם הבאה ה-Skill יהיה טוב יותר.
+
+## Skills מהקהילה
+
+לא צריך להמציא הכול לבד. יש מאגרים גדולים של Skills מוכנים:
+
+### alirezarezvani/claude-skills
+
+[מאגר ב-GitHub](https://github.com/alirezarezvani/claude-skills), ברישיון MIT, עם כ-390 Skills ב-20 תחומים: הנדסה, שיווק, ניהול מוצר, פיננסים ועוד. דוגמאות למה שתמצאו שם:
+
+| Skill | מה הוא עושה |
+| --- | --- |
+| `skill-security-auditor` | סורק Skill **לפני** התקנה ומחזיר עבר / אזהרה / נכשל |
+| `playwright-pro` | כתיבת בדיקות דפדפן ותיקון בדיקות לא יציבות |
+| `dependency-auditor` | בדיקת חבילות, רישיונות ותכנון שדרוגים |
+| `incident-commander` | ניהול תקלות בייצור וכתיבת דוח אחרי תקלה |
+| `mcp-server-builder` | בניית שרת MCP ממפרט API |
+
+אפשר להתקין דרך מערכת התוספים של Claude Code, או פשוט להעתיק תיקייה של Skill אחד ל-`~/.claude/skills/`:
+
+```text title="בתוך Claude Code"
+/plugin marketplace add alirezarezvani/claude-skills
+/plugin install engineering-skills@claude-code-skills
+```
+
+### aitmpl.com (Claude Code Templates)
+
+[aitmpl.com](https://www.aitmpl.com/skills/) הוא קטלוג אינטראקטיבי של Skills, סוכנים, פקודות, הגדרות ושרתי MCP, שמבוסס על הפרויקט הפתוח [claude-code-templates](https://github.com/davila7/claude-code-templates) (רישיון MIT). אפשר לדפדף באתר, או להריץ את מתקין שורת הפקודה:
+
+```bash title="בטרמינל"
+npx claude-code-templates@latest
+```
+
+<Callout type="warning" title="Skill מבחוץ = קוד מבחוץ">
+Skill הוא לא רק טקסט. הוא יכול להכיל פקודות מוזרקות שרצות אוטומטית, סקריפטים, והוראות ש-Claude יבצע. לפני שמתקינים Skill ממקור חיצוני:
+
+- **קראו את `SKILL.md`** ואת כל הקבצים בתיקייה. אם לא ברור מה שורה עושה, שאלו את Claude.
+- **חפשו פקודות מוזרקות** (`` !` ``) וסקריפטים, ובדקו מה בדיוק הם מריצים.
+- **התחילו מפרויקט תרגול**, לא מהפרויקט החשוב שלכם.
+- **העדיפו מקורות פופולריים ומתוחזקים**, ושקלו להריץ קודם סורק כמו `skill-security-auditor`.
+</Callout>
+
+<Prompt>תקרא את כל הקבצים בתיקייה .claude/skills/[שם ה-skill] שהורדתי מהאינטרנט. תסביר לי בעברית מה ה-skill עושה, אילו פקודות הוא מריץ ומתי, לאילו קבצים ושירותים הוא ניגש, ואם יש בו משהו חשוד או מסוכן. אל תפעיל אותו ואל תריץ כלום ממנו</Prompt>
+
+## תרגיל: ערכת ה-Skills של הפרויקט
+
+באתר המתכונים (או בכל פרויקט עם Git):
+
+1. צרו את שלושת ה-Skills מהפרק: `review-pr`, `generate-tests` ו-`deploy`.
+2. הקלידו `/` ובדקו ששלושתם מופיעים בתפריט.
+3. הפעילו את `/review-pr` על ענף עם שינוי קטן. הסוקר נמנע מלתקן?
+4. כתבו "תוסיף בדיקות לקובץ של מחשבון המנות" **בלי** לכתוב `/`. Claude הפעיל את `generate-tests` לבד?
+5. כתבו "נראה שהכול מוכן, אולי כדאי להעלות לאוויר?". Claude **לא** אמור להפעיל את `deploy` לבד.
+6. בקשו מ-Claude לבנות Skill רביעי משלכם, למשל `new-recipe`.
+7. הוסיפו חוק `ask` ל-`Skill(deploy *)` ב-`.claude/settings.json`.
+
+<Checklist
+  id="ch11-exercise"
+  title="סיימתם את התרגיל?"
+  items={[
+    "יש לי לפחות שלושה Skills בתיקייה .claude/skills, כל אחד בתיקייה משלו",
+    "כל Skill מופיע בתפריט /",
+    "ה-Skill לסקירה משתמש בהזרקה (!`...`) ובקובץ נלווה",
+    "ל-Skill לסקירה יש disallowed-tools שמונע עריכה",
+    "generate-tests מקבל קובץ כפרמטר ($0)",
+    "Claude הפעיל Skill אוטומטית לפי התיאור",
+    "ל-deploy יש disable-model-invocation, ו-Claude לא הפעיל אותו לבד",
+    "קראתי Skill מהקהילה לפני שהתקנתי אותו",
+  ]}
+/>
+
+## סיכום
+
+- **Skill = מתכון עבודה כתוב**: תיקייה עם `SKILL.md`, ב-`.claude/skills/` (פרויקט) או ב-`~/.claude/skills/` (אישי).
+- **טעינה הדרגתית**: רק השם והתיאור נטענים מראש. התוכן והקבצים הנלווים נטענים רק כשצריך.
+- **התיאור** קובע מתי Claude יפעיל לבד. `disable-model-invocation: true` לכל מה שיש לו השלכות.
+- **פרמטרים** עם `$ARGUMENTS` ו-`$0`, ו**מידע חי** עם `` !`פקודה` ``.
+- **הרשאות**: `allowed-tools` מאשר מראש, `disallowed-tools` חוסם, וחוקי `Skill(...)` בהגדרות.
+- **Skills מהקהילה** חוסכים עבודה, אבל קוראים אותם לפני שמתקינים.
+
+בפרק הבא נכיר את האחים הגדולים של ה-Skills: **סוכני משנה** (Sub-agents). נראה איך Claude מחלק משימות גדולות בין כמה עוזרים שעובדים במקביל, וגם נבין לעומק טוקנים, חלון הקשר ו-Prompt Caching.

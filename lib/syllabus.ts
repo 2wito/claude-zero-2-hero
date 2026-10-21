@@ -13,7 +13,9 @@ export type Chapter = {
     | "Columns2"
     | "GitBranch"
     | "Globe"
-    | "Rocket";
+    | "Rocket"
+    | "Sparkles"
+    | "Bot";
 };
 
 export const chapters: Chapter[] = [
@@ -86,5 +88,19 @@ export const chapters: Chapter[] = [
     title: "טיפים של אלופים וקיצורי דרך",
     summary: "חוסכים בטוקנים ובעלויות, משדרגים את CLAUDE.md, מחברים כלים עם MCP, ומסכמים את הקורס.",
     icon: "Rocket",
+  },
+  {
+    number: 11,
+    slug: "11-skills",
+    title: "Skills ואוטומציה",
+    summary: "כותבים מתכוני עבודה ש-Claude מפעיל לבד או בפקודה: פרמטרים, מידע חי מהפרויקט והרשאות.",
+    icon: "Sparkles",
+  },
+  {
+    number: 12,
+    slug: "12-agents",
+    title: "סוכנים וסוכני משנה",
+    summary: "סוכני משנה במקביל וברקע, טוקנים, חלון הקשר ו-Prompt Caching, ו-README שנכתב לבד.",
+    icon: "Bot",
   },
 ];
