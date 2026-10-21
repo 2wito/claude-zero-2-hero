@@ -88,7 +88,7 @@ function Hero() {
             לראות את כל הפרקים
           </a>
         </div>
-        <p className="mt-8 text-sm text-muted">17 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
+        <p className="mt-8 text-sm text-muted">17 פרקים, הוראות לכל מערכת הפעלה, ועבודה משולבת עם Cursor.</p>
       </div>
       <HeroTerminal />
     </section>
