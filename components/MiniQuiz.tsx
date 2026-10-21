@@ -1,6 +1,8 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useId, useState } from "react";
+import { recordAnswer } from "@/lib/progress";
 
 export type QuizQuestion = {
   q: string;
@@ -13,14 +15,20 @@ export function MiniQuiz({ questions }: { questions: QuizQuestion[] }) {
   return (
     <div className="mt-6 space-y-5">
       {questions.map((question, i) => (
-        <QuizCard key={i} index={i} question={question} />
+        <QuizCard key={i} index={i} total={questions.length} question={question} />
       ))}
     </div>
   );
 }
 
-function QuizCard({ index, question }: { index: number; question: QuizQuestion }) {
+function QuizCard({ index, total, question }: { index: number; total: number; question: QuizQuestion }) {
   const [picked, setPicked] = useState<number | null>(null);
+  const slug = usePathname().split("/").pop() ?? "";
+
+  function pick(i: number) {
+    setPicked(i);
+    recordAnswer(slug, index, total, i === question.answer);
+  }
   const baseId = useId();
   const correct = picked === question.answer;
 
@@ -46,7 +54,7 @@ function QuizCard({ index, question }: { index: number; question: QuizQuestion }
               role="radio"
               aria-checked={selected}
               disabled={correct}
-              onClick={() => setPicked(i)}
+              onClick={() => pick(i)}
               className={`rounded-lg border px-4 py-2.5 text-start leading-7 disabled:cursor-default ${
                 showCorrect
                   ? "border-accent bg-accent/15 font-medium"

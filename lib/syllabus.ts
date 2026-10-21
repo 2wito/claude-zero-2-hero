@@ -19,7 +19,8 @@ export type Chapter = {
     | "MonitorSmartphone"
     | "Library"
     | "BookMarked"
-    | "Calculator";
+    | "Calculator"
+    | "MessagesSquare";
 };
 
 export const chapters: Chapter[] = [
@@ -130,9 +131,16 @@ export const chapters: Chapter[] = [
   },
   {
     number: 16,
-    slug: "16-tools",
+    slug: "16-prompt-hub",
+    title: "ספריית בקשות יומיומיות",
+    summary: "בקשות מוכנות להעתקה לפי נושא: דיבאג, ריפקטורינג, Git ו-PR, בדיקות, ו-RTL.",
+    icon: "MessagesSquare",
+  },
+  {
+    number: 17,
+    slug: "17-tools",
     title: "כלים אינטראקטיביים",
-    summary: "בונה בקשות ו-Skills, ומחשבון טוקנים שמראה כמה חוסכים עם /compact וקריאה ממוקדת.",
+    summary: "סימולטור טרמינל, מחולל CLAUDE.md, בונה בקשות ו-Skills, ומחשבון טוקנים.",
     icon: "Calculator",
   },
 ];

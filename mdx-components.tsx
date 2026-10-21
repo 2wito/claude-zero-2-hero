@@ -7,6 +7,9 @@ import { PromptBuilder } from "@/components/PromptBuilder";
 import { TokenCalculator } from "@/components/TokenCalculator";
 import { Checklist } from "@/components/mdx/checklist";
 import { CodeBlock } from "@/components/mdx/code-block";
+import { ClaudeConfigGenerator } from "@/components/ClaudeConfigGenerator";
+import { PromptHub } from "@/components/PromptHub";
+import { TerminalSimulator } from "@/components/TerminalSimulator";
 import { Library } from "@/components/mdx/library";
 import { LibraryItem } from "@/components/mdx/library-item";
 import { Prompt } from "@/components/mdx/prompt";
@@ -69,6 +72,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       ),
     Callout,
     Checklist,
+    ClaudeConfigGenerator,
+    PromptHub,
+    TerminalSimulator,
     Glossary,
     MiniQuiz,
     PromptBuilder,

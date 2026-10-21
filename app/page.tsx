@@ -17,6 +17,7 @@ import {
   Library,
   Lightbulb,
   MessageSquare,
+  MessagesSquare,
   MonitorSmartphone,
   Rocket,
   Sparkles,
@@ -45,6 +46,7 @@ const chapterIcons: Record<Chapter["icon"], LucideIcon> = {
   Library,
   BookMarked,
   Calculator,
+  MessagesSquare,
 };
 
 const FIRST_CHAPTER = `/docs/${chapters[0].slug}`;
@@ -86,7 +88,7 @@ function Hero() {
             לראות את כל הפרקים
           </a>
         </div>
-        <p className="mt-8 text-sm text-muted">16 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
+        <p className="mt-8 text-sm text-muted">17 פרקים, הדרכה ל-Windows, macOS ו-Linux, ועבודה משולבת עם Cursor.</p>
       </div>
       <HeroTerminal />
     </section>
@@ -156,7 +158,8 @@ function Features() {
 
 function Syllabus() {
   const core = chapters.filter((chapter) => chapter.number <= 10);
-  const bonus = chapters.filter((chapter) => chapter.number > 10);
+  const bonus = chapters.filter((chapter) => chapter.number > 10 && chapter.number <= 14);
+  const resources = chapters.filter((chapter) => chapter.number > 14);
 
   return (
     <section id="syllabus" aria-labelledby="syllabus-title" className="scroll-mt-20">
@@ -167,8 +170,8 @@ function Syllabus() {
               {chapters.length} פרקים, צעד אחר צעד
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-8 text-muted">
-              {core.length} פרקי המסלול הבסיסי בונים זה על זה. {bonus.length} פרקי ההעשרה מעמיקים, ואפשר לקרוא אותם בכל
-              סדר.
+              {core.length} פרקי המסלול הבסיסי בונים זה על זה. {bonus.length} פרקי ההעשרה מעמיקים, ובסוף יש מילון, ספריית בקשות
+              וכלים אינטראקטיביים.
             </p>
           </div>
           <Link href={FIRST_CHAPTER} className="inline-flex items-center gap-2 font-medium text-accent hover:underline">
@@ -180,8 +183,11 @@ function Syllabus() {
         <h3 className="mt-12 text-lg font-bold">המסלול הבסיסי</h3>
         <ChapterGrid items={core} className="mt-4 lg:grid-cols-5" />
 
-        <h3 className="mt-12 text-lg font-bold">פרקי העשרה וכלים</h3>
-        <ChapterGrid items={bonus} className="mt-4 lg:grid-cols-3" />
+        <h3 className="mt-12 text-lg font-bold">פרקי העשרה למתקדמים</h3>
+        <ChapterGrid items={bonus} className="mt-4 lg:grid-cols-4" />
+
+        <h3 className="mt-12 text-lg font-bold">עזרים וכלים</h3>
+        <ChapterGrid items={resources} className="mt-4 lg:grid-cols-3" />
       </div>
     </section>
   );

@@ -19,5 +19,6 @@ export const chapterContent: Record<string, () => Promise<MDXModule>> = {
   "13-platforms-and-apps": () => import("@/content/docs/13-platforms-and-apps.mdx"),
   "14-templates-library": () => import("@/content/docs/14-templates-library.mdx"),
   "15-glossary": () => import("@/content/docs/15-glossary.mdx"),
-  "16-tools": () => import("@/content/docs/16-tools.mdx"),
+  "16-prompt-hub": () => import("@/content/docs/16-prompt-hub.mdx"),
+  "17-tools": () => import("@/content/docs/17-tools.mdx"),
 };

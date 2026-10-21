@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { chapterContent } from "@/lib/content";
 import { chapters } from "@/lib/syllabus";
+import { CompleteButton } from "@/components/ProgressTracker";
 
 export const dynamicParams = false;
 
@@ -46,6 +47,8 @@ export default async function ChapterPage({ params }: Props) {
           </div>
         </>
       )}
+
+      {Content && chapter.number <= 14 && <CompleteButton slug={chapter.slug} />}
 
       <nav aria-label="ניווט בין פרקים" className="mt-16 grid gap-3 border-t border-line pt-8 sm:grid-cols-2">
         {prev ? (
