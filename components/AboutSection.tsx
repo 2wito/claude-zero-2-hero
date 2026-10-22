@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Briefcase, GraduationCap, Layers, Mail } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 
@@ -70,12 +71,13 @@ export function AboutSection({ locale }: { locale: Locale }) {
         <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
           <div className="rounded-2xl border border-line bg-surface p-7">
             <div className="flex items-center gap-4">
-              <div
-                className="grid size-16 shrink-0 place-items-center rounded-full bg-accent font-display text-xl text-accent-ink"
-                aria-hidden
-              >
-                IT
-              </div>
+              <Image
+                src="/itay-twito.jpeg"
+                alt={t.name}
+                width={160}
+                height={160}
+                className="size-20 shrink-0 rounded-full object-cover ring-2 ring-accent/40"
+              />
               <div className="min-w-0">
                 <p className="text-xl font-bold">{t.name}</p>
                 <p className="text-muted" lang={locale === "he" ? "en" : "he"}>
