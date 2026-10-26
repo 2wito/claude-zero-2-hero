@@ -23,7 +23,8 @@ export type Chapter = {
     | "Library"
     | "BookMarked"
     | "Calculator"
-    | "MessagesSquare";
+    | "MessagesSquare"
+    | "PartyPopper";
 };
 
 export const chapters: Chapter[] = [
@@ -162,6 +163,14 @@ export const chapters: Chapter[] = [
     summary: "סימולטור טרמינל, מחולל CLAUDE.md, בונה בקשות ו-Skills, ומחשבון טוקנים.",
     en: { title: "Interactive Tools", summary: "Terminal simulator, CLAUDE.md generator, prompt & Skill builder, and a token calculator." },
     icon: "Calculator",
+  },
+  {
+    number: 18,
+    slug: "18-finish",
+    title: "סיימתם! משוב וקרדיטים",
+    summary: "כמה מילים על הקורס, סקר קצר, ותודה לכל המקורות והמדריכים שעליהם נבנה.",
+    en: { title: "You Made It! Feedback & Credits", summary: "A few words about the course, a short survey, and thanks to every source and guide it builds on." },
+    icon: "PartyPopper",
   },
 ];
 

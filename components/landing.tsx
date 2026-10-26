@@ -20,6 +20,7 @@ import {
   MessageSquare,
   MessagesSquare,
   MonitorSmartphone,
+  PartyPopper,
   Rocket,
   Sparkles,
   SquareTerminal,
@@ -50,6 +51,7 @@ const chapterIcons: Record<Chapter["icon"], LucideIcon> = {
   BookMarked,
   Calculator,
   MessagesSquare,
+  PartyPopper,
 };
 
 const copy = {
@@ -114,6 +116,7 @@ const copy = {
     },
     cta: { title: "הפרק הראשון לוקח 15 דקות", body: "בסופו תבינו מה Claude Code יודע לעשות, ותדעו אם זה בשבילכם.", start: "להתחיל ללמוד" },
     footer: ["נכתב באהבה לחברים ולמשפחה.", "מדריך קהילתי, לא תיעוד רשמי של Anthropic."],
+    credits: "קרדיטים ומקורות",
   },
   en: {
     hero: {
@@ -176,6 +179,7 @@ const copy = {
     },
     cta: { title: "The first chapter takes 15 minutes", body: "By the end you'll know what Claude Code can do, and whether it's for you.", start: "Start learning" },
     footer: ["Written with love for friends and family.", "A community guide, not official Anthropic documentation."],
+    credits: "Credits & sources",
   },
 };
 
@@ -197,7 +201,12 @@ export function Landing({ locale }: { locale: Locale }) {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-muted sm:flex-row sm:justify-between sm:px-6">
           <p>{c.footer[0]}</p>
-          <p>{c.footer[1]}</p>
+          <p>
+            {c.footer[1]}{" "}
+            <Link href={docHref(locale, "18-finish")} className="underline underline-offset-4 hover:text-ink">
+              {c.credits}
+            </Link>
+          </p>
         </div>
       </footer>
     </main>

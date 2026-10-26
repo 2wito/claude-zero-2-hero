@@ -24,6 +24,7 @@ export const chapterContent: Record<Locale, ContentMap> = {
     "15-glossary": () => import("@/content/docs/15-glossary.mdx"),
     "16-prompt-hub": () => import("@/content/docs/16-prompt-hub.mdx"),
     "17-tools": () => import("@/content/docs/17-tools.mdx"),
+    "18-finish": () => import("@/content/docs/18-finish.mdx"),
   },
   en: {
     "01-introduction": () => import("@/content/docs-en/01-introduction.mdx"),
@@ -43,5 +44,6 @@ export const chapterContent: Record<Locale, ContentMap> = {
     "15-glossary": () => import("@/content/docs-en/15-glossary.mdx"),
     "16-prompt-hub": () => import("@/content/docs-en/16-prompt-hub.mdx"),
     "17-tools": () => import("@/content/docs-en/17-tools.mdx"),
+    "18-finish": () => import("@/content/docs-en/18-finish.mdx"),
   },
 };

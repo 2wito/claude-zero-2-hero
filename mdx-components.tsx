@@ -1,6 +1,7 @@
 import { Children, isValidElement, type ReactElement } from "react";
 import type { MDXComponents } from "mdx/types";
 import { Callout } from "@/components/callout";
+import { FeedbackSurvey } from "@/components/FeedbackSurvey";
 import { Glossary } from "@/components/Glossary";
 import { MiniQuiz } from "@/components/MiniQuiz";
 import { PromptBuilder } from "@/components/PromptBuilder";
@@ -73,6 +74,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Callout,
     Checklist,
     ClaudeConfigGenerator,
+    FeedbackSurvey,
     PromptHub,
     TerminalSimulator,
     Glossary,
