@@ -3,7 +3,7 @@ import { Briefcase, GraduationCap, Layers, Mail } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 
 const EMAIL = "hello@claude-code-hebrew.com";
-const LINKEDIN = "https://www.linkedin.com/in/itay-twito/";
+const LINKEDIN = "https://www.linkedin.com/in/itay-twito-2083812b9/";
 
 const stack = ["Next.js", "Supabase", "Tailwind CSS", "Claude Code", "Cursor"];
 

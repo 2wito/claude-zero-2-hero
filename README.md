@@ -147,7 +147,7 @@ Adding a chapter and the full MDX component reference are documented in the [Heb
 
 **Itay Twito**: I designed, wrote and built this project end to end, from the course curriculum and Hebrew/English content to the UI, interactive tools, i18n architecture, SEO and deployment.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-itay--twito-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/itay-twito/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-itay--twito-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/itay-twito-2083812b9/)
 [![Website](https://img.shields.io/badge/Website-claude--code--hebrew.com-0F766E)](https://www.claude-code-hebrew.com)
 
 <br clear="right" />
