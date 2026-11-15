@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import { IBM_Plex_Mono, IBM_Plex_Sans_Hebrew, Secular_One } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -39,6 +40,7 @@ export function RootShell({ locale, children }: { locale: Locale; children: Reac
           <SiteHeader />
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
